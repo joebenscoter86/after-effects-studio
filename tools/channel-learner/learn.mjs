@@ -35,7 +35,7 @@ import { homedir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { compareTranscripts, parseJson3, parseWhisperJson, toSentences } from './lib/words.mjs';
+import { compareTranscripts, isSpeech, parseJson3, parseWhisperJson, screenOnlySentences, toSentences } from './lib/words.mjs';
 import { measureChanges, noisyCells, pickFrames } from './lib/change.mjs';
 import { diffRows, readBoxes, toRows } from './lib/screen-text.mjs';
 import { buildTimeline, renderTimelineMarkdown } from './lib/timeline.mjs';
@@ -181,23 +181,25 @@ function creatorLangs(info) {
 
 // The word sources present in <dir>, in the order the timeline prefers them:
 // captions the creator uploaded, then whisper, then YouTube's automatic captions.
+// A source with too few words for its length (isSpeech) is music or noise, not speech.
 async function wordSources(dir, info) {
   const out = [];
+  const speech = (words) => isSpeech(words, info?.duration);
   for (const lang of creatorLangs(info)) {
     const file = `captions.${lang}.json3`;
     if (existsSync(join(dir, file))) {
       const words = parseJson3(await readJson(join(dir, file)));
-      if (words.length) { out.push({ name: 'captions-creator', file, words }); break; }
+      if (speech(words)) { out.push({ name: 'captions-creator', file, words }); break; }
     }
   }
   if (existsSync(join(dir, 'whisper.json'))) {
     const words = parseWhisperJson(await readJson(join(dir, 'whisper.json')));
-    if (words.length) out.push({ name: 'whisper', file: 'whisper.json', words });
+    if (speech(words)) out.push({ name: 'whisper', file: 'whisper.json', words });
   }
   const autoFile = `captions.${AUTO_LANG}.json3`;
   if (existsSync(join(dir, autoFile))) {
     const words = parseJson3(await readJson(join(dir, autoFile)));
-    if (words.length) out.push({ name: 'captions-auto', file: autoFile, words });
+    if (speech(words)) out.push({ name: 'captions-auto', file: autoFile, words });
   }
   return out;
 }
@@ -206,6 +208,14 @@ function noWordsReason(state) {
   const why = (s) => state.steps[s]?.note ?? (done(state, s) ? 'done but empty' : 'not run');
   return `no usable words: captions (${why('captions')}); whisper (${why('whisper')})`;
 }
+
+// A tutorial with music and no narration: whisper ran and heard no speech. With chapters
+// to split it by, the timeline is built from the screen alone (screenOnlySentences);
+// without chapters there is nothing to hang the techniques on, so it stops.
+const SCREEN_ONLY = 'none (screen only)';
+const chaptersOf = (info) => (info?.chapters ?? []).map((c) => ({ title: c.title, start: c.start_time, end: c.end_time }));
+const screenOnly = (state, info) => done(state, 'whisper') && chaptersOf(info).length > 0;
+const noSpeechReason = (state) => `no speech: whisper ran (${state.steps.whisper?.note ?? 'done'}) but heard only music or markers, and the video has no chapters to split it by`;
 
 // YouTube's "Sign in to confirm you're not a bot". Retrying soon only makes it worse.
 const BOT_CHECK = /confirm you.?re not a bot|sign in to confirm/i;
@@ -341,8 +351,12 @@ async function gather(url, dir, d, redo) {
   }
 
   const sources = await wordSources(dir, info);
+  if (sources.length === 0 && screenOnly(state, info)) {
+    d.log('gather done; no speech (music only), so align will build the timeline from the screen and the chapters');
+    return 0;
+  }
   if (sources.length === 0) {
-    state.stopped = { step: 'gather', reason: noWordsReason(state) };
+    state.stopped = { step: 'gather', reason: done(state, 'whisper') ? noSpeechReason(state) : noWordsReason(state) };
     await saveState(dir, state);
     d.log(`stopped: ${state.stopped.reason}`);
     return 2;
@@ -365,14 +379,16 @@ async function align(dir, d, redo) {
   const video = join(dir, 'source.mp4');
 
   const sources = await wordSources(dir, info);
-  if (sources.length === 0) {
-    state.stopped = { step: 'align', reason: noWordsReason(state) };
+  if (sources.length === 0 && !screenOnly(state, info)) {
+    state.stopped = { step: 'align', reason: done(state, 'whisper') ? noSpeechReason(state) : noWordsReason(state) };
     await saveState(dir, state);
     d.log(`stopped: ${state.stopped.reason}`);
     return 2;
   }
-  const [chosen, other] = sources;
-  const sentences = toSentences(chosen.words);
+  const [chosen, other] = sources.length ? sources : [{ name: SCREEN_ONLY, words: [] }];
+  const sentences = sources.length
+    ? toSentences(chosen.words)
+    : screenOnlySentences(chaptersOf(info), info.duration);
 
   const changesPath = join(dir, 'changes.jsonl');
   if (!(await step(dir, state, 'changes', async () => {
@@ -427,7 +443,7 @@ async function align(dir, d, redo) {
       const raw = await readJson(ignorePath);
       ignore = Array.isArray(raw) ? raw : (raw.ignore ?? []);
     }
-    const chapters = (info.chapters ?? []).map((c) => ({ title: c.title, start: c.start_time, end: c.end_time }));
+    const chapters = chaptersOf(info);
     // Values are tracked by label, not position (the editor zooms and pans the recording),
     // and each chapter starts with nothing seen.
     const chapterStarts = chapters.map((c) => c.start).sort((a, b) => a - b);

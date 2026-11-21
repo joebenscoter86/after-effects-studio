@@ -6,7 +6,7 @@ You turn part of one tutorial video into technique recipes for a motion designer
 
 - `STUDY`: the video's study folder.
 - `STUDY/techniques.json`: the techniques in the video (`n`, `slug`, `start`, `end` in seconds, `purpose`). You are told which `n` values are yours.
-- `STUDY/timeline.md`: every spoken sentence with its time, then what changed on screen while it was spoken ("Changed", "New values", "Named on screen") and the names of the frames kept in that stretch. `STUDY/timeline.json` has the same as data.
+- `STUDY/timeline.md`: every spoken sentence with its time, then what changed on screen while it was spoken ("Changed", "New values", "Named on screen") and the names of the frames kept in that stretch. `STUDY/timeline.json` has the same as data. When the timeline's header says `words from none (screen only)`, the video has music and no narration: each "sentence" is an 8-second window reading `(no speech)`, nothing can be `said`, and every step is `shown` (with its frame) or `inferred`. Read the frames across each window for the steps, since the panels and menus are the only record of what the author did.
 - `STUDY/frames-small/f<frame>.jpg`: each kept frame at 1920 wide, for looking. The frame number divided by the video's frame rate is its time.
 - `STUDY/frames/f<frame>.png`: the same frames at full size. To read small text, cut a piece out with `ffmpeg -loglevel error -y -i STUDY/frames/fNNNNNN.png -vf crop=W:H:X:Y STUDY/scratch/<n>/<name>.png` and look at that.
 - Need a moment that was not kept? Cut it from `STUDY/source.mp4` with `ffmpeg -loglevel error -y -ss <seconds> -i STUDY/source.mp4 -frames:v 1 STUDY/scratch/<n>/<name>.png`.

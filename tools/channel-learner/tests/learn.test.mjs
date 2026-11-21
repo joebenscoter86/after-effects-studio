@@ -55,7 +55,7 @@ function fakes(dir, opts = {}) {
       count(`fetchCaptions:${lang}:${auto ? 'auto' : 'creator'}`);
       bot('captions');
       if (opts.captionsFail) throw new Error('HTTP Error 429: Too Many Requests');
-      await writeFile(join(d, `captions.${lang}.json3`), JSON.stringify(auto ? autoCaptions : creatorCaptions));
+      await writeFile(join(d, `captions.${lang}.json3`), JSON.stringify(opts.captions ?? (auto ? autoCaptions : creatorCaptions)));
     },
     extractAudio: async ({ dir: d, out }) => {
       count('extractAudio');
@@ -65,7 +65,7 @@ function fakes(dir, opts = {}) {
     transcribe: async ({ dir: d, out }) => {
       count('transcribe');
       if (opts.whisperFail) throw new Error('whisper-cli: model not found');
-      await writeFile(join(d, out ?? 'whisper.json'), JSON.stringify(whisper));
+      await writeFile(join(d, out ?? 'whisper.json'), JSON.stringify(opts.whisper ?? whisper));
     },
     measureChanges: async (video, out) => {
       count('measureChanges');
@@ -294,6 +294,34 @@ test('align stops with exit 2 when there are no words', async () => {
     assert.equal(await run(['align', dir], deps), 2);
     assert.deepEqual(calls, {});
     assert.ok((await readJson(join(dir, 'state.json'))).stopped.reason);
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
+// A music-only tutorial (Tf0EiCGOEYs): whisper hears "(soft music)", the captions "[Music]".
+const music = {
+  whisper: { transcription: [0, 1, 2, 3].map((k) => ({ offsets: { from: k * 1500, to: k * 1500 + 700 }, text: k % 2 ? ' music)' : ' (soft' })) },
+  captions: json3([[0, '[Music]'], [3000, 'so']]),
+  info: info({ duration: 600 }), // one stray word in ten minutes is not speech
+};
+
+test('a music-only video with chapters gathers and aligns screen-only', async () => {
+  const dir = await gathered(music);
+  try {
+    const { deps } = fakes(dir, music);
+    assert.equal(await run(['align', dir], deps), 0);
+    const tl = await readJson(join(dir, 'timeline.json'));
+    assert.equal(tl.video.wordsFrom, 'none (screen only)');
+    const spans = tl.chapters.flatMap((c) => c.sentences.map((s) => [s.start, s.end]));
+    assert.deepEqual(spans, [[0, 2.5], [2.5, 6]], 'one window per short chapter');
+    assert.ok(tl.chapters.every((c) => c.sentences.every((s) => s.text === '(no speech)')));
+    assert.equal((await readJson(join(dir, 'state.json'))).words, 'none (screen only)');
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
+test('a music-only video without chapters still stops with exit 2', async () => {
+  const dir = await gathered({ ...music, info: info({ duration: 600, chapters: [] }), expectGather: 2 });
+  try {
+    assert.match((await readJson(join(dir, 'state.json'))).stopped.reason, /no speech/);
   } finally { await rm(dir, { recursive: true, force: true }); }
 });
 
