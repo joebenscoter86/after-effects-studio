@@ -52,7 +52,7 @@ function fixture(entries, proofs = {}) {
 }
 const build = (entries, o = {}) => {
   const { dir, catalog } = fixture(entries, o.proofs);
-  try { return buildArsenal({ catalog, jobs: JOBS, examples: EXAMPLES, draftsDir: dir, stills: o.stills ?? {}, creators: o.creators ?? ['Some Channel'] }); }
+  try { return buildArsenal({ catalog, jobs: JOBS, examples: EXAMPLES, draftsDir: dir, stills: o.stills ?? {}, creators: o.creators ?? ['Some Channel'], ...(o.fileLimit ? { fileLimit: o.fileLimit } : {}) }); }
   finally { fs.rmSync(dir, { recursive: true, force: true }); }
 };
 
@@ -135,6 +135,24 @@ test('build: recipes are grouped one file per job group, build aids and unmatche
   assert.match(files.get('recipes-picture.md'), /^## Name pic$/m);
   assert.match(files.get('recipes-build-aid.md'), /^## Name aid$/m);
   assert.match(files.get('recipes-build-aid.md'), /^## Name odd$/m);
+});
+
+test('build: a group too big for one package file is split into numbered parts, each record pointing at the part that holds it', () => {
+  const entries = Array.from({ length: 6 }, (_, i) => ({ slug: `line${i}`, lines: `variations: ${'a longer note '.repeat(300)}` }));
+  const one = build(entries).files.get('recipes-line.md');
+  const limit = Math.ceil(Buffer.byteLength(one) / 2.5);
+  const { files, index } = build(entries, { fileLimit: limit });
+  const parts = [...files.keys()].filter((f) => /^recipes-line(-\d+)?\.md$/.test(f)).sort();
+  assert.ok(parts.length >= 3, `expected the line group in 3+ parts, got ${parts.join(', ')}`);
+  assert.ok(parts.includes('recipes-line.md') && parts.includes('recipes-line-2.md'), parts.join(', '));
+  assert.match(index.documents.find((d) => d.id === 'arsenal-line-2').title, /part 2 of \d/);
+  for (const f of parts) assert.ok(Buffer.byteLength(files.get(f)) <= limit, `${f} over the limit`);
+  const docs = new Map(index.documents.map((d) => [d.id, d.path.replace(/^arsenal\//, '')]));
+  for (const r of JSON.parse(files.get('catalog.json')).recipes) {
+    const file = docs.get(r.section.document);
+    assert.ok(file, `${r.id} points at ${r.section.document}, which the index does not list`);
+    assert.match(files.get(file), new RegExp(`^## ${r.section.heading}\\nid: ${r.id}$`, 'm'));
+  }
 });
 
 test('build: a group with no recipes gets no file', () => {

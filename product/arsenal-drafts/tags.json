@@ -1840,6 +1840,331 @@
       "difficulty": 3,
       "group": "time stagger",
       "why": "'clears an end card ... with the same cascade it arrived with', so the card reads as passing through the frame"
+    },
+    "nHh0NRo8G2U#01": {
+      "id": "01-segmented-progress-bar-draws-in-order",
+      "kind": "technique",
+      "job": "step-through-process",
+      "support": [
+        "show-time"
+      ],
+      "mood": [
+        "dark",
+        "bold",
+        "clean"
+      ],
+      "needs": [
+        "shapes",
+        "type"
+      ],
+      "duration": 2,
+      "motion": "one-shot",
+      "difficulty": 3,
+      "group": "trim paths draw-on",
+      "why": "'a process or timeline beat (\"first this phase, then that one\")': one bar split into coloured phases that fill left to right, the second starting as the first slows"
+    },
+    "nHh0NRo8G2U#02": {
+      "id": "02-labels-rise-from-behind-the-bar",
+      "kind": "technique",
+      "job": "step-through-process",
+      "support": [
+        "reveal-headline"
+      ],
+      "mood": [
+        "dark",
+        "bold",
+        "clean"
+      ],
+      "needs": [
+        "shapes",
+        "type"
+      ],
+      "duration": 2,
+      "motion": "one-shot",
+      "difficulty": 2,
+      "group": null,
+      "why": "'names each phase of a progress bar as that phase fills': the word rises out of its own segment through an inverted track matte"
+    },
+    "nHh0NRo8G2U#03": {
+      "id": "03-step-icons-pop-with-bounce-in-sequence",
+      "kind": "technique",
+      "job": "step-through-process",
+      "support": [
+        "list-items"
+      ],
+      "mood": [
+        "dark",
+        "playful",
+        "clean"
+      ],
+      "needs": [
+        "photo"
+      ],
+      "duration": 4,
+      "motion": "one-shot",
+      "difficulty": 2,
+      "group": "time stagger",
+      "why": "'brings in a row of step pictures ... one by one ... so the eye walks the process left to right': scale pops with a small inertial bounce, 10 frames apart"
+    },
+    "nHh0NRo8G2U#04": {
+      "id": "04-curved-arrow-draws-between-steps",
+      "kind": "technique",
+      "job": "step-through-process",
+      "support": [
+        "relate-things"
+      ],
+      "mood": [
+        "dark",
+        "minimal",
+        "clean"
+      ],
+      "needs": [
+        "shapes"
+      ],
+      "duration": 3,
+      "motion": "one-shot",
+      "difficulty": 2,
+      "group": "trim paths draw-on",
+      "why": "'ties a row of step images into a process': a small arrow draws itself between each pair as the next step appears"
+    },
+    "nHh0NRo8G2U#05": {
+      "id": "05-stop-motion-jitter-and-mono-finish",
+      "kind": "technique",
+      "job": "finish-the-look",
+      "support": [
+        "keep-it-alive"
+      ],
+      "mood": [
+        "textured",
+        "retro",
+        "playful"
+      ],
+      "needs": [
+        "photo"
+      ],
+      "duration": 4,
+      "motion": "loop",
+      "difficulty": 2,
+      "group": "stop-motion jitter",
+      "why": "'gives a clean, flat infographic a cut-out, stop-motion feel': grey photos, each twitching on its own, a whole-frame shake and everything stepped to 12 fps"
+    },
+    "nHh0NRo8G2U#06": {
+      "id": "06-faint-graph-paper-backdrop",
+      "kind": "technique",
+      "job": "fill-the-backdrop",
+      "support": [
+        "finish-the-look"
+      ],
+      "mood": [
+        "light",
+        "paper",
+        "textured"
+      ],
+      "needs": [
+        "none"
+      ],
+      "duration": 4,
+      "motion": "still",
+      "difficulty": 2,
+      "group": "graph-paper grid",
+      "why": "'an off-white sheet ruled with tiny pale-blue squares, like school exercise paper', so a flat infographic reads as hand-made and educational"
+    },
+    "nHh0NRo8G2U#07": {
+      "id": "07-stroked-bars-grow-in-stagger-with-value-labels",
+      "kind": "technique",
+      "job": "compare",
+      "support": [
+        "show-proof",
+        "list-items"
+      ],
+      "mood": [
+        "dark",
+        "bold",
+        "clean"
+      ],
+      "needs": [
+        "shapes",
+        "type"
+      ],
+      "duration": 3,
+      "motion": "one-shot",
+      "difficulty": 2,
+      "group": "trim paths draw-on",
+      "why": "'a quick \"how big is each one\" moment': four bars rise one after another from a shared baseline while each value label slides in"
+    },
+    "nHh0NRo8G2U#08": {
+      "id": "08-baseline-draws-out-from-centre",
+      "kind": "technique",
+      "job": "show-proof",
+      "support": [
+        "compare"
+      ],
+      "mood": [
+        "dark",
+        "minimal",
+        "calm"
+      ],
+      "needs": [
+        "shapes"
+      ],
+      "duration": 1,
+      "motion": "one-shot",
+      "difficulty": 1,
+      "group": "trim paths draw-on",
+      "why": "'opens a chart (or any divider) with a line that grows out to both ends at once from its centre', a calm first move before the data arrives"
+    },
+    "nHh0NRo8G2U#09": {
+      "id": "09-grid-clipped-to-the-chart-area",
+      "kind": "technique",
+      "job": "fill-the-backdrop",
+      "support": [
+        "show-proof",
+        "finish-the-look"
+      ],
+      "mood": [
+        "dark",
+        "minimal",
+        "textured"
+      ],
+      "needs": [
+        "shapes"
+      ],
+      "duration": 3,
+      "motion": "still",
+      "difficulty": 2,
+      "group": "graph-paper grid",
+      "why": "'gives a bar chart a quiet graph-paper backing that stops at the chart's edges', with the chart's motion stepped to 12 fps so a plain data beat reads as designed"
+    },
+    "nHh0NRo8G2U#10": {
+      "id": "10-pie-slice-from-a-stroked-ring",
+      "kind": "technique",
+      "job": "show-proof",
+      "support": [
+        "land-number",
+        "compare"
+      ],
+      "mood": [
+        "dark",
+        "bold",
+        "clean"
+      ],
+      "needs": [
+        "shapes"
+      ],
+      "duration": 2,
+      "motion": "one-shot",
+      "difficulty": 3,
+      "group": "trim paths draw-on",
+      "why": "a single-statistic beat (\"X % of all ...\"): the pie sweeps on and the 18 % wedge slides out \"so the number has a piece to point at\""
+    },
+    "nHh0NRo8G2U#11": {
+      "id": "11-label-rises-word-by-word",
+      "kind": "technique",
+      "job": "land-number",
+      "support": [
+        "reveal-headline"
+      ],
+      "mood": [
+        "dark",
+        "bold",
+        "clean"
+      ],
+      "needs": [
+        "type"
+      ],
+      "duration": 3,
+      "motion": "one-shot",
+      "difficulty": 2,
+      "group": "time stagger",
+      "why": "puts a short stat sentence (\"18% of all ...\") beside the chart piece, number first, each word rising 2 frames after the last so the line reads as it lands"
+    },
+    "nHh0NRo8G2U#12": {
+      "id": "12-pyramid-tiers-spread-to-reveal-labels",
+      "kind": "technique",
+      "job": "make-concrete",
+      "support": [
+        "add-impact"
+      ],
+      "mood": [
+        "photo",
+        "dark",
+        "bold"
+      ],
+      "needs": [
+        "photo",
+        "type"
+      ],
+      "duration": 2,
+      "motion": "one-shot",
+      "difficulty": 3,
+      "group": null,
+      "why": "a hierarchy or \"levels\" beat acted out by a real pyramid that gathers itself, bursts into three tiers and shows a label in each opening gap"
+    },
+    "nHh0NRo8G2U#13": {
+      "id": "13-match-cut-carried-by-movement",
+      "kind": "technique",
+      "job": "hand-over",
+      "support": [
+        "move-camera",
+        "point-at-detail"
+      ],
+      "mood": [
+        "dark",
+        "cinematic"
+      ],
+      "needs": [
+        "none"
+      ],
+      "duration": 4,
+      "motion": "transition",
+      "difficulty": 2,
+      "group": null,
+      "why": "moves from an overview to a detail \"without a visible transition\": cut at the fastest moment to a doubled-size view, both shots drifting up so the eye reads one move"
+    },
+    "nHh0NRo8G2U#14": {
+      "id": "14-pinned-photos-swaying-on-a-map",
+      "kind": "technique",
+      "job": "point-at-detail",
+      "support": [
+        "keep-it-alive",
+        "establish-place"
+      ],
+      "mood": [
+        "paper",
+        "textured",
+        "calm"
+      ],
+      "needs": [
+        "photo",
+        "texture"
+      ],
+      "duration": 5,
+      "motion": "loop",
+      "difficulty": 3,
+      "group": null,
+      "why": "marks a few places on a map with pinned instant photos that rock gently round their pins, for a travel or \"where it happened\" beat"
+    },
+    "nHh0NRo8G2U#15": {
+      "id": "15-map-highlights-and-border-trace",
+      "kind": "technique",
+      "job": "point-at-detail",
+      "support": [
+        "establish-place"
+      ],
+      "mood": [
+        "paper",
+        "textured",
+        "editorial"
+      ],
+      "needs": [
+        "shapes",
+        "texture"
+      ],
+      "duration": 3,
+      "motion": "one-shot",
+      "difficulty": 3,
+      "group": "trim paths draw-on",
+      "why": "points at a region on an old map with Multiply washes that look printed in and draws a country outline on cue, for \"here is where it happened\" beats"
     }
   }
 }

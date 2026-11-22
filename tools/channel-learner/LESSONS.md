@@ -135,6 +135,45 @@ The first video's 25 recipes all passed the check. Building them found three rec
 - **What happened.** Recipe 07 took the cursor's start handle from a reading made while the author dragged it (+39, −564) and its shape from the drawn motion path. The route the preview plays bows about a third as much. The first build bowed 19 % of its chord against the reference's 7 %. The first re-track took the cursor's centre from its lightness alone, and the translucent disc over a shaded corner pulled it 17–34 px low near the button. Tracked by the disc's outline, eleven points gave handles of about (136, −296) and (−87, 50), and the rebuild sits within 2 px of the played route.
 - **Rule.** `distil.md`: a curved path's target is the route that plays, tracked on six or more preview frames by the object's outline; handles are inferred from those points. `check.md` item 10: check one of the given points on a played frame.
 
+### 30. The cookbook outgrew a package file (explainer piece 3, nHh0NRo8G2U, 2026-11-21)
+- **What happened.** With the 15 recipes from piece 3 in the drafts, the arsenal build refused: `recipes-line.md` came to 321 KB and `recipes-picture.md` to 281 KB, over the 256 KB limit on a non-image file in the Claude package. The guard test in `tests/arsenal.test.mjs` caught it before any release.
+- **Rule.** `arsenal.mjs` splits a job group into numbered parts (`recipes-line.md`, `recipes-line-2.md`, ...) when one file would pass the limit. A parent and its variants stay in one part, and each catalog record names the part that holds it, so `ae_arsenal get` and the manifest need no change. Test in `tests/arsenal.test.mjs`.
+
+### 31. An S-curve ease written as zero speed (explainer piece 3, nHh0NRo8G2U 04, 07, 08, 15, 16, 2026-11-21)
+- **What happened.** The tutorial eases with an extension whose curve reads 0.88, 0.14, 0.12, 0.86 on screen. Four writers turned it into `KeyframeEase(0, 88)`. The curve's slope at each end is 0.14 ÷ 0.88, so the move keeps about 16 % of its average speed at each key; zero speed gives a harder ease than the one that plays. The checkers caught it each time by tracking the played frames against both curves.
+- **Rule.** `distil.md`: a cubic-bezier ease is converted to After Effects speed and influence from its end slopes (speed = slope × the property's average speed over the segment, influence = the handle's x share), marked inferred, and checked against played frames.
+
+### 32. A checker's own suggestion was a mid-drag reading (explainer piece 3, nHh0NRo8G2U 12, 2026-11-21)
+- **What happened.** In round 1 the checker told the writer that a speed-graph tooltip (41.61 px/s, 29.48 %) was the key's value. It was read while the author was still dragging; the settled graph starts at 0 px/s and 24.6 %. The writer applied it, and the same checker caught it in round 2. A further round went to undoing the checker's own mistake.
+- **Rule.** `check.md`: a value a checker suggests meets the same test as the recipe's own: cite the frame where it has landed, not one taken while it is still changing.
+
+### 33. A grid's grey was the recording's encoding (explainer piece 3, nHh0NRo8G2U 06, 2026-11-21)
+- **What happened.** The review called 06's graph-paper proof "partly": its lines rendered pale blue where the tutorial's read grey on faintly blue cells, a gap the recipe had already listed as unknown. Put through 4:2:0 encoding at the reference's pixel scale, the build's lines measured 227, 231, 233 against the reference's 227, 233, 235. Thin lines keep their brightness but lose their colour to the cells around them. The recipe's Grid colour was right.
+- **Rule.** `prove-review.md`: before calling a thin line's colour wrong, encode the build the way the recording was (scale, yuv420p, scale back) and compare again.
+
+### 34. Enlarged for one object, the shot lost what it was (explainer piece 3, nHh0NRo8G2U 13, 14, 15, 2026-11-21)
+- **What happened.** Fitting 16:9 scenes into the 9:16 frame, I told the runner to scale the map scene until its instant prints were 180–240 px wide. That took a factor of 3.21: one print in view on empty paper (14), washes 71 % of the frame wide and a border never seen as a loop (15). The pyramid close-up (13) went the other way: at the recipe's factor in a tall frame it showed both labels and a black band, not a detail. All three techniques worked; the reviews came back "partly" on the look.
+- **Rule.** `prove-run.md`: frame a tall proof so it shows what the reference's shot shows (how many objects are in view, a whole loop, one detail), and only then size items within that. A size target for one object never overrides the framing.
+
+### 35. Running the learner used a quarter of a week's usage (audit, 2026-11-21)
+- **What happened.** One session built and ran the learner for 13 days. It started 118 agents itself, held their work in a context that grew to 966k, ran partly on Fable, and named Opus for most agents. Builders and reviewers were resumed with follow-up messages until they held 300k to 450k, and the runs opened about 2,700 images, many of them full-size frames. It came to about 24 % of the owner's week (build runs 4.1 %, writers 3.4 %, checkers 2.2 %, reviewers 1.4 %, the session itself 13 %), and the week ran out 37 hours early.
+- **Why.** Nothing set a model per stage, so every agent took the strongest one; nothing capped a run or a video; one agent took several recipes and was then continued, so each new message re-read everything before it; and the prompts asked for full-size pairs and several frames per look.
+- **Rule.** Stages run through `run-stage.mjs` only: one fresh headless run per recipe per stage, never resumed; each stage's model named in its `STAGES` table (Sonnet everywhere except `prove-review` on Opus; never Fable); every run has a turn limit, a dollar cap and a time limit, and one that hits it is a fail with its reason, not a retry; each video has a budget, and the runner stops before the next run once it is spent. Builders and reviewers look at one 512-px contact sheet and cut a full-size crop only for a figure (`prove-run.md` step 4, `prove-review.md` steps 1 and 2). The orchestrating session reads `runs.jsonl`, not the runs. Tests: `tests/run-stage.test.mjs`, `tests/contact-sheet.test.mjs`.
+
 ## Still open
 - The 24 "matches" on the first video were given before the look line existed.
 - Nothing yet tests the prompts themselves. A cheap test: keep technique 11's first recipe as a fixture and confirm a fresh checker fails it on check 8.
+
+## Running a video
+
+Everything a model does goes through `run-stage.mjs`; the steps without a model (`learn.mjs`, `assemble.mjs`, `proofs/references.mjs`) are plain scripts. From the repository root, with `S` the study folder (for example `~/Assets/comp-room-studies/channel-study/<id>`):
+
+1. Gather and align (no model): `node tools/channel-learner/learn.mjs gather <url> --out $S`, then `node tools/channel-learner/learn.mjs align $S`.
+2. Preview the plan at no cost: `node tools/channel-learner/run-stage.mjs video --study $S --dry-run`.
+3. Recipes: `node tools/channel-learner/run-stage.mjs video --study $S`. It lists the techniques, writes and checks each recipe in fresh runs, gives a failed recipe up to two fix rounds, holds what still fails, and assembles the draft. Run it in the background: a 25-technique video is many runs.
+4. Proofs, one stage at a time, after `node tools/channel-learner/proofs/references.mjs $S`:
+   `node tools/channel-learner/run-stage.mjs art --study $S` (generates images, which costs Higgsfield credits as well), then `prove-author --study $S --scripts tools/channel-learner/proofs/<id>`, then `prove-run` with the same `--scripts` (After Effects open on `$S/proof/proofs.aep`; one run at a time, always), then `prove-review --study $S`. The runner makes each proof's contact sheets before its review.
+5. The menu, once drafts change: `node tools/channel-learner/run-stage.mjs menu`.
+
+Follow a video in `$S/runs.jsonl` (one line per run: stage, technique, model, pass or fail, note, cost, turns, peak context), or total it with `node tools/channel-learner/run-stage.mjs spent --study $S`. Each video may spend `VIDEO_BUDGET_USD` (40 dollars as Claude Code counts them; `--budget-usd` changes it for one go). Past it the runner starts nothing more and prints where it stopped; run the same command again with a higher budget and it skips what already passed. `--only 04,07` reruns chosen techniques, `--jobs 3` runs text stages three at a time (never `prove-run`). Models, turn limits and caps per run are the `STAGES` table at the top of `run-stage.mjs`: change them there and nowhere else.
+

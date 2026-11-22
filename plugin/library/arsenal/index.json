@@ -2,7 +2,7 @@
  "arsenal": "Technique recipes for beats, filed under the job vocabulary. Ask ae_arsenal per beat by job (find), read the chosen recipe (get), list the jobs (jobs).",
  "tool": "ae_arsenal",
  "vocab": "jobs-v1",
- "version": "e9551509",
+ "version": "c859987b",
  "documents": [
   {
    "id": "arsenal-index",
@@ -24,14 +24,26 @@
   },
   {
    "id": "arsenal-line",
-   "title": "Arsenal recipes: line jobs: what the viewer must get from this line",
+   "title": "Arsenal recipes: line jobs: what the viewer must get from this line (part 1 of 2)",
    "path": "arsenal/recipes-line.md",
    "kind": "recipes"
   },
   {
+   "id": "arsenal-line-2",
+   "title": "Arsenal recipes: line jobs: what the viewer must get from this line (part 2 of 2)",
+   "path": "arsenal/recipes-line-2.md",
+   "kind": "recipes"
+  },
+  {
    "id": "arsenal-picture",
-   "title": "Arsenal recipes: picture jobs: how the picture has to read, whatever the line says",
+   "title": "Arsenal recipes: picture jobs: how the picture has to read, whatever the line says (part 1 of 2)",
    "path": "arsenal/recipes-picture.md",
+   "kind": "recipes"
+  },
+  {
+   "id": "arsenal-picture-2",
+   "title": "Arsenal recipes: picture jobs: how the picture has to read, whatever the line says (part 2 of 2)",
+   "path": "arsenal/recipes-picture-2.md",
    "kind": "recipes"
   },
   {
@@ -48,8 +60,8 @@
   }
  ],
  "counts": {
-  "recipes": 86,
-  "proven": 70,
-  "stills": 61
+  "recipes": 101,
+  "proven": 85,
+  "stills": 76
  }
 }

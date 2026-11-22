@@ -271,7 +271,8 @@ function serverReplies(entry, extraEnv = {}) {
     ...calls.map(([method, params], k) => ({ jsonrpc: '2.0', id: k + 1, method, params })),
   ].map((m) => JSON.stringify(m)).join('\n') + '\n';
   const env = { ...process.env, AE_MCP_READONLY: '0', AE_MCP_ENABLE_EVAL: '1', ...extraEnv };
-  const r = spawnSync(process.execPath, [entry], { cwd: os.tmpdir(), env, input, encoding: 'utf8', timeout: 60_000 });
+  // The arsenal's finds carry their stills inline: with 101 recipes the replies pass spawnSync's 1 MB default and were cut mid-line.
+  const r = spawnSync(process.execPath, [entry], { cwd: os.tmpdir(), env, input, encoding: 'utf8', timeout: 60_000, maxBuffer: 64 * 1024 * 1024 });
   const replies = new Map(r.stdout.split('\n').filter(Boolean).map((l) => JSON.parse(l)).map((m) => [m.id, m]));
   return calls.map((c, k) => {
     const reply = replies.get(k + 1);

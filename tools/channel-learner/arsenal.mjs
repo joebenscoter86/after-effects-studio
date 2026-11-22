@@ -147,7 +147,7 @@ export function publicJobs(content, examples) {
  * public `examples` (publicJobs); `stills` maps id -> JPEG bytes already made; `creators` are names no shipped file may
  * contain, checked with PRIVATE_NAMES.
  */
-export function buildArsenal({ catalog, jobs, examples, draftsDir, stills = {}, creators = [] }) {
+export function buildArsenal({ catalog, jobs, examples, draftsDir, stills = {}, creators = [], fileLimit = FILE_LIMIT }) {
   const jobsText = publicJobs(jobs, examples);
   const videos = [...new Set(catalog.recipes.map((r) => r.video).filter(Boolean))];
   const drafts = new Map();
@@ -182,30 +182,51 @@ export function buildArsenal({ catalog, jobs, examples, draftsDir, stills = {}, 
       section: { document: docId(g), heading: r.name }, still,
     });
   }
+  // A parent and its variants are one chunk, so they always share a file.
   const byGroup = new Map();
   for (const r of catalog.recipes.filter((x) => !x.variant_of)) {
-    for (const id of [r.id, ...(r.variants ?? [])]) {
-      const { g, text } = sectionText.get(id);
-      (byGroup.get(g) ?? byGroup.set(g, []).get(g)).push(text);
-    }
+    const ids = [r.id, ...(r.variants ?? [])];
+    const { g } = sectionText.get(r.id);
+    (byGroup.get(g) ?? byGroup.set(g, []).get(g)).push({ ids, text: ids.map((id) => sectionText.get(id).text).join('\n') });
   }
 
   const files = new Map();
-  files.set('catalog.json', `${JSON.stringify({ vocab: catalog.vocab, version: catalog.version, jobs: catalog.jobs, recipes: records }, null, 1)}\n`);
   files.set(jobsFile(jobs), jobsText);
+  // A group too big for one package file goes into numbered parts (recipes-line.md, recipes-line-2.md, ...),
+  // filled in catalog order; each record names the part that holds its section.
   const groups = GROUP_ORDER.filter((g) => byGroup.has(g));
+  const recipeDocs = [];
+  const docOf = new Map();
   for (const g of groups) {
     const label = g === 'build-aid' ? AID_LABEL : jobs.groups?.[g] ?? g;
     const intro = g === 'build-aid'
       ? 'Recipes that help a build but serve no beat, and recipes that fit no job yet. A beat query never returns them; read one by id with ae_arsenal get.'
       : 'Recipes whose primary job is in this group. Find candidates for a beat with ae_arsenal find; read one with ae_arsenal get, or a section here by its heading.';
-    files.set(recipeFile(g), `# Arsenal recipes: ${label}\n\nGenerated from the recipe drafts; do not edit by hand. ${intro}\n\n${byGroup.get(g).join('\n')}`);
+    const head = (k) => `# Arsenal recipes: ${label}${k > 1 ? ` (part ${k})` : ''}\n\nGenerated from the recipe drafts; do not edit by hand. ${intro}\n\n`;
+    const parts = [[]];
+    for (const chunk of byGroup.get(g)) {
+      const cur = parts[parts.length - 1];
+      const grown = head(parts.length) + [...cur, chunk].map((c) => c.text).join('\n');
+      if (cur.length && Buffer.byteLength(grown) > fileLimit) parts.push([chunk]);
+      else cur.push(chunk);
+    }
+    const title = `Arsenal recipes: ${g === 'build-aid' ? AID_LABEL.toLowerCase() : (jobs.groups?.[g] ?? g).toLowerCase()}`;
+    parts.forEach((chunks, i) => {
+      const k = i + 1;
+      const file = k === 1 ? recipeFile(g) : `recipes-${g}-${k}.md`;
+      const id = k === 1 ? docId(g) : `${docId(g)}-${k}`;
+      files.set(file, head(k) + chunks.map((c) => c.text).join('\n'));
+      recipeDocs.push({ id, title: parts.length > 1 ? `${title} (part ${k} of ${parts.length})` : title, path: `arsenal/${file}`, kind: 'recipes' });
+      for (const c of chunks) for (const rid of c.ids) docOf.set(rid, id);
+    });
   }
+  for (const rec of records) rec.section.document = docOf.get(rec.id);
+  files.set('catalog.json', `${JSON.stringify({ vocab: catalog.vocab, version: catalog.version, jobs: catalog.jobs, recipes: records }, null, 1)}\n`);
   const documents = [
     { id: 'arsenal-index', title: 'Technique arsenal index: documents, vocabulary and counts', path: 'arsenal/index.json', kind: 'catalog' },
     { id: 'arsenal-catalog', title: 'Technique arsenal catalog: one record per recipe, queried by ae_arsenal', path: 'arsenal/catalog.json', kind: 'catalog' },
     { id: 'arsenal-jobs', title: `Job vocabulary ${catalog.vocab}: the jobs a beat asks for`, path: `arsenal/${jobsFile(jobs)}`, kind: 'catalog' },
-    ...groups.map((g) => ({ id: docId(g), title: `Arsenal recipes: ${g === 'build-aid' ? AID_LABEL.toLowerCase() : (jobs.groups?.[g] ?? g).toLowerCase()}`, path: `arsenal/${recipeFile(g)}`, kind: 'recipes' })),
+    ...recipeDocs,
   ];
   const index = {
     arsenal: 'Technique recipes for beats, filed under the job vocabulary. Ask ae_arsenal per beat by job (find), read the chosen recipe (get), list the jobs (jobs).',
@@ -217,7 +238,7 @@ export function buildArsenal({ catalog, jobs, examples, draftsDir, stills = {}, 
   const problems = [];
   for (const [f, text] of files) {
     const bytes = Buffer.byteLength(text);
-    if (bytes > FILE_LIMIT) problems.push(`${f} is ${bytes} bytes, over the ${FILE_LIMIT}-byte package file limit`);
+    if (bytes > fileLimit) problems.push(`${f} is ${bytes} bytes, over the ${fileLimit}-byte package file limit`);
     for (const [kind, names] of [['a creator', creators], ['a private name', PRIVATE_NAMES]]) {
       for (const c of names) {
         if (c && new RegExp(`\\b${c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i').test(text)) problems.push(`${f} names ${kind}: ${c}`);
