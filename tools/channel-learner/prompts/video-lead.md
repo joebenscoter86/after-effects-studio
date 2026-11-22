@@ -1,6 +1,6 @@
 # Leading one video from timeline to checked recipes
 
-You run the recipe work for one video whose study folder (`STUDY`) is already gathered and aligned (it has `timeline.md`, `frames/`, `frames-small/`, `source.mp4`). You organise the work; other agents do the reading. The prompts beside this file say how each kind of agent works: `techniques.md`, `distil.md`, `check.md`.
+You lead the recipe work for one video whose study folder (`STUDY`) is already gathered and aligned (it has `timeline.md`, `frames/`, `frames-small/`, `source.mp4`). The work itself is done by the runner, `tools/channel-learner/run-stage.mjs`: it starts one fresh headless run per technique per stage, following `techniques.md`, `distil.md` and `check.md` beside this file, each on the model its table names, with a turn limit and a dollar cap per run and a budget for the whole video. You start it, follow its results file, and report. You do not start agents yourself, except for the match step below, and you do not hold the work in your own context.
 
 ## Before anything
 
@@ -8,27 +8,25 @@ In a fresh worktree, run `node tools/channel-learner/learn.mjs link <worktree ro
 
 ## Steps
 
-1. **List the techniques** yourself, following `techniques.md` (text only): `STUDY/techniques.json`.
-2. **Writers.** Start one agent for each group of about three techniques, all at once, each told to follow `distil.md` exactly and given: `STUDY`, the video id, its size and frame rate, its technique numbers, any note from your technique list that it needs (two techniques sharing a chapter, an advert to leave out, a technique that builds on another), and these standing notes: the timeline's words come from speech recognition, so trust the screen for names; the on-screen text reader misses lone single digits and sometimes a minus sign, so crop and read those; ignore junk "Changed" items; write only your own recipe and scratch files; no git; no After Effects. Use the strongest model you can choose for these agents. If you have no way to start other agents, stop and say so in your report. Do not write the recipes yourself.
-3. **Checkers.** For each writer's batch, start a fresh agent told to follow `check.md` exactly, with the same facts and notes and the list of recipe files.
-4. **Fix rounds.**
-   - A recipe that fails goes back to its writer once, with the check file's points and the instruction to verify each on the frames before changing it (continue the same writer if you can; otherwise start a new one with the recipe and the check file).
-   - The checker then re-checks it and writes its verdict with a first line `round: 2`.
-   - A point first raised in round 2 (the checker missed it, or the fix introduced it) gets one more fix and a final check of the changed lines only, first line `round: 3 (changed lines only)`.
-   - A recipe that still fails is held: move its file to `STUDY/held/` and add a line to `STUDY/drafts-held.md` with the reason. Held recipes do not ship.
-5. **Match before adding.** Once every recipe passes, match each against the catalog (`merge.md`): variants get their two merge lines and a changed-lines check that ends `merge: confirmed`; every recipe gets its tags.
-6. **Assemble.** From the repository root run `node tools/channel-learner/assemble.mjs STUDY`. It writes the tracked draft and the credits line, and refuses unless every recipe left in `STUDY/recipes/` has a passing check.
+1. **Preview** (starts nothing): `node tools/channel-learner/run-stage.mjs video --study STUDY --dry-run`.
+2. **Run** it in the background, from the repository root: `node tools/channel-learner/run-stage.mjs video --study STUDY` (add `--budget-usd <n>` only if the owner set a different limit). It does, in order:
+   - lists the techniques (`STUDY/techniques.json`) if there is no list yet;
+   - one writer run per technique, then one checker run per recipe (round 1);
+   - **fix rounds**: a recipe that fails its check goes to a fresh writer run with the check file and the instruction to verify each point on the frames before changing it; a fresh checker run then re-checks it (`round: 2`); a recipe that fails round 2 gets one more fix and a final check of the changed lines only (`round: 3 (changed lines only)`);
+   - holds a recipe that still fails: moves it to `STUDY/held/` with a line in `STUDY/drafts-held.md`. Held recipes do not ship;
+   - runs `node tools/channel-learner/assemble.mjs STUDY`.
+   A run that hits its turn limit, its own dollar cap or its time limit is recorded as a fail with that reason and is not tried again in the same go. Past the video's budget the runner starts nothing more and prints where it stopped.
+3. **Follow** `STUDY/runs.jsonl` only: one line per run with the stage, technique, model, pass or fail, a short note, cost, turns and peak context. `node tools/channel-learner/run-stage.mjs spent --study STUDY` totals it. Open a recipe or a check file only to settle a disagreement between a writer and a checker, and frames only for that.
+4. To run one stage again for chosen techniques: `node tools/channel-learner/run-stage.mjs <stage> --study STUDY --only 04,07`. Never resume or message a finished run: start a fresh one.
+5. **Match before adding.** The runner has no merge stage yet. Once every recipe passes, match each against the catalog (`merge.md`): variants get their two merge lines and a changed-lines check that ends `merge: confirmed`; every recipe gets its tags. Start one fresh agent per recipe for this, on `model: "sonnet"`, never resumed or messaged afterwards; then run `node tools/channel-learner/assemble.mjs STUDY` again.
+6. **Proofs** go through the runner too, one stage at a time: `layout`, `art`, `prove-author`, `prove-run` (one at a time, After Effects takes one driver), `prove-review`, each as `node tools/channel-learner/run-stage.mjs <stage> --study STUDY`. Each stage's model is in the runner's `STAGES` table (Sonnet everywhere but the Opus look review). Never start your own agents for these stages.
 
 ## Rules
 
-- Do not report back until the assemble step has run, or you can name the recipe and the reason it cannot. Waiting for your agents is not a reason to report.
-- Tell every agent to keep its scratch files under its own names inside its own `STUDY/scratch/<n>/` folder, never a shared folder: two writers once overwrote each other's script.
 - When no clean result frame exists for a technique, the recipe says so and names the best frame as a reference, with what in it is not the technique. That passes; a recipe that pretends otherwise does not.
-
 - No git commands. No After Effects. Do not edit anything tracked except through the assemble step.
-- You do not read frames yourself except to settle a disagreement between a writer and a checker.
-- Keep your own messages to agents short and specific; pass on the checker's evidence (frame numbers, times), not a summary of it.
+- Do not report back until the runner has finished or stopped, or you can name the recipe and the reason it cannot.
 
 ## Report (at most 12 lines)
 
-Techniques found; recipes passed in round 1, 2 and 3; any held, with the reason; the three most important things the checks caught; how many agents you started; anything in the prompts that should change.
+Techniques found; recipes passed in round 1, 2 and 3; any held, with the reason; the three most important things the checks caught (from the check files of failed rounds); the video's cost from `spent`; any run that hit a limit; anything in the prompts that should change.
