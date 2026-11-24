@@ -1,6 +1,6 @@
 {
  "vocab": "jobs-v1",
- "version": "c859987b",
+ "version": "c4945901",
  "jobs": [
   "land-number",
   "count-things",
@@ -30,10 +30,139 @@
   "move-camera",
   "keep-it-alive"
  ],
- "recipes": [
+ "levels": [
+  "direction",
+  "world",
+  "recipe"
+ ],
+ "provides": {
+  "material": [
+   "glass",
+   "gloss",
+   "metal",
+   "paper",
+   "ink",
+   "print",
+   "flat-vector",
+   "low-poly",
+   "wireframe",
+   "pixel",
+   "cut-paper"
+  ],
+  "floor": [
+   "gloss-dark",
+   "shadow-catcher",
+   "ground",
+   "paper"
+  ],
+  "light": [
+   "key",
+   "rim",
+   "fill",
+   "window",
+   "glow",
+   "strip",
+   "practical",
+   "side",
+   "sun"
+  ],
+  "environment": [
+   "studio-dark",
+   "studio-light",
+   "room",
+   "outdoor",
+   "weather",
+   "map",
+   "screen",
+   "stage",
+   "city"
+  ],
+  "camera": [
+   "depth-of-field",
+   "push",
+   "orbit",
+   "focus-lock",
+   "wide-lens",
+   "telephoto",
+   "handheld",
+   "isometric",
+   "tilt-shift",
+   "travel"
+  ],
+  "depth": [
+   "shadow",
+   "z-stack",
+   "fog",
+   "extrusion",
+   "matte",
+   "parallax"
+  ],
+  "type": [
+   "reveal",
+   "3d",
+   "path",
+   "number",
+   "label",
+   "handwritten",
+   "engraved",
+   "grid",
+   "poster",
+   "terminal",
+   "captions"
+  ],
+  "transition": [
+   "wipe",
+   "slide",
+   "split",
+   "match-cut",
+   "cut",
+   "morph",
+   "sweep"
+  ],
+  "backdrop": [
+   "grid",
+   "shapes",
+   "tile",
+   "light-pockets",
+   "paper",
+   "texture",
+   "pattern"
+  ],
+  "finish": [
+   "grain",
+   "glow",
+   "blur",
+   "grade",
+   "stop-motion",
+   "emboss",
+   "halftone",
+   "vhs",
+   "crt",
+   "film",
+   "misregistration"
+  ],
+  "motion": [
+   "loop",
+   "orbit",
+   "particles",
+   "stagger",
+   "sway",
+   "cursor",
+   "counter",
+   "draw-on",
+   "bounce",
+   "swing",
+   "carousel",
+   "chart",
+   "character",
+   "limited"
+  ]
+ },
+ "entries": [
   {
    "id": "01-shadow-map-overlay",
    "revision": "73f75aaa",
+   "level": "recipe",
    "name": "Window-light shadow map over a flat layout",
    "line": "Makes a flat title card or layout look as if it sits in a room with sunlight falling through a window: long soft diagonal shadows with light bands between them. Reach for it when a clean graphic looks too digital and needs contrast and a sense of place without any 3D.",
    "status": "proven",
@@ -56,6 +185,15 @@
    "difficulty": 2,
    "taught_by": 1,
    "variants": [],
+   "provides": [
+    "light: window",
+    "depth: shadow"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-picture",
     "heading": "Window-light shadow map over a flat layout"
@@ -68,6 +206,7 @@
   {
    "id": "02-shadow-map-wipe-on",
    "revision": "81a89eb7",
+   "level": "recipe",
    "name": "Soft diagonal wipe-on for a shadow map",
    "line": "Brings window-light shadows into a shot as if the sun had just come out: the shadow sweeps across the layout along the strips over about a second instead of popping on. Use it on the opening beat of a title card that carries a shadow map.",
    "status": "proven",
@@ -89,6 +228,15 @@
    "difficulty": 2,
    "taught_by": 1,
    "variants": [],
+   "provides": [
+    "light: window",
+    "transition: wipe"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-picture",
     "heading": "Soft diagonal wipe-on for a shadow map"
@@ -101,6 +249,7 @@
   {
    "id": "03-graphics-orbit-a-real-object",
    "revision": "aa669c47",
+   "level": "recipe",
    "name": "Graphics riding a spinning real object",
    "line": "Lets a real photographed object drive the motion: a cut-out wheel (or any round object) spins, and a ring of graphic cards fanned around its centre turns with it like a carousel. Use it for a \"meet the team\" or product-range beat that should feel physical rather than a plain slider.",
    "status": "proven",
@@ -124,6 +273,15 @@
    "taught_by": 6,
    "variant_of": "04-carousel-by-rotation",
    "variants": [],
+   "provides": [
+    "motion: orbit",
+    "depth: matte"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-line",
     "heading": "Graphics riding a spinning real object"
@@ -136,6 +294,7 @@
   {
    "id": "04-swap-footage-keep-edits",
    "revision": "74f0fe70",
+   "level": "recipe",
    "name": "Swap a layer's photo and keep everything built on it",
    "line": "A time-saver, not a look. Once one card, slot or frame is fully built (transforms, masks or mattes, parenting, keyframes, effects), you put a different photo or clip into it without rebuilding anything.",
    "status": "proven",
@@ -154,15 +313,23 @@
    "difficulty": 1,
    "taught_by": 1,
    "variants": [],
+   "provides": [],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-build-aid",
     "heading": "Swap a layer's photo and keep everything built on it"
    },
-   "still": null
+   "still": null,
+   "no_still": "build aid: serves no beat, so no proof still"
   },
   {
    "id": "05-soft-doubled-drop-shadow",
    "revision": "a967c4ef",
+   "level": "recipe",
    "name": "Seat a cut-out object with a soft, doubled drop shadow",
    "line": "When a photographed object cut out of its background (a product, a prop, a wheel) is dropped into a flat graphic scene and looks pasted on, a very soft, barely offset drop shadow gives it a dark halo that grounds it. Stack a second, even softer copy when the first is too faint.",
    "status": "proven",
@@ -186,6 +353,14 @@
    "variants": [
     "02-button-soft-lift-shadow"
    ],
+   "provides": [
+    "depth: shadow"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-picture",
     "heading": "Seat a cut-out object with a soft, doubled drop shadow"
@@ -198,6 +373,7 @@
   {
    "id": "06-graphics-behind-subject-object-matte",
    "revision": "9703a0dd",
+   "level": "recipe",
    "name": "Tuck graphics behind a person with an automatic object matte",
    "line": "For talking-head or presenter footage on a plain wall: cards, titles and text sit between the person and the wall, so the person stands in front of the graphics. Reach for it when overlays would otherwise cover the face or body.",
    "status": "proven",
@@ -219,6 +395,14 @@
    "difficulty": 2,
    "taught_by": 1,
    "variants": [],
+   "provides": [
+    "depth: matte"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-picture",
     "heading": "Tuck graphics behind a person with an automatic object matte"
@@ -231,6 +415,7 @@
   {
    "id": "07-key-imperfect-green-screen",
    "revision": "03ffee48",
+   "level": "recipe",
    "name": "Key a rough, unevenly lit green backdrop with a machine-learning keyer",
    "line": "For stock or found footage shot against a coloured wall that was never meant to be keyed (uneven light, olive green, shadows), when a classic colour keyer leaves grey residue. The person comes out clean, hair included, ready to sit over graphics.",
    "status": "proven",
@@ -249,15 +434,25 @@
    "difficulty": 1,
    "taught_by": 1,
    "variants": [],
+   "provides": [
+    "depth: matte"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-build-aid",
     "heading": "Key a rough, unevenly lit green backdrop with a machine-learning keyer"
    },
-   "still": null
+   "still": null,
+   "no_still": "build aid: serves no beat, so no proof still"
   },
   {
    "id": "08-raised-white-shapes-with-long-shadows",
    "revision": "2c7f4a98",
+   "level": "recipe",
    "name": "Stacked white discs that grow out of the centre with long soft shadows",
    "line": "A title or opener background that makes a near-white frame look premium and tactile: white discs swell out from the centre one after another, each one raised off the one below with a pale rim and a long, soft shadow to one side. Reach for it when a clean white brand look needs depth and slow motion behind type.",
    "status": "proven",
@@ -281,6 +476,15 @@
    "taught_by": 1,
    "variant_of": "11-white-on-light-finish",
    "variants": [],
+   "provides": [
+    "backdrop: shapes",
+    "depth: shadow"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-picture",
     "heading": "Stacked white discs that grow out of the centre with long soft shadows"
@@ -293,6 +497,7 @@
   {
    "id": "09-edge-lens-blur-and-noise-finish",
    "revision": "8b06ca07",
+   "level": "recipe",
    "name": "Soft lens blur at the frame sides plus fine grain",
    "line": "A last pass that makes a clean, drawn graphic look as if it was shot through a lens: the left and right sides go slightly soft while the centre stays crisp, and a little grain breaks up the flat digital fills. Use it on any finished graphic or title plate, especially pale ones where the cleanliness gives away that they are drawn.",
    "status": "proven",
@@ -314,6 +519,15 @@
    "difficulty": 1,
    "taught_by": 1,
    "variants": [],
+   "provides": [
+    "finish: blur",
+    "finish: grain"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-picture",
     "heading": "Soft lens blur at the frame sides plus fine grain"
@@ -326,6 +540,7 @@
   {
    "id": "10-2d-graphics-on-extruded-3d-plate",
    "revision": "349107c8",
+   "level": "recipe",
    "name": "Flat UI graphic on a glossy extruded plate",
    "line": "Turns a flat 2D card or UI panel into a solid, glossy object floating over a pale floor with a real cast shadow, while the graphic on its face keeps its exact flat colours. Reach for it when a 2D layout needs to read as a physical product shot without leaving After Effects.",
    "status": "proven",
@@ -348,6 +563,15 @@
    "difficulty": 3,
    "taught_by": 3,
    "variants": [],
+   "provides": [
+    "material: gloss",
+    "depth: extrusion"
+   ],
+   "cost": {
+    "renderer": "advanced-3d"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-picture",
     "heading": "Flat UI graphic on a glossy extruded plate"
@@ -360,6 +584,7 @@
   {
    "id": "11-camera-depth-of-field-advanced-3d",
    "revision": "5af2a365",
+   "level": "recipe",
    "name": "Depth of field on a row of glossy plates (Advanced 3D camera)",
    "line": "Gives a 3D product-style scene a photographic lens: duplicated objects staggered in depth fall progressively out of focus, and a small camera move adds life. Use it to sell scale and depth once a scene from recipe 10 exists.",
    "status": "proven",
@@ -384,6 +609,15 @@
     "09-camera-fly-through-with-depth-of-field",
     "06-depth-of-field-camera-push-on-null"
    ],
+   "provides": [
+    "camera: depth-of-field",
+    "material: gloss"
+   ],
+   "cost": {
+    "renderer": "advanced-3d"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-connective",
     "heading": "Depth of field on a row of glossy plates (Advanced 3D camera)"
@@ -396,6 +630,7 @@
   {
    "id": "01-blurred-stroked-shapes-on-light-ground",
    "revision": "e199954e",
+   "level": "recipe",
    "name": "Soft one-way blurred dark shapes with a bright stroke fringe on a pale ground",
    "line": "Turns two flat, crude shapes into a soft, lens-like backdrop in under a minute. Reach for it when a title or scene needs an organic, out-of-focus base layer rather than hard vector art.",
    "status": "proven",
@@ -417,6 +652,14 @@
    "difficulty": 2,
    "taught_by": 4,
    "variants": [],
+   "provides": [
+    "backdrop: shapes"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-picture",
     "heading": "Soft one-way blurred dark shapes with a bright stroke fringe on a pale ground"
@@ -429,6 +672,7 @@
   {
    "id": "02-glow-radial-blur-noise-finish-stack",
    "revision": "fcca23a3",
+   "level": "recipe",
    "name": "Wiggled glow, darkest radial blur and fine grain finish for bright scenes",
    "line": "A three-adjustment-layer finish that makes any soft, light-backed composition bloom and gain film grit, with wiggle expressions on the glow radius and blur amount as its only source of movement. Use it over a blurred or abstract backdrop (in the tutorial, the blurred shapes of technique 01, whose figures are repeated in step 1) when the frame feels static and digital.",
    "status": "proven",
@@ -451,6 +695,15 @@
    "difficulty": 2,
    "taught_by": 3,
    "variants": [],
+   "provides": [
+    "finish: glow",
+    "finish: grain"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-picture",
     "heading": "Wiggled glow, darkest radial blur and fine grain finish for bright scenes"
@@ -463,6 +716,7 @@
   {
    "id": "03-blurred-light-shapes-at-frame-edges",
    "revision": "dd5607c1",
+   "level": "recipe",
    "name": "Soft pockets of light from heavily blurred edge shapes",
    "line": "Adds soft patches of lighter tone around the edges of an otherwise finished frame (with a wiggle on one blur for movement), so the dark areas are not flat and the eye is pulled toward the centre. A quick pass to make a background feel lit and alive.",
    "status": "proven",
@@ -485,6 +739,15 @@
    "difficulty": 2,
    "taught_by": 4,
    "variants": [],
+   "provides": [
+    "backdrop: light-pockets",
+    "light: glow"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-picture",
     "heading": "Soft pockets of light from heavily blurred edge shapes"
@@ -497,6 +760,7 @@
   {
    "id": "04-blur-and-choke-gooey-morph",
    "revision": "d5884a3c",
+   "level": "recipe",
    "name": "Liquid merge of outlined circles with blur and choke",
    "line": "Makes separate shapes fuse like drops of liquid when one drifts into another, so a plain layout of circles becomes an organic, slow-breathing background or a morph between two forms.",
    "status": "proven",
@@ -519,6 +783,15 @@
    "difficulty": 2,
    "taught_by": 4,
    "variants": [],
+   "provides": [
+    "backdrop: shapes",
+    "transition: morph"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-picture",
     "heading": "Liquid merge of outlined circles with blur and choke"
@@ -531,6 +804,7 @@
   {
    "id": "05-path-opening-split-driven-by-moving-ball",
    "revision": "6c8f7dbd",
+   "level": "recipe",
    "name": "A dark mass split open behind a travelling ball",
    "line": "A small ball crosses the frame and a large dark form tears open behind it, revealing the light ground; good for line-led animation, progress moments or a reveal that clears space for a headline.",
    "status": "proven",
@@ -553,6 +827,14 @@
    "difficulty": 2,
    "taught_by": 4,
    "variants": [],
+   "provides": [
+    "transition: split"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-connective",
     "heading": "A dark mass split open behind a travelling ball"
@@ -565,6 +847,7 @@
   {
    "id": "06-gradient-shapes-blur-noise-glow-posterize",
    "revision": "3fd59519",
+   "level": "recipe",
    "name": "Turning a crude gradient disc into a grainy glowing orb",
    "line": "Rescues a deliberately plain graphic (two gradient circles) into a soft, filmic hero object for a title card or an event poster background, using only blur, heavy grain, a huge glow and posterize.",
    "status": "unproven",
@@ -587,15 +870,26 @@
    "difficulty": 2,
    "taught_by": 3,
    "variants": [],
+   "provides": [
+    "light: glow",
+    "finish: grain"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-picture",
     "heading": "Turning a crude gradient disc into a grainy glowing orb"
    },
-   "still": null
+   "still": null,
+   "no_still": "unproven: no proof build yet"
   },
   {
    "id": "01-value-driven-counter",
    "revision": "bec7b246",
+   "level": "recipe",
    "name": "Counter driven by one slider on a control null",
    "line": "A stat that counts up (or down) to a figure, so a number lands with weight. The same slider later drives a ring (02-ring-fills-to-value) and bars (03-bars-grow-to-values), so one keyframed value moves the number and its graphic together.",
    "status": "proven",
@@ -615,6 +909,15 @@
    "difficulty": 1,
    "taught_by": 4,
    "variants": [],
+   "provides": [
+    "type: number",
+    "motion: counter"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-line",
     "heading": "Counter driven by one slider on a control null"
@@ -627,6 +930,7 @@
   {
    "id": "02-ring-fills-to-value",
    "revision": "05485478",
+   "level": "recipe",
    "name": "Ring that fills to the counter's value",
    "line": "A percentage stat shown as a donut that draws on to the same figure the number counts to, so the graphic and the number can never disagree. Builds on 01-value-driven-counter: it reuses that recipe's null and slider.",
    "status": "proven",
@@ -650,6 +954,15 @@
    "difficulty": 1,
    "taught_by": 4,
    "variants": [],
+   "provides": [
+    "motion: chart",
+    "type: number"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-line",
     "heading": "Ring that fills to the counter's value"
@@ -662,6 +975,7 @@
   {
    "id": "03-bars-grow-to-values",
    "revision": "19e03b63",
+   "level": "recipe",
    "name": "Round-capped bars that grow to their own values",
    "line": "A comparison beat: several figures rise side by side, each to its own value, so the viewer reads which is biggest. Builds on 01-value-driven-counter (a null whose sliders hold the values) and 02-ring-fills-to-value (dim track under a coloured copy, Trim Paths End linked to a slider).",
    "status": "proven",
@@ -684,6 +998,14 @@
    "difficulty": 2,
    "taught_by": 4,
    "variants": [],
+   "provides": [
+    "motion: chart"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-line",
     "heading": "Round-capped bars that grow to their own values"
@@ -696,6 +1018,7 @@
   {
    "id": "04-icon-fills-to-value",
    "revision": "b09ebf07",
+   "level": "recipe",
    "name": "Icon that fills up to a value",
    "line": "Turns a flat icon into a gauge: a bright copy of the icon rises from the bottom over a dim copy and stops at a figure, so a stat reads as \"how full\". Reach for it beside a counter when a percentage needs a picture.",
    "status": "proven",
@@ -718,6 +1041,14 @@
    "difficulty": 2,
    "taught_by": 4,
    "variants": [],
+   "provides": [
+    "motion: chart"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-line",
     "heading": "Icon that fills up to a value"
@@ -730,6 +1061,7 @@
   {
    "id": "05-map-regions-fade-up",
    "revision": "59a59810",
+   "level": "recipe",
    "name": "Map regions that fade up one by one",
    "line": "Marks places on a map: chosen regions light up in colour over a grey base map, each with a numbered list entry, so a viewer reads \"these places\" in order. Use it for coverage, rankings or \"where\" beats.",
    "status": "proven",
@@ -752,6 +1084,14 @@
    "difficulty": 1,
    "taught_by": 1,
    "variants": [],
+   "provides": [
+    "environment: map"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-line",
     "heading": "Map regions that fade up one by one"
@@ -764,6 +1104,7 @@
   {
    "id": "01-pill-button-in-own-comp",
    "revision": "33b5d2bd",
+   "level": "recipe",
    "name": "A pill button built in its own comp",
    "line": "The call-to-action button for an end card or app demo: a flat, fully rounded pill with a centred caps label, kept in its own comp so the scene can place, scale, slide and \"press\" it as one layer.",
    "status": "proven",
@@ -786,6 +1127,14 @@
    "difficulty": 2,
    "taught_by": 1,
    "variants": [],
+   "provides": [
+    "environment: screen"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-line",
     "heading": "A pill button built in its own comp"
@@ -798,6 +1147,7 @@
   {
    "id": "02-button-soft-lift-shadow",
    "revision": "14b43551",
+   "level": "recipe",
    "name": "A soft coloured lift under a button, and an inset label",
    "line": "Lifts a flat UI button off a white page so it reads as a pressable object, with a long, very soft glow-like shadow in the button's own colour straight underneath, and gives the label a slight pressed-in feel with two tiny shadows.",
    "status": "proven",
@@ -821,6 +1171,15 @@
    "taught_by": 1,
    "variant_of": "05-soft-doubled-drop-shadow",
    "variants": [],
+   "provides": [
+    "depth: shadow",
+    "environment: screen"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-picture",
     "heading": "A soft coloured lift under a button, and an inset label"
@@ -833,6 +1192,7 @@
   {
    "id": "03-end-card-stack",
    "revision": "33ec8bcf",
+   "level": "recipe",
    "name": "Headline, button and web address stacked on a white square",
    "line": "The closing card of a social ad or product promo: one line of headline, one button and a quiet web address, on a clean white square, centred on one vertical axis and ready to be animated in.",
    "status": "proven",
@@ -855,6 +1215,15 @@
    "difficulty": 2,
    "taught_by": 1,
    "variants": [],
+   "provides": [
+    "type: reveal",
+    "motion: stagger"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-line",
     "heading": "Headline, button and web address stacked on a white square"
@@ -867,6 +1236,7 @@
   {
    "id": "04-tap-cursor-with-rings",
    "revision": "f0079c1a",
+   "level": "recipe",
    "name": "Tap cursor built from two translucent discs",
    "line": "A stand-in for a finger or touch point in a UI demo. It is a soft, translucent touch marker that reads on a white screen without hiding the button under it.",
    "status": "proven",
@@ -889,6 +1259,14 @@
    "difficulty": 3,
    "taught_by": 3,
    "variants": [],
+   "provides": [
+    "motion: cursor"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-line",
     "heading": "Tap cursor built from two translucent discs"
@@ -901,6 +1279,7 @@
   {
    "id": "05-staggered-slide-in",
    "revision": "3e9d01cb",
+   "level": "recipe",
    "name": "Card elements slide in from the left, one after another",
    "line": "Builds an end card or call-to-action screen in a quick, readable cascade: each element arrives from off the left edge and lands in place a few frames after the one above it, so the eye reads headline, then button, then address.",
    "status": "proven",
@@ -923,6 +1302,15 @@
    "difficulty": 2,
    "taught_by": 5,
    "variants": [],
+   "provides": [
+    "motion: stagger",
+    "transition: slide"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-line",
     "heading": "Card elements slide in from the left, one after another"
@@ -935,6 +1323,7 @@
   {
    "id": "06-cursor-travels-and-taps-button",
    "revision": "2a41799f",
+   "level": "recipe",
    "name": "Cursor glides in and taps the button",
    "line": "Shows a tap on a UI element. A touch marker slides in from off screen and stops on a button, and the button dips in scale and springs back, so the viewer reads \"pressed\".",
    "status": "proven",
@@ -957,6 +1346,15 @@
    "difficulty": 1,
    "taught_by": 3,
    "variants": [],
+   "provides": [
+    "motion: cursor",
+    "environment: screen"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-line",
     "heading": "Cursor glides in and taps the button"
@@ -969,6 +1367,7 @@
   {
    "id": "07-curved-cursor-route",
    "revision": "79ba15a2",
+   "level": "recipe",
    "name": "Curved, eased cursor route in and out",
    "line": "Makes a touch marker move like a hand, not a robot. It arcs in, pauses on the button for the tap, then arcs out and off screen, with eased starts and stops.",
    "status": "proven",
@@ -991,6 +1390,14 @@
    "difficulty": 3,
    "taught_by": 3,
    "variants": [],
+   "provides": [
+    "motion: cursor"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-line",
     "heading": "Curved, eased cursor route in and out"
@@ -1003,6 +1410,7 @@
   {
    "id": "08-staggered-slide-out-exit",
    "revision": "b061556e",
+   "level": "recipe",
    "name": "Card elements slide out to the right in the same cascade",
    "line": "Clears an end card or call-to-action screen with the same cascade it arrived with, carried on in the same direction: the elements leave off the right edge one after another, so the card reads as passing through the frame. Also a pass to even out the gaps between entrance, tap and exit.",
    "status": "proven",
@@ -1025,6 +1433,15 @@
    "difficulty": 3,
    "taught_by": 5,
    "variants": [],
+   "provides": [
+    "transition: slide",
+    "motion: stagger"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-connective",
     "heading": "Card elements slide out to the right in the same cascade"
@@ -1037,6 +1454,7 @@
   {
    "id": "01-dotted-stroke",
    "revision": "228e87a2",
+   "level": "recipe",
    "name": "Round dots from a shape stroke",
    "line": "Turns any stroked line or outline into an evenly spaced row or ring of round dots with no extra layers, for loaders, orbit rings, borders and decorative circles around a title.",
    "status": "proven",
@@ -1059,6 +1477,14 @@
    "difficulty": 2,
    "taught_by": 2,
    "variants": [],
+   "provides": [
+    "motion: loop"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-line",
     "heading": "Round dots from a shape stroke"
@@ -1071,6 +1497,7 @@
   {
    "id": "02-line-with-end-dots",
    "revision": "1571ddbc",
+   "level": "recipe",
    "name": "Arc with a dot at each end",
    "line": "A thin line or arc with a round dot at each end, built inside one shape layer, for orbit segments, connector lines, data callouts and ring loaders.",
    "status": "proven",
@@ -1092,6 +1519,14 @@
    "difficulty": 1,
    "taught_by": 2,
    "variants": [],
+   "provides": [
+    "motion: draw-on"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-line",
     "heading": "Arc with a dot at each end"
@@ -1104,6 +1539,7 @@
   {
    "id": "03-tapered-stroke",
    "revision": "c61c2fb0",
+   "level": "recipe",
    "name": "Fade both ends of an open stroke with Taper",
    "line": "Makes an open stroke thin to nothing at both ends, so a light streak, horizon arc or swoosh fades out softly instead of stopping in a hard square end.",
    "status": "proven",
@@ -1125,6 +1561,14 @@
    "difficulty": 1,
    "taught_by": 1,
    "variants": [],
+   "provides": [
+    "motion: draw-on"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-picture",
     "heading": "Fade both ends of an open stroke with Taper"
@@ -1137,6 +1581,7 @@
   {
    "id": "04-carousel-by-rotation",
    "revision": "3a03f5d0",
+   "level": "recipe",
    "name": "Text carousel from rotated copies around one pivot",
    "line": "Builds a wheel of repeated words (or any layer) curving around an off-screen pivot. Use it for list reveals, title wheels and \"rolodex\" type moments without expressions or plugins.",
    "status": "proven",
@@ -1161,6 +1606,15 @@
     "03-graphics-orbit-a-real-object",
     "04-duplicate-cards-round-the-pivot"
    ],
+   "provides": [
+    "motion: carousel",
+    "type: reveal"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-line",
     "heading": "Text carousel from rotated copies around one pivot"
@@ -1173,6 +1627,7 @@
   {
    "id": "05-stagger-layers-in-time",
    "revision": "9201d48e",
+   "level": "recipe",
    "name": "Even time stagger by dragging a whole stack at once",
    "line": "Makes a stack of copies appear one after another at an even interval, so items of a list, ring or grid arrive in sequence. A quick replacement for Sequence Layers or hand-nudging each bar.",
    "status": "proven",
@@ -1191,15 +1646,25 @@
    "difficulty": 1,
    "taught_by": 5,
    "variants": [],
+   "provides": [
+    "motion: stagger"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-build-aid",
     "heading": "Even time stagger by dragging a whole stack at once"
    },
-   "still": null
+   "still": null,
+   "no_still": "build aid: serves no beat, so no proof still"
   },
   {
    "id": "06-3d-orbit-rings",
    "revision": "55063a18",
+   "level": "recipe",
    "name": "Tilted 3D ring of discs orbiting a centre",
    "line": "Wraps a central object in a tilted, torus-like ring of repeated flat shapes that pass in front of and behind it. Use it for an orbit or \"planet with rings\" look, or any hero object that needs a 3D halo, with no 3D plugin.",
    "status": "proven",
@@ -1225,6 +1690,15 @@
     "07-3d-spinning-box-of-cards",
     "10-inner-ring-carousel"
    ],
+   "provides": [
+    "motion: orbit",
+    "depth: z-stack"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-connective",
     "heading": "Tilted 3D ring of discs orbiting a centre"
@@ -1237,6 +1711,7 @@
   {
    "id": "07-face-the-camera",
    "revision": "59029d99",
+   "level": "recipe",
    "name": "Keep an orbiting 3D layer turned towards the camera",
    "line": "When a flat 3D layer circles around something (a moon round a planet, an icon on an orbit), it turns edge-on and thins out at parts of the loop; this keeps it reading as a full, flat shape the whole way round.",
    "status": "proven",
@@ -1255,15 +1730,25 @@
    "difficulty": 1,
    "taught_by": 1,
    "variants": [],
+   "provides": [
+    "motion: orbit"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-build-aid",
     "heading": "Keep an orbiting 3D layer turned towards the camera"
    },
-   "still": null
+   "still": null,
+   "no_still": "build aid: serves no beat, so no proof still"
   },
   {
    "id": "08-record-puppet-pin-motion",
    "revision": "1ecba9c9",
+   "level": "recipe",
    "name": "Perform puppet-pin motion live with the mouse",
    "line": "For organic secondary motion on an illustrated character (a head sway, a nod, a drifting limb) where hand-placing keyframes would look stiff or take too long; you act the motion out once and After Effects writes the keyframes.",
    "status": "unproven",
@@ -1282,15 +1767,25 @@
    "difficulty": 2,
    "taught_by": 1,
    "variants": [],
+   "provides": [
+    "motion: character"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-build-aid",
     "heading": "Perform puppet-pin motion live with the mouse"
    },
-   "still": null
+   "still": null,
+   "no_still": "build aid: serves no beat, so no proof still"
   },
   {
    "id": "09-endless-background-tile",
    "revision": "dff1920a",
+   "level": "recipe",
    "name": "Slide a background endlessly with mirrored tiling",
    "line": "For a background that has to keep moving longer than the artwork is wide, such as the view out of a moving vehicle's window; the image is repeated and slid along without visible seams.",
    "status": "proven",
@@ -1313,6 +1808,15 @@
    "difficulty": 1,
    "taught_by": 1,
    "variants": [],
+   "provides": [
+    "backdrop: tile",
+    "motion: loop"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-picture",
     "heading": "Slide a background endlessly with mirrored tiling"
@@ -1325,6 +1829,7 @@
   {
    "id": "10-graphic-as-particles",
    "revision": "f4725be7",
+   "level": "recipe",
    "name": "Leaf-shaped particles from any graphic",
    "line": "Fill a scene with drifting copies of a small graphic (leaves, petals, confetti, logos) without hand-placing them; the particle system births, spins and moves each copy for you.",
    "status": "proven",
@@ -1349,6 +1854,14 @@
    "variants": [
     "07-leaf-particles-blown-across"
    ],
+   "provides": [
+    "motion: particles"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-connective",
     "heading": "Leaf-shaped particles from any graphic"
@@ -1361,6 +1874,7 @@
   {
    "id": "11-white-on-light-finish",
    "revision": "0f345098",
+   "level": "recipe",
    "name": "Soft embossed finish for white shapes on a pale background",
    "line": "When a pure white shape or title vanishes into a light background, two layer styles give it a faint cool shading and a bright rim. On their own they only tint the shape; it reads as a raised, soft-plastic object once a long soft shadow lies under it and the shapes around it get the same treatment, so the pieces look stacked.",
    "status": "proven",
@@ -1384,6 +1898,14 @@
    "variants": [
     "08-raised-white-shapes-with-long-shadows"
    ],
+   "provides": [
+    "finish: emboss"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-picture",
     "heading": "Soft embossed finish for white shapes on a pale background"
@@ -1396,6 +1918,7 @@
   {
    "id": "12-long-soft-shadow",
    "revision": "5b8fb6a4",
+   "level": "recipe",
    "name": "Long soft shadow from a radially blurred black copy",
    "line": "Gives flat shapes or letters a long, fading directional shadow, as if lit by a low sun, which reads especially well on bright, pale backgrounds.",
    "status": "proven",
@@ -1417,6 +1940,14 @@
    "difficulty": 2,
    "taught_by": 2,
    "variants": [],
+   "provides": [
+    "depth: shadow"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-picture",
     "heading": "Long soft shadow from a radially blurred black copy"
@@ -1429,6 +1960,7 @@
   {
    "id": "13-dot-grid-texture",
    "revision": "4222655e",
+   "level": "recipe",
    "name": "Fine dot-grid background from a ball-grid effect",
    "line": "A quick, quiet design texture for a plain or pale background, so an empty backdrop reads as designed rather than blank without pulling focus from the type or graphics in front.",
    "status": "proven",
@@ -1450,6 +1982,14 @@
    "difficulty": 1,
    "taught_by": 1,
    "variants": [],
+   "provides": [
+    "backdrop: grid"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-picture",
     "heading": "Fine dot-grid background from a ball-grid effect"
@@ -1462,6 +2002,7 @@
   {
    "id": "14-3d-floor-shadows",
    "revision": "b210d945",
+   "level": "recipe",
    "name": "Real cast shadows on an invisible 3D floor",
    "line": "Grounds flat 3D layers in a scene by giving them soft, believable shadows on the ground, without letting the light change the colour of the graphics themselves.",
    "status": "proven",
@@ -1486,6 +2027,15 @@
    "variants": [
     "02-backlit-environment-light-with-shadow-floor"
    ],
+   "provides": [
+    "floor: shadow-catcher",
+    "depth: shadow"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-picture",
     "heading": "Real cast shadows on an invisible 3D floor"
@@ -1498,6 +2048,7 @@
   {
    "id": "15-grow-bounds-fix",
    "revision": "8e648131",
+   "level": "recipe",
    "name": "Un-clip an effect with Grow Bounds",
    "line": "Fixes effects that are cut off with a hard edge because the layer's bounding box is too small, for example a blurred or stretched shadow running past the edge of its source artwork.",
    "status": "proven",
@@ -1516,15 +2067,23 @@
    "difficulty": 1,
    "taught_by": 2,
    "variants": [],
+   "provides": [],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-build-aid",
     "heading": "Un-clip an effect with Grow Bounds"
    },
-   "still": null
+   "still": null,
+   "no_still": "build aid: serves no beat, so no proof still"
   },
   {
    "id": "16-lock-focus-to-layer",
    "revision": "45bd25eb",
+   "level": "recipe",
    "name": "Keep a chosen layer sharp while the camera travels",
    "line": "Use when a camera push or drift through a layered 3D scene should keep the hero element crisp the whole time, so depth of field never drifts off the subject as the camera's distance to it changes.",
    "status": "proven",
@@ -1549,6 +2108,15 @@
    "variants": [
     "04-camera-depth-of-field-focus-lock-dolly"
    ],
+   "provides": [
+    "camera: focus-lock",
+    "camera: depth-of-field"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-connective",
     "heading": "Keep a chosen layer sharp while the camera travels"
@@ -1561,6 +2129,7 @@
   {
    "id": "17-depth-fog",
    "revision": "443696ce",
+   "level": "recipe",
    "name": "Tie a 3D scene together with depth fog over the precomp",
    "line": "Use when separately made 3D layers look pasted together; a coloured depth fog over the finished scene lifts the darks and sinks the distance into one atmosphere.",
    "status": "proven",
@@ -1582,6 +2151,14 @@
    "difficulty": 1,
    "taught_by": 1,
    "variants": [],
+   "provides": [
+    "depth: fog"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-picture",
     "heading": "Tie a 3D scene together with depth fog over the precomp"
@@ -1594,6 +2171,7 @@
   {
    "id": "18-smooth-text-reveal",
    "revision": "8c8e30dd",
+   "level": "recipe",
    "name": "Soft word-by-word rise-and-fade text reveal",
    "line": "Use for a headline or tagline that should arrive gently, words sliding up and fading in one after another with a smooth overlap, with no per-word keyframes.",
    "status": "proven",
@@ -1615,6 +2193,14 @@
    "variants": [
     "05-per-character-3d-fly-in-ramp-up"
    ],
+   "provides": [
+    "type: reveal"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-line",
     "heading": "Soft word-by-word rise-and-fade text reveal"
@@ -1627,6 +2213,7 @@
   {
    "id": "19-text-on-a-path",
    "revision": "d8d51815",
+   "level": "recipe",
    "name": "Text that runs round a drawn path",
    "line": "Wrap a repeated line of type round a circle (or any shape you draw) and slide it along the path, so a badge or seal of words circles a central title.",
    "status": "proven",
@@ -1650,6 +2237,14 @@
    "variants": [
     "09-rotating-3d-text-ring-loop"
    ],
+   "provides": [
+    "type: path"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-line",
     "heading": "Text that runs round a drawn path"
@@ -1662,6 +2257,7 @@
   {
    "id": "20-two-pass-glow",
    "revision": "295cc9bc",
+   "level": "recipe",
    "name": "Two stacked glows for a soft cinematic bloom",
    "line": "A finishing pass on bright line art or type on a dark ground: one tight glow for a halo near the edges plus one very wide glow for a faint bloom, without looking blown out.",
    "status": "proven",
@@ -1683,6 +2279,15 @@
    "difficulty": 1,
    "taught_by": 1,
    "variants": [],
+   "provides": [
+    "finish: glow",
+    "light: glow"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-picture",
     "heading": "Two stacked glows for a soft cinematic bloom"
@@ -1695,6 +2300,7 @@
   {
    "id": "21-texture-through-a-matte",
    "revision": "c33c4c28",
+   "level": "recipe",
    "name": "Paper texture through a title matte, with roughened edges",
    "line": "Make a title look printed or stamped into a worn paper texture instead of floating on top of it: the texture itself forms the letters, brightened, and the letter edges are broken up.",
    "status": "proven",
@@ -1717,6 +2323,16 @@
    "difficulty": 2,
    "taught_by": 2,
    "variants": [],
+   "provides": [
+    "type: reveal",
+    "backdrop: texture",
+    "material: paper"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-line",
     "heading": "Paper texture through a title matte, with roughened edges"
@@ -1729,6 +2345,7 @@
   {
    "id": "22-hide-layers-shy",
    "revision": "ff77e41e",
+   "level": "recipe",
    "name": "Tuck helper layers out of the timeline with the shy switch",
    "line": "When a comp has dozens of support layers (mattes, lines, labels) and you only want to touch a few, mark the rest shy and hide them from the layer stack without precomposing. The comp structure and the render stay unchanged.",
    "status": "proven",
@@ -1747,15 +2364,23 @@
    "difficulty": 1,
    "taught_by": 1,
    "variants": [],
+   "provides": [],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-build-aid",
     "heading": "Tuck helper layers out of the timeline with the shy switch"
    },
-   "still": null
+   "still": null,
+   "no_still": "build aid: serves no beat, so no proof still"
   },
   {
    "id": "23-shutter-angle-blur",
    "revision": "955188f5",
+   "level": "recipe",
    "name": "Dial motion blur strength with the comp's shutter angle",
    "line": "When motion blur is on but reads too subtle (or too smeary), change the composition's shutter angle to set how long each frame's blur streak is, without touching the animation.",
    "status": "proven",
@@ -1774,15 +2399,25 @@
    "difficulty": 1,
    "taught_by": 1,
    "variants": [],
+   "provides": [
+    "finish: blur"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-build-aid",
     "heading": "Dial motion blur strength with the comp's shutter angle"
    },
-   "still": null
+   "still": null,
+   "no_still": "build aid: serves no beat, so no proof still"
   },
   {
    "id": "24-sharp-scaled-precomp",
    "revision": "42775cad",
+   "level": "recipe",
    "name": "Keep a scaled-up precomp of vector art crisp",
    "line": "When a precomp built from shape and text layers is pushed far past 100% (a big push-in or a hero zoom), turn on the layer's collapse/rasterize switch so the vector contents are redrawn at the new size instead of being enlarged as pixels.",
    "status": "proven",
@@ -1801,15 +2436,23 @@
    "difficulty": 1,
    "taught_by": 1,
    "variants": [],
+   "provides": [],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-build-aid",
     "heading": "Keep a scaled-up precomp of vector art crisp"
    },
-   "still": null
+   "still": null,
+   "no_still": "build aid: serves no beat, so no proof still"
   },
   {
    "id": "25-custom-media-frame",
    "revision": "8c6d3c5f",
+   "level": "recipe",
    "name": "Frame video in a custom shape with a track matte",
    "line": "When a photo or clip should sit in a designed window rather than a plain rectangle (for example, a cut-out that leaves room for a headline), draw any shape and use it as the clip's matte.",
    "status": "proven",
@@ -1835,6 +2478,15 @@
    "variants": [
     "01-rounded-shape-matte-media-card"
    ],
+   "provides": [
+    "environment: screen",
+    "depth: matte"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-line",
     "heading": "Frame video in a custom shape with a track matte"
@@ -1847,6 +2499,7 @@
   {
    "id": "01-rounded-shape-matte-media-card",
    "revision": "6305ccdf",
+   "level": "recipe",
    "name": "Rounded-rectangle matte card that carries its media and labels",
    "line": "Turns any photo or clip into a tidy rounded card whose size and position are driven by one shape layer, so the card can later be swung, scaled or duplicated as a unit. Reach for it as the base piece of any card carousel or media stack.",
    "status": "unproven",
@@ -1871,15 +2524,25 @@
    "taught_by": 2,
    "variant_of": "25-custom-media-frame",
    "variants": [],
+   "provides": [
+    "environment: screen"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-line",
     "heading": "Rounded-rectangle matte card that carries its media and labels"
    },
-   "still": null
+   "still": null,
+   "no_still": "unproven: no proof build yet"
   },
   {
    "id": "02-pivot-null-swing-loop",
    "revision": "faf0d084",
+   "level": "recipe",
    "name": "Card that swings round a pivot below the frame, one step at a time, forever",
    "line": "Gives a card (or later a row of cards) a carousel step: it swings in from one side on a big arc, settles upright, pauses, then swings out the other side, and the step repeats endlessly from only three keyframes. Use it for product or photo carousels, list reveals, or any \"next item\" rhythm.",
    "status": "proven",
@@ -1901,6 +2564,15 @@
    "difficulty": 3,
    "taught_by": 1,
    "variants": [],
+   "provides": [
+    "motion: swing",
+    "motion: loop"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-line",
     "heading": "Card that swings round a pivot below the frame, one step at a time, forever"
@@ -1913,6 +2585,7 @@
   {
    "id": "03-tilt-and-shrink-on-swing",
    "revision": "27af439d",
+   "level": "recipe",
    "name": "Card shrinks and leans outward at the ends of its swing",
    "line": "Adds a size-and-lean change on top of the pivot swing so the card is small and tipped outward while it is off to the side and full size and upright when it reaches the top. This is what makes a swinging carousel feel like it is \"resizing\" and gives the centred item its emphasis.",
    "status": "proven",
@@ -1934,6 +2607,14 @@
    "difficulty": 2,
    "taught_by": 1,
    "variants": [],
+   "provides": [
+    "motion: swing"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-line",
     "heading": "Card shrinks and leans outward at the ends of its swing"
@@ -1946,6 +2627,7 @@
   {
    "id": "04-duplicate-cards-round-the-pivot",
    "revision": "fafb7596",
+   "level": "recipe",
    "name": "Chained copies of a swinging card, placed with a helper null",
    "line": "Turns one looping swing card into a carousel of several cards that follow each other round the same pivot, one swing step apart, so a new card always arrives as the previous one leaves. Reach for it for product, photo or profile carousels where each beat shows the next item.",
    "status": "unproven",
@@ -1968,15 +2650,25 @@
    "taught_by": 6,
    "variant_of": "04-carousel-by-rotation",
    "variants": [],
+   "provides": [
+    "motion: swing"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-line",
     "heading": "Chained copies of a swinging card, placed with a helper null"
    },
-   "still": null
+   "still": null,
+   "no_still": "unproven: no proof build yet"
   },
   {
    "id": "05-mask-path-to-position-loop",
    "revision": "950c5aaa",
+   "level": "recipe",
    "name": "Cards orbiting an ellipse drawn as a mask",
    "line": "Sends a ring of photo cards round an oval forever, framing a title or product in the middle. Use it for an endless moodboard or gallery loop behind a headline, or a hold that has to run for any length.",
    "status": "proven",
@@ -1999,6 +2691,15 @@
    "difficulty": 3,
    "taught_by": 2,
    "variants": [],
+   "provides": [
+    "motion: orbit",
+    "motion: loop"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-connective",
     "heading": "Cards orbiting an ellipse drawn as a mask"
@@ -2011,6 +2712,7 @@
   {
    "id": "06-path-trail-scale-rotate-in",
    "revision": "a7127f71",
+   "level": "recipe",
    "name": "Cards growing along a drawn path into a stacked trail",
    "line": "A stream of photo cards is born as specks, grows and straightens as it sweeps along a looping path, and brakes to a stop in a fanned stack. Use it for a gallery reveal, a \"many stories\" opener, or a build-up behind a title.",
    "status": "proven",
@@ -2033,6 +2735,14 @@
    "difficulty": 2,
    "taught_by": 2,
    "variants": [],
+   "provides": [
+    "motion: stagger"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-line",
     "heading": "Cards growing along a drawn path into a stacked trail"
@@ -2045,6 +2755,7 @@
   {
    "id": "07-3d-spinning-box-of-cards",
    "revision": "218a6bac",
+   "level": "recipe",
    "name": "Spinning square box built from four 3D cards",
    "line": "Turns a handful of photo cards into a rotating four-walled box seen end-on, a quick 3D showcase loop for a gallery or \"many images\" moment, and the base unit for the tunnel in 08.",
    "status": "unproven",
@@ -2068,15 +2779,26 @@
    "taught_by": 6,
    "variant_of": "06-3d-orbit-rings",
    "variants": [],
+   "provides": [
+    "motion: loop",
+    "depth: z-stack"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-connective",
     "heading": "Spinning square box built from four 3D cards"
    },
-   "still": null
+   "still": null,
+   "no_still": "unproven: no proof build yet"
   },
   {
    "id": "08-tunnel-from-stacked-boxes",
    "revision": "a181bdad",
+   "level": "recipe",
    "name": "Counter-spinning tunnel from stacked card boxes",
    "line": "Extends the spinning box (07) into a deep tunnel of photo walls whose alternate rings turn in opposite directions; a hypnotic gallery loop or the set for a camera fly-through (09).",
    "status": "proven",
@@ -2099,6 +2821,15 @@
    "difficulty": 2,
    "taught_by": 1,
    "variants": [],
+   "provides": [
+    "depth: z-stack",
+    "motion: loop"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-connective",
     "heading": "Counter-spinning tunnel from stacked card boxes"
@@ -2111,6 +2842,7 @@
   {
    "id": "09-camera-fly-through-with-depth-of-field",
    "revision": "f486c2fd",
+   "level": "recipe",
    "name": "Camera push into the card tunnel with depth of field",
    "line": "Flies the viewer into the counter-spinning card tunnel (08) while shallow focus melts the near and far walls, for an immersive opener or transition through a wall of images.",
    "status": "unproven",
@@ -2135,15 +2867,27 @@
    "taught_by": 5,
    "variant_of": "11-camera-depth-of-field-advanced-3d",
    "variants": [],
+   "provides": [
+    "camera: push",
+    "camera: depth-of-field",
+    "transition: cut"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-connective",
     "heading": "Camera push into the card tunnel with depth of field"
    },
-   "still": null
+   "still": null,
+   "no_still": "unproven: no proof build yet"
   },
   {
    "id": "10-inner-ring-carousel",
    "revision": "f6e85b1b",
+   "level": "recipe",
    "name": "Ring of 3D photo cards seen from inside",
    "line": "Puts the viewer in the middle of a slowly turning ring of photo cards, so a gallery wraps around the frame instead of sliding past it. Reach for it for a portfolio, lookbook or \"many stories\" moment.",
    "status": "unproven",
@@ -2167,15 +2911,26 @@
    "taught_by": 6,
    "variant_of": "06-3d-orbit-rings",
    "variants": [],
+   "provides": [
+    "motion: carousel",
+    "camera: wide-lens"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-connective",
     "heading": "Ring of 3D photo cards seen from inside"
    },
-   "still": null
+   "still": null,
+   "no_still": "unproven: no proof build yet"
   },
   {
    "id": "11-wide-lens-camera-distortion",
    "revision": "13680b7a",
+   "level": "recipe",
    "name": "Wide-lens camera inside the card ring",
    "line": "A one-step finish for the ring of cards in 10-inner-ring-carousel: a short-focal-length camera stretches the perspective so the ring reads as a wide, immersive sweep rather than three flat cards. Use it whenever a 3D layout looks too flat under the default view.",
    "status": "proven",
@@ -2196,6 +2951,14 @@
    "difficulty": 1,
    "taught_by": 1,
    "variants": [],
+   "provides": [
+    "camera: wide-lens"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-picture",
     "heading": "Wide-lens camera inside the card ring"
@@ -2208,6 +2971,7 @@
   {
    "id": "01-bevelled-3d-text-material-texture",
    "revision": "593535c4",
+   "level": "recipe",
    "name": "Bevelled 3D text wrapped in a tiled material",
    "line": "Turns a flat title into a solid, physical object with rounded edges and a real surface (metal, stone, paint) in a few clicks; the base for any lit 3D title shot.",
    "status": "proven",
@@ -2230,6 +2994,16 @@
    "difficulty": 3,
    "taught_by": 3,
    "variants": [],
+   "provides": [
+    "type: 3d",
+    "material: metal",
+    "depth: extrusion"
+   ],
+   "cost": {
+    "renderer": "advanced-3d"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-line",
     "heading": "Bevelled 3D text wrapped in a tiled material"
@@ -2242,6 +3016,7 @@
   {
    "id": "02-backlit-environment-light-with-shadow-floor",
    "revision": "813da270",
+   "level": "recipe",
    "name": "Backlit environment light over a shadow-only floor",
    "line": "The quick way to make a textured 3D title look photographed rather than flat: one environment light turned round behind the text so long soft shadows fall toward the viewer onto an invisible floor, with a slow light swing for movement.",
    "status": "unproven",
@@ -2265,15 +3040,27 @@
    "taught_by": 3,
    "variant_of": "14-3d-floor-shadows",
    "variants": [],
+   "provides": [
+    "light: rim",
+    "floor: shadow-catcher",
+    "environment: studio-dark"
+   ],
+   "cost": {
+    "renderer": "advanced-3d"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-picture",
     "heading": "Backlit environment light over a shadow-only floor"
    },
-   "still": null
+   "still": null,
+   "no_still": "unproven: no proof build yet"
   },
   {
    "id": "03-parallel-rim-light-no-shadows",
    "revision": "49cebea9",
+   "level": "recipe",
    "name": "Shadowless parallel light as an extra backlight",
    "line": "A small finishing touch on a lit 3D title: a second, shadowless directional light from behind and to one side brightens the edges and tops of the letters without adding a second set of shadows.",
    "status": "proven",
@@ -2296,6 +3083,14 @@
    "difficulty": 1,
    "taught_by": 1,
    "variants": [],
+   "provides": [
+    "light: rim"
+   ],
+   "cost": {
+    "renderer": "advanced-3d"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-picture",
     "heading": "Shadowless parallel light as an extra backlight"
@@ -2308,6 +3103,7 @@
   {
    "id": "04-point-light-falloff-front-fill",
    "revision": "c3d7dbf6",
+   "level": "recipe",
    "name": "Soft front fill from a point light with smooth falloff",
    "line": "Reach for this when lit 3D type reads as one flat wash from the front; a small, soft pool of light off to one side gives the faces a gentle gradient so the letters stop looking evenly lit.",
    "status": "proven",
@@ -2328,6 +3124,15 @@
    "difficulty": 2,
    "taught_by": 1,
    "variants": [],
+   "provides": [
+    "light: fill",
+    "light: key"
+   ],
+   "cost": {
+    "renderer": "advanced-3d"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-picture",
     "heading": "Soft front fill from a point light with smooth falloff"
@@ -2340,6 +3145,7 @@
   {
    "id": "05-per-character-3d-fly-in-ramp-up",
    "revision": "95094a0c",
+   "level": "recipe",
    "name": "Letters tumble in from just in front of the lens, one after another",
    "line": "A smooth, weighty title entrance for extruded 3D type: each letter starts turned and in front of the lens, then swings into place in a rolling wave, so the word assembles itself without any hard pop.",
    "status": "unproven",
@@ -2363,15 +3169,26 @@
    "taught_by": 2,
    "variant_of": "18-smooth-text-reveal",
    "variants": [],
+   "provides": [
+    "type: 3d",
+    "type: reveal"
+   ],
+   "cost": {
+    "renderer": "advanced-3d"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-line",
     "heading": "Letters tumble in from just in front of the lens, one after another"
    },
-   "still": null
+   "still": null,
+   "no_still": "unproven: no proof build yet"
   },
   {
    "id": "06-depth-of-field-camera-push-on-null",
    "revision": "d1f6287b",
+   "level": "recipe",
    "name": "Depth-of-field camera on a null, pushed in through the shot",
    "line": "Add this on top of a 3D type entrance to make it feel filmed: letters close to the lens go soft, and a slow camera push keeps the frame alive after the word has landed.",
    "status": "unproven",
@@ -2394,15 +3211,26 @@
    "taught_by": 5,
    "variant_of": "11-camera-depth-of-field-advanced-3d",
    "variants": [],
+   "provides": [
+    "camera: push",
+    "camera: depth-of-field"
+   ],
+   "cost": {
+    "renderer": "advanced-3d"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-connective",
     "heading": "Depth-of-field camera on a null, pushed in through the shot"
    },
-   "still": null
+   "still": null,
+   "no_still": "unproven: no proof build yet"
   },
   {
    "id": "07-gold-face-plain-sides-look",
    "revision": "c21c2d9c",
+   "level": "recipe",
    "name": "Warm-sided metal title: textured faces, plain tinted sides",
    "line": "A fast restyle of an already-built textured 3D title when you want a warmer, more polished metal read without rebuilding the material: keep the texture only where it matters and let the extruded sides catch light as a tinted metal.",
    "status": "unproven",
@@ -2425,15 +3253,26 @@
    "difficulty": 2,
    "taught_by": 3,
    "variants": [],
+   "provides": [
+    "type: 3d",
+    "material: metal"
+   ],
+   "cost": {
+    "renderer": "advanced-3d"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-line",
     "heading": "Warm-sided metal title: textured faces, plain tinted sides"
    },
-   "still": null
+   "still": null,
+   "no_still": "unproven: no proof build yet"
   },
   {
    "id": "08-outline-only-3d-title",
    "revision": "fdb05df9",
+   "level": "recipe",
    "name": "Hollow chrome outline title: faces hidden, bevels and walls remain",
    "line": "A cut-out, stroke-like 3D title for a sleek or dark mood: the letter faces vanish and only the rounded bevels and the extrusion walls remain, so the word reads as a hollow metal outline standing on a floor.",
    "status": "unproven",
@@ -2456,15 +3295,26 @@
    "difficulty": 2,
    "taught_by": 3,
    "variants": [],
+   "provides": [
+    "type: 3d",
+    "material: metal"
+   ],
+   "cost": {
+    "renderer": "advanced-3d"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-line",
     "heading": "Hollow chrome outline title: faces hidden, bevels and walls remain"
    },
-   "still": null
+   "still": null,
+   "no_still": "unproven: no proof build yet"
   },
   {
    "id": "09-rotating-3d-text-ring-loop",
    "revision": "a5ed1d79",
+   "level": "recipe",
    "name": "Spinning ring of standing 3D letters, stackable",
    "line": "A seamless looping title or bumper: a word repeated around a circle stands up like a carousel and turns forever, and stacked copies make a tower of rings; good for intros, loops and background type.",
    "status": "unproven",
@@ -2489,15 +3339,26 @@
    "taught_by": 2,
    "variant_of": "19-text-on-a-path",
    "variants": [],
+   "provides": [
+    "type: 3d",
+    "motion: loop"
+   ],
+   "cost": {
+    "renderer": "advanced-3d"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-line",
     "heading": "Spinning ring of standing 3D letters, stackable"
    },
-   "still": null
+   "still": null,
+   "no_still": "unproven: no proof build yet"
   },
   {
    "id": "01-vector-art-split-into-layers",
    "revision": "7b170ad6",
+   "level": "recipe",
    "name": "Found vector art, one object per file, laid out as separate layers",
    "line": "The groundwork for a lit, deep 2D scene when you cannot draw: gather ready-made vector illustrations, keep only the pieces you need, and bring every object into After Effects as its own layer so each one can later be graded and placed in depth on its own. Assumes: nothing; it starts from an empty project.",
    "status": "unproven",
@@ -2516,15 +3377,23 @@
    "difficulty": 2,
    "taught_by": 1,
    "variants": [],
+   "provides": [],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-build-aid",
     "heading": "Found vector art, one object per file, laid out as separate layers"
    },
-   "still": null
+   "still": null,
+   "no_still": "build aid: serves no beat, so no proof still"
   },
   {
    "id": "02-tritone-curves-mood-grade",
    "revision": "02816449",
+   "level": "recipe",
    "name": "One mood grade for mismatched art: Tritone plus a single-point Curves, pasted to every layer",
    "line": "When a scene is built from stock pieces that do not match (saturated greens, different palettes), this pulls them into one night-time or moody colour world in a minute, before any lighting or depth work. Assumes: a composition in which every scene object is its own layer (technique 01).",
    "status": "proven",
@@ -2546,6 +3415,14 @@
    "difficulty": 2,
    "taught_by": 1,
    "variants": [],
+   "provides": [
+    "finish: grade"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-picture",
     "heading": "One mood grade for mismatched art: Tritone plus a single-point Curves, pasted to every layer"
@@ -2558,6 +3435,7 @@
   {
    "id": "03-z-depth-push-and-rescale",
    "revision": "a5ee353f",
+   "level": "recipe",
    "name": "Flat cut-outs into a deep stage: push far layers back in Z, pull near ones forward, rescale to frame",
    "line": "Sets up real parallax and depth of field for a 2D illustrated scene: the picture through the default view barely changes, but layers now sit thousands of pixels apart, so any later camera move or focus pull separates them. Assumes: the scene is already split into one layer per object (technique 01) and graded (technique 02), with Tritone switched off on the stone-wall layer so its lamp glows warm (off).",
    "status": "proven",
@@ -2579,6 +3457,15 @@
    "difficulty": 2,
    "taught_by": 2,
    "variants": [],
+   "provides": [
+    "depth: z-stack",
+    "depth: parallax"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-picture",
     "heading": "Flat cut-outs into a deep stage: push far layers back in Z, pull near ones forward, rescale to frame"
@@ -2591,6 +3478,7 @@
   {
    "id": "04-camera-depth-of-field-focus-lock-dolly",
    "revision": "ae50b2ae",
+   "level": "recipe",
    "name": "Depth-of-field camera locked on the subject, with a slow dolly in",
    "line": "Turns a staged 2D-in-3D layout into a filmed shot: near and far layers fall out of focus, the subject stays sharp, and a short push-in gives the opening beat life without any layer being animated.",
    "status": "unproven",
@@ -2615,15 +3503,26 @@
    "taught_by": 5,
    "variant_of": "16-lock-focus-to-layer",
    "variants": [],
+   "provides": [
+    "camera: focus-lock",
+    "camera: push"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-connective",
     "heading": "Depth-of-field camera locked on the subject, with a slow dolly in"
    },
-   "still": null
+   "still": null,
+   "no_still": "unproven: no proof build yet"
   },
   {
    "id": "05-looping-wind-sway-rotation",
    "revision": "043cb041",
+   "level": "recipe",
    "name": "Endless wind sway from two rotation keys and a ping-pong loop",
    "line": "Gives a still illustrated scene a reason to move (wind) with almost no keyframing: each branch or tree rocks back and forth forever from just two keys.",
    "status": "proven",
@@ -2645,6 +3544,15 @@
    "difficulty": 2,
    "taught_by": 1,
    "variants": [],
+   "provides": [
+    "motion: sway",
+    "environment: outdoor"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-connective",
     "heading": "Endless wind sway from two rotation keys and a ping-pong loop"
@@ -2657,6 +3565,7 @@
   {
    "id": "06-wave-warp-grass-wind",
    "revision": "dd4619ea",
+   "level": "recipe",
    "name": "Grass rippling in the wind with Wave Warp",
    "line": "Makes a field of many thin blades (grass, reeds, fur-like edges) move in the wind without animating a single blade: one effect, one setting, and it moves on its own.",
    "status": "proven",
@@ -2678,6 +3587,15 @@
    "difficulty": 1,
    "taught_by": 1,
    "variants": [],
+   "provides": [
+    "motion: sway",
+    "environment: outdoor"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-connective",
     "heading": "Grass rippling in the wind with Wave Warp"
@@ -2690,6 +3608,7 @@
   {
    "id": "07-leaf-particles-blown-across",
    "revision": "4be15c33",
+   "level": "recipe",
    "name": "Leaves blown across the frame with textured particles",
    "line": "Sells wind in an illustrated scene by sending a steady trickle of tumbling leaves across it from one side, without animating a single leaf by hand. Assumes a finished, graded 2D scene in a 3D comp with a camera (techniques 02–04) and the scene's Tritone plus Curves grade on a layer to copy from.",
    "status": "unproven",
@@ -2713,15 +3632,26 @@
    "taught_by": 2,
    "variant_of": "10-graphic-as-particles",
    "variants": [],
+   "provides": [
+    "motion: particles",
+    "environment: outdoor"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-connective",
     "heading": "Leaves blown across the frame with textured particles"
    },
-   "still": null
+   "still": null,
+   "no_still": "unproven: no proof build yet"
   },
   {
    "id": "08-rainfall-matched-to-wind",
    "revision": "ce6ebd7e",
+   "level": "recipe",
    "name": "Rain slanted to match the wind",
    "line": "Adds weather on top of a wind-animated scene so the motion has a reason, with the rain leaning the same way everything else is blowing. Assumes a scene that already moves in one wind direction (techniques 05–07; here the leaves enter from the left edge).",
    "status": "proven",
@@ -2744,6 +3674,14 @@
    "difficulty": 1,
    "taught_by": 1,
    "variants": [],
+   "provides": [
+    "environment: weather"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-picture",
     "heading": "Rain slanted to match the wind"
@@ -2756,6 +3694,7 @@
   {
    "id": "10-film-grain-finish-stack",
    "revision": "e20e6ad4",
+   "level": "recipe",
    "name": "Film-stock grain and mood finish on a top adjustment layer",
    "line": "The last pass on an illustrated shot: real-film grain, one last overall curve, and an optional posterize for a rougher look, all in one layer over everything. Assumes the full scene is built beneath (techniques 01–09).",
    "status": "proven",
@@ -2775,6 +3714,15 @@
    "difficulty": 1,
    "taught_by": 3,
    "variants": [],
+   "provides": [
+    "finish: grain",
+    "finish: film"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-picture",
     "heading": "Film-stock grain and mood finish on a top adjustment layer"
@@ -2787,6 +3735,7 @@
   {
    "id": "11-matching-closeup-telephoto-compression",
    "revision": "f83795fe",
+   "level": "recipe",
    "name": "Long-lens close-up that matches the wide shot",
    "line": "Assumes a finished wide scene already exists with separate 2D layers, a cold grade on each (Tritone + Curves, technique 02), a 3D camera with depth of field (04), sway on trees (05), rain and finishing adjustment layers (08, 10). Cut from an established wide scene to a close-up of the character without building a new world: reuse the wide shot's backdrop pieces, camera and finishing layers, and push the backdrop very deep so the close-up reads as shot on a long lens.",
    "status": "proven",
@@ -2811,15 +3760,25 @@
    "difficulty": 2,
    "taught_by": 2,
    "variants": [],
+   "provides": [
+    "camera: telephoto"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-build-aid",
     "heading": "Long-lens close-up that matches the wide shot"
    },
-   "still": null
+   "still": null,
+   "no_still": "unmatched: fits no job yet, so no proof still"
   },
   {
    "id": "13-masked-curves-relight-track-matte",
    "revision": "7dc05162",
+   "level": "recipe",
    "name": "Side-light a face with a matted Curves layer",
    "line": "Assumes a close-up with the character on its own layer (or pre-comp) under a scene grade (techniques 11 and 12). Adds a soft wash of differently coloured light to one side of the face and hair only, so a flat close-up gains a light direction without touching the background.",
    "status": "proven",
@@ -2842,6 +3801,14 @@
    "difficulty": 1,
    "taught_by": 2,
    "variants": [],
+   "provides": [
+    "light: side"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-picture",
     "heading": "Side-light a face with a matted Curves layer"
@@ -2854,6 +3821,7 @@
   {
    "id": "01-segmented-progress-bar-draws-in-order",
    "revision": "aa3d7518",
+   "level": "recipe",
    "name": "Two-colour phase bar that draws on segment after segment",
    "line": "A process or timeline beat (\"first this phase, then that one\"): one straight bar split into coloured phases that fill left to right, the second phase starting just as the first slows down, with step pictures lined up underneath.",
    "status": "proven",
@@ -2876,6 +3844,15 @@
    "difficulty": 3,
    "taught_by": 6,
    "variants": [],
+   "provides": [
+    "motion: draw-on",
+    "motion: chart"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-line",
     "heading": "Two-colour phase bar that draws on segment after segment"
@@ -2888,6 +3865,7 @@
   {
    "id": "02-labels-rise-from-behind-the-bar",
    "revision": "2d62f2fa",
+   "level": "recipe",
    "name": "Labels that rise out of their own bar segment",
    "line": "Names each phase of a progress bar as that phase fills: the word slides up out of the bar as if it was tucked behind it, timed to its segment.",
    "status": "proven",
@@ -2910,6 +3888,14 @@
    "difficulty": 2,
    "taught_by": 1,
    "variants": [],
+   "provides": [
+    "type: label"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-line",
     "heading": "Labels that rise out of their own bar segment"
@@ -2922,6 +3908,7 @@
   {
    "id": "03-step-icons-pop-with-bounce-in-sequence",
    "revision": "326c36ad",
+   "level": "recipe",
    "name": "Step pictures that pop in one after another with a small bounce",
    "line": "Brings in a row of step pictures under a timeline one by one, each growing from nothing with a slight overshoot and settle, so the eye walks the process left to right.",
    "status": "proven",
@@ -2943,6 +3930,15 @@
    "difficulty": 2,
    "taught_by": 5,
    "variants": [],
+   "provides": [
+    "motion: bounce",
+    "motion: stagger"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-line",
     "heading": "Step pictures that pop in one after another with a small bounce"
@@ -2955,6 +3951,7 @@
   {
    "id": "04-curved-arrow-draws-between-steps",
    "revision": "71fe9a82",
+   "level": "recipe",
    "name": "Small swept-head arrow that draws itself between steps",
    "line": "Ties a row of step images into a process: a tiny arrow draws itself between each pair just as the next step appears, so the eye is led left to right one step at a time.",
    "status": "proven",
@@ -2976,6 +3973,14 @@
    "difficulty": 2,
    "taught_by": 6,
    "variants": [],
+   "provides": [
+    "motion: draw-on"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-line",
     "heading": "Small swept-head arrow that draws itself between steps"
@@ -2988,6 +3993,7 @@
   {
    "id": "05-stop-motion-jitter-and-mono-finish",
    "revision": "3f58811c",
+   "level": "recipe",
    "name": "Stepped jitter and black-and-white photos for a hand-made finish",
    "line": "Takes a clean, flat infographic and gives it a cut-out, stop-motion feel: photos go monochrome, each one twitches on its own a few times a second, the whole frame shakes slightly and all motion steps at a low frame rate. Reach for it when a data beat looks too slick or digital.",
    "status": "proven",
@@ -3009,6 +4015,14 @@
    "difficulty": 2,
    "taught_by": 1,
    "variants": [],
+   "provides": [
+    "finish: stop-motion"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-picture-2",
     "heading": "Stepped jitter and black-and-white photos for a hand-made finish"
@@ -3021,6 +4035,7 @@
   {
    "id": "06-faint-graph-paper-backdrop",
    "revision": "089b44ae",
+   "level": "recipe",
    "name": "Faint graph-paper backdrop",
    "line": "Swaps a plain black ground for an off-white sheet ruled with tiny pale-blue squares, like school exercise paper, so a flat infographic reads as hand-made and educational rather than digital.",
    "status": "proven",
@@ -3042,6 +4057,15 @@
    "difficulty": 2,
    "taught_by": 2,
    "variants": [],
+   "provides": [
+    "backdrop: grid",
+    "backdrop: paper"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-picture-2",
     "heading": "Faint graph-paper backdrop"
@@ -3054,6 +4078,7 @@
   {
    "id": "07-stroked-bars-grow-in-stagger-with-value-labels",
    "revision": "4731c114",
+   "level": "recipe",
    "name": "Bar chart of thick strokes that grow up in a ladder, with value labels sliding in beside them",
    "line": "A quick \"how big is each one\" moment: four bars rise one after another from a shared baseline, left to right, tallest first, while each value label slides in from the left. Use it when a narrated figure needs a chart that builds as the voice lists the numbers.",
    "status": "proven",
@@ -3077,6 +4102,15 @@
    "difficulty": 2,
    "taught_by": 6,
    "variants": [],
+   "provides": [
+    "motion: chart",
+    "type: label"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-line-2",
     "heading": "Bar chart of thick strokes that grow up in a ladder, with value labels sliding in beside them"
@@ -3089,6 +4123,7 @@
   {
    "id": "08-baseline-draws-out-from-centre",
    "revision": "24d327a4",
+   "level": "recipe",
    "name": "Chart baseline that draws outward from its middle",
    "line": "Opens a chart (or any divider) with a line that grows out to both ends at once from its centre, a calm, balanced first move before the data arrives.",
    "status": "proven",
@@ -3110,6 +4145,15 @@
    "difficulty": 1,
    "taught_by": 6,
    "variants": [],
+   "provides": [
+    "motion: draw-on",
+    "motion: chart"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-line-2",
     "heading": "Chart baseline that draws outward from its middle"
@@ -3122,6 +4166,7 @@
   {
    "id": "09-grid-clipped-to-the-chart-area",
    "revision": "6216762b",
+   "level": "recipe",
    "name": "Faint grid held inside the chart's box, and the whole chart stepped to 12 fps",
    "line": "Gives a bar chart a quiet graph-paper backing that stops at the chart's edges, and a slightly hand-made, stepped motion, so a plain data beat reads as designed rather than default.",
    "status": "proven",
@@ -3144,6 +4189,15 @@
    "difficulty": 2,
    "taught_by": 2,
    "variants": [],
+   "provides": [
+    "backdrop: grid",
+    "motion: chart"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-picture-2",
     "heading": "Faint grid held inside the chart's box, and the whole chart stepped to 12 fps"
@@ -3156,6 +4210,7 @@
   {
    "id": "10-pie-slice-from-a-stroked-ring",
    "revision": "e2f0e818",
+   "level": "recipe",
    "name": "Pie chart from one fat stroke, with the share pushed out",
    "line": "A single-statistic beat (\"X % of all ...\"): a pie sweeps round from twelve o'clock, then the highlighted share slides out from the centre so the number has a piece to point at.",
    "status": "proven",
@@ -3178,6 +4233,14 @@
    "difficulty": 3,
    "taught_by": 6,
    "variants": [],
+   "provides": [
+    "motion: chart"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-line-2",
     "heading": "Pie chart from one fat stroke, with the share pushed out"
@@ -3190,6 +4253,7 @@
   {
    "id": "11-label-rises-word-by-word",
    "revision": "6464b2db",
+   "level": "recipe",
    "name": "Value label that rises in one word at a time",
    "line": "Puts a short stat sentence next to a chart's highlighted piece (\"18% of all ...\"). The words pop up one after another two frames apart, so the line reads as it lands.",
    "status": "proven",
@@ -3211,6 +4275,15 @@
    "difficulty": 2,
    "taught_by": 5,
    "variants": [],
+   "provides": [
+    "type: label",
+    "type: reveal"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-line-2",
     "heading": "Value label that rises in one word at a time"
@@ -3223,6 +4296,7 @@
   {
    "id": "12-pyramid-tiers-spread-to-reveal-labels",
    "revision": "8f0a59ee",
+   "level": "recipe",
    "name": "Photo pyramid that dips, then splits into tiers to reveal labels",
    "line": "A hierarchy or \"levels\" beat. A real-looking pyramid sits whole, gathers itself, then pulls apart into three tiers, and a label appears in each opening gap.",
    "status": "proven",
@@ -3245,6 +4319,15 @@
    "difficulty": 3,
    "taught_by": 1,
    "variants": [],
+   "provides": [
+    "transition: split",
+    "type: label"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-line-2",
     "heading": "Photo pyramid that dips, then splits into tiers to reveal labels"
@@ -3257,6 +4340,7 @@
   {
    "id": "13-match-cut-carried-by-movement",
    "revision": "e19a4084",
+   "level": "recipe",
    "name": "Cut mid-move to a close-up, carried by a shared upward drift",
    "line": "Moves from an overview to a detail without a visible transition. At the fastest moment of an animation, the shot cuts to a doubled-size view of the same animation. Both shots drift upward through the cut, so the eye reads one continuous move. A later slide down then visits the next detail.",
    "status": "proven",
@@ -3278,6 +4362,14 @@
    "difficulty": 2,
    "taught_by": 1,
    "variants": [],
+   "provides": [
+    "transition: match-cut"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-connective",
     "heading": "Cut mid-move to a close-up, carried by a shared upward drift"
@@ -3290,6 +4382,7 @@
   {
    "id": "14-pinned-photos-swaying-on-a-map",
    "revision": "8c3d0093",
+   "level": "recipe",
    "name": "Pinned instant photos swaying on a grey map",
    "line": "Marks a few places on a map with small pinned instant photos that hang and sway a little, so a travel or \"where it happened\" beat feels hand-made and alive while the camera holds or moves over it.",
    "status": "proven",
@@ -3313,6 +4406,15 @@
    "difficulty": 3,
    "taught_by": 1,
    "variants": [],
+   "provides": [
+    "environment: map",
+    "motion: sway"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-line-2",
     "heading": "Pinned instant photos swaying on a grey map"
@@ -3325,6 +4427,7 @@
   {
    "id": "15-map-highlights-and-border-trace",
    "revision": "7eb6b455",
+   "level": "recipe",
    "name": "Ink-blend place highlights and a self-drawing border on a grey map",
    "line": "Points at a region on an old map with soft coloured blobs that look printed into the paper, and draws a country's outline on cue, for \"here is where it happened\" beats in a travel or history piece.",
    "status": "proven",
@@ -3347,6 +4450,15 @@
    "difficulty": 3,
    "taught_by": 6,
    "variants": [],
+   "provides": [
+    "environment: map",
+    "motion: draw-on"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
    "section": {
     "document": "arsenal-line-2",
     "heading": "Ink-blend place highlights and a self-drawing border on a grey map"
@@ -3354,6 +4466,1345 @@
    "still": {
     "path": "arsenal/stills/15-map-highlights-and-border-trace.jpg",
     "sha256": "f52bae4696aaab98b2d62fc7ed13fe1fef257ee24f3b396996cdd209c522281c"
+   }
+  },
+  {
+   "id": "style-art-deco",
+   "revision": "dc4a7b88",
+   "level": "direction",
+   "name": "Art Deco",
+   "line": "A 1930s poster that moves: engraved gold line on warm lacquer black, built around one centre axis.",
+   "good_for": "A premium reveal or a big announcement that should feel like an event",
+   "status": "proven",
+   "kind": "style",
+   "job": null,
+   "support": [],
+   "mood": [],
+   "needs": [
+    "ffmpeg",
+    "node"
+   ],
+   "duration": null,
+   "motion": null,
+   "difficulty": null,
+   "taught_by": 1,
+   "variants": [],
+   "provides": [
+    "material: metal",
+    "light: glow",
+    "backdrop: pattern",
+    "type: poster",
+    "transition: wipe"
+   ],
+   "cost": {
+    "renderer": "classic",
+    "seconds_per_frame": 0.164,
+    "measured": "After Effects render of the 10.8 s proof at 1080x1920, 324 frames"
+   },
+   "composes": [],
+   "shelf": "shipped",
+   "section": {
+    "document": "style-art-deco",
+    "heading": null
+   },
+   "still": {
+    "path": "arsenal/stills/style-art-deco.jpg",
+    "sha256": "3db3c2a0b457d181de8ac2510d1f1f71a2b27eac0edaa7a2abc6c43c8bfb4338"
+   }
+  },
+  {
+   "id": "style-backrooms",
+   "revision": "0d7e5b96",
+   "level": "world",
+   "also_level": [
+    "direction"
+   ],
+   "name": "Liminal found footage",
+   "line": "A camcorder tape recovered from an empty, endless office: one handheld first-person take through mustard wallpaper, humming ceiling panels and fog that goes dark where the lights have died, with a laser-printed notice from Management, a CRT on a cart that is somewhere else when the camera looks back, and one red alarm lamp.",
+   "good_for": "Something eerie or unsettling, a 'nobody warned me about this' story",
+   "status": "proven",
+   "kind": "style",
+   "job": null,
+   "support": [],
+   "mood": [],
+   "needs": [
+    "blender",
+    "ffmpeg",
+    "node"
+   ],
+   "duration": null,
+   "motion": null,
+   "difficulty": null,
+   "taught_by": 1,
+   "variants": [],
+   "provides": [
+    "environment: room",
+    "camera: handheld",
+    "depth: fog",
+    "light: practical",
+    "finish: vhs",
+    "type: captions"
+   ],
+   "cost": {
+    "renderer": "blender",
+    "seconds_per_frame": 0.446,
+    "measured": "After Effects render of the 10.8 s proof at 1080x1920, 324 frames, Blender plates not counted"
+   },
+   "composes": [],
+   "shelf": "shipped",
+   "section": {
+    "document": "style-backrooms",
+    "heading": null
+   },
+   "still": {
+    "path": "arsenal/stills/style-backrooms.jpg",
+    "sha256": "9ab7b238fe21ff3e2529e046c708e98f85445dda5c8b38a008c042bddd157585"
+   }
+  },
+  {
+   "id": "style-blueprint",
+   "revision": "c05387ff",
+   "level": "direction",
+   "name": "Blueprint",
+   "line": "Engineering drawings that draw themselves on a sheet of cyanotype paper: white line work on Prussian blue in drafting order, hand-lettered notes, a title block, and one red stamp for the verdict.",
+   "good_for": "How something works, an architecture or system explained part by part",
+   "status": "proven",
+   "kind": "style",
+   "job": null,
+   "support": [],
+   "mood": [],
+   "needs": [
+    "ffmpeg",
+    "node"
+   ],
+   "duration": null,
+   "motion": null,
+   "difficulty": null,
+   "taught_by": 1,
+   "variants": [],
+   "provides": [
+    "material: paper",
+    "backdrop: grid",
+    "motion: draw-on",
+    "type: handwritten"
+   ],
+   "cost": {
+    "renderer": "classic",
+    "seconds_per_frame": 0.075,
+    "measured": "After Effects render of the 10.8 s proof at 1080x1920, 324 frames"
+   },
+   "composes": [],
+   "shelf": "shipped",
+   "section": {
+    "document": "style-blueprint",
+    "heading": null
+   },
+   "still": {
+    "path": "arsenal/stills/style-blueprint.jpg",
+    "sha256": "5e01b5a32c5f234bd327a5659c34634cc2bbc647dd6ad2201c78e7d4a559b9e1"
+   }
+  },
+  {
+   "id": "style-crt-terminal",
+   "revision": "3dd59d88",
+   "level": "direction",
+   "name": "CRT terminal",
+   "line": "Every image is real glyphs on a monospace grid behind a monochrome phosphor CRT.",
+   "good_for": "Anything about code, terminals or what the AI is really doing underneath",
+   "status": "proven",
+   "kind": "style",
+   "job": null,
+   "support": [],
+   "mood": [],
+   "needs": [
+    "ffmpeg",
+    "node"
+   ],
+   "duration": null,
+   "motion": null,
+   "difficulty": null,
+   "taught_by": 1,
+   "variants": [],
+   "provides": [
+    "type: terminal",
+    "finish: crt",
+    "environment: screen"
+   ],
+   "cost": {
+    "renderer": "classic",
+    "seconds_per_frame": 0.214,
+    "measured": "After Effects render of the 10.8 s proof at 1080x1920, 324 frames"
+   },
+   "composes": [],
+   "shelf": "shipped",
+   "section": {
+    "document": "style-crt-terminal",
+    "heading": null
+   },
+   "still": {
+    "path": "arsenal/stills/style-crt-terminal.jpg",
+    "sha256": "d5f6cef5592c35b6d2db5083dd1286ead204f1e65b6cf7be9a80719283a035c4"
+   }
+  },
+  {
+   "id": "style-dark-keynote",
+   "revision": "fb42af65",
+   "level": "direction",
+   "name": "Dark keynote",
+   "line": "A software launch film where the interface is the star: a near-black stage with a hairline grid and soft cool light, raised dark windows and cards, one luminous accent reserved for the one thing that matters, light sweeps that reveal, a giant number locking out of glyph noise, and captions as toast notifications.",
+   "good_for": "A product or feature launch where the interface is the star",
+   "status": "proven",
+   "kind": "style",
+   "job": null,
+   "support": [],
+   "mood": [],
+   "needs": [],
+   "duration": null,
+   "motion": null,
+   "difficulty": null,
+   "taught_by": 1,
+   "variants": [],
+   "provides": [
+    "environment: studio-dark",
+    "environment: screen",
+    "backdrop: grid",
+    "light: glow",
+    "type: number",
+    "transition: sweep"
+   ],
+   "cost": {
+    "renderer": "classic",
+    "seconds_per_frame": 0.047,
+    "measured": "After Effects render of the 10.8 s proof at 1080x1920, 324 frames"
+   },
+   "composes": [],
+   "shelf": "shipped",
+   "section": {
+    "document": "style-dark-keynote",
+    "heading": null
+   },
+   "still": {
+    "path": "arsenal/stills/style-dark-keynote.jpg",
+    "sha256": "26e9dca789afc438bedd0a35b365729177df886dab65a05616541339a3a4d08b"
+   }
+  },
+  {
+   "id": "style-dataviz",
+   "revision": "f1286b33",
+   "level": "direction",
+   "name": "Data storytelling",
+   "line": "A chart that tells the story: real numbers drawn mark by mark on cream paper by a red and blue pencil, handwritten notes pinned to the values, and every move a chart operation (a mark lands, an axis grows, the scale ratchets, the series morphs).",
+   "good_for": "A real number or a before-and-after that carries the point",
+   "status": "proven",
+   "kind": "style",
+   "job": null,
+   "support": [],
+   "mood": [],
+   "needs": [
+    "ffmpeg",
+    "node"
+   ],
+   "duration": null,
+   "motion": null,
+   "difficulty": null,
+   "taught_by": 1,
+   "variants": [],
+   "provides": [
+    "material: paper",
+    "motion: chart",
+    "type: handwritten",
+    "motion: draw-on"
+   ],
+   "cost": {
+    "renderer": "classic",
+    "seconds_per_frame": 0.05,
+    "measured": "After Effects render of the 10.8 s proof at 1080x1920, 324 frames"
+   },
+   "composes": [],
+   "shelf": "shipped",
+   "section": {
+    "document": "style-dataviz",
+    "heading": null
+   },
+   "still": {
+    "path": "arsenal/stills/style-dataviz.jpg",
+    "sha256": "15743e0f7420dd03afd4168481ff58a3ed5f155105ea551dbc6a10d4f00a3480"
+   }
+  },
+  {
+   "id": "style-engraving",
+   "revision": "ad30e43d",
+   "level": "direction",
+   "name": "Copperplate engraving",
+   "line": "A copperplate engraving that cuts itself: every frame is a natural-history plate on cream laid paper, inside a pressed plate mark and a ruled border.",
+   "good_for": "A deep dive or field guide that should feel scholarly",
+   "status": "proven",
+   "kind": "style",
+   "job": null,
+   "support": [],
+   "mood": [],
+   "needs": [
+    "ffmpeg",
+    "node"
+   ],
+   "duration": null,
+   "motion": null,
+   "difficulty": null,
+   "taught_by": 1,
+   "variants": [],
+   "provides": [
+    "material: print",
+    "material: paper",
+    "motion: draw-on",
+    "type: engraved"
+   ],
+   "cost": {
+    "renderer": "classic",
+    "seconds_per_frame": 0.198,
+    "measured": "After Effects render of the 10.8 s proof at 1080x1920, 324 frames"
+   },
+   "composes": [],
+   "shelf": "shipped",
+   "section": {
+    "document": "style-engraving",
+    "heading": null
+   },
+   "still": {
+    "path": "arsenal/stills/style-engraving.jpg",
+    "sha256": "66207eaf954078689f13056b94aa0e740c11301faf29650193b97353ce5ed78b"
+   }
+  },
+  {
+   "id": "style-game-show",
+   "revision": "25977b6c",
+   "level": "direction",
+   "name": "Game Show",
+   "line": "A rhythm-game variety show in flat vector: toy mascots with thick ink outlines hop on a fixed beat over candy-coloured stripes, dots and sunbursts.",
+   "good_for": "A list, a quiz or a countdown with high energy",
+   "status": "proven",
+   "kind": "style",
+   "job": null,
+   "support": [],
+   "mood": [],
+   "needs": [
+    "ffmpeg",
+    "node"
+   ],
+   "duration": null,
+   "motion": null,
+   "difficulty": null,
+   "taught_by": 1,
+   "variants": [],
+   "provides": [
+    "material: flat-vector",
+    "backdrop: pattern",
+    "motion: bounce",
+    "motion: character"
+   ],
+   "cost": {
+    "renderer": "classic",
+    "seconds_per_frame": 0.081,
+    "measured": "After Effects render of the 10.8 s proof at 1080x1920, 324 frames"
+   },
+   "composes": [],
+   "shelf": "shipped",
+   "section": {
+    "document": "style-game-show",
+    "heading": null
+   },
+   "still": {
+    "path": "arsenal/stills/style-game-show.jpg",
+    "sha256": "82c3be68877574fd0f4b3e662e15e9f6800001ce3d0f12b7654fc5912a828194"
+   }
+  },
+  {
+   "id": "style-glass-product",
+   "revision": "242db40c",
+   "level": "world",
+   "also_level": [
+    "direction"
+   ],
+   "name": "Glass product",
+   "line": "A launch film for a fictional glass object: one hero of clear and frosted glass, metal and light floating in an infinite black studio, outlined by strip lights it never shows, with rainbow edges, light that travels inside it, caustic rings on a black gloss floor, and slow exploded views that snap shut on the beat.",
+   "good_for": "A hero product reveal that should feel like a premium product launch",
+   "status": "proven",
+   "kind": "style",
+   "job": null,
+   "support": [],
+   "mood": [],
+   "needs": [
+    "blender",
+    "ffmpeg",
+    "node"
+   ],
+   "duration": null,
+   "motion": null,
+   "difficulty": null,
+   "taught_by": 1,
+   "variants": [],
+   "provides": [
+    "material: glass",
+    "material: metal",
+    "floor: gloss-dark",
+    "environment: studio-dark",
+    "light: strip",
+    "light: rim",
+    "camera: orbit",
+    "camera: depth-of-field",
+    "type: captions"
+   ],
+   "cost": {
+    "renderer": "blender",
+    "seconds_per_frame": 0.072,
+    "measured": "After Effects render of the 10.8 s proof at 1080x1920, 324 frames, Blender plates not counted"
+   },
+   "composes": [],
+   "shelf": "shipped",
+   "section": {
+    "document": "style-glass-product",
+    "heading": null
+   },
+   "still": {
+    "path": "arsenal/stills/style-glass-product.jpg",
+    "sha256": "fd97a16573480c8edaf37d4a87df621a3c59c1701bcf242d6b534fc4d310fdd7"
+   }
+  },
+  {
+   "id": "style-halftone-dossier",
+   "revision": "1ce50e7a",
+   "level": "direction",
+   "name": "Halftone dossier",
+   "line": "A retro print case file: cream archive paper, overprinted halftone dots in a few flat inks, heavy serif headlines with misregistered shadows that pop in glyph by glyph, caption bars with a highlighted keyword, rubber stamps that slam with a shake and a flash, numbered exhibits pinned to a board, and a dot wipe between files.",
+   "good_for": "Investigating something: case files, receipts, 'here is the evidence'",
+   "status": "proven",
+   "kind": "style",
+   "job": null,
+   "support": [],
+   "mood": [],
+   "needs": [
+    "ffmpeg",
+    "node"
+   ],
+   "duration": null,
+   "motion": null,
+   "difficulty": null,
+   "taught_by": 1,
+   "variants": [],
+   "provides": [
+    "material: print",
+    "finish: halftone",
+    "finish: misregistration",
+    "type: poster"
+   ],
+   "cost": {
+    "renderer": "classic",
+    "seconds_per_frame": 0.124,
+    "measured": "After Effects render of the 10.8 s proof at 1080x1920, 324 frames"
+   },
+   "composes": [],
+   "shelf": "shipped",
+   "section": {
+    "document": "style-halftone-dossier",
+    "heading": null
+   },
+   "still": {
+    "path": "arsenal/stills/style-halftone-dossier.jpg",
+    "sha256": "189eb402d1960c2ef74093b7363e60421026528327a0b353ac1be0dcb0e3e27d"
+   }
+  },
+  {
+   "id": "style-hologram-hud",
+   "revision": "3f2e23f8",
+   "level": "direction",
+   "name": "Hologram HUD",
+   "line": "A sci-fi spec scan: the subject is a glowing line wireframe above a round projector pad on a near-black stage, grown by a rising scan plane and seen through a slowly orbiting camera.",
+   "good_for": "Scanning or analysing something; breaking a thing into labelled parts",
+   "status": "proven",
+   "kind": "style",
+   "job": null,
+   "support": [],
+   "mood": [],
+   "needs": [
+    "ffmpeg",
+    "node"
+   ],
+   "duration": null,
+   "motion": null,
+   "difficulty": null,
+   "taught_by": 1,
+   "variants": [],
+   "provides": [
+    "material: wireframe",
+    "environment: studio-dark",
+    "light: glow",
+    "camera: orbit",
+    "type: label"
+   ],
+   "cost": {
+    "renderer": "classic",
+    "seconds_per_frame": 0.285,
+    "measured": "After Effects render of the 10.8 s proof at 1080x1920, 324 frames"
+   },
+   "composes": [],
+   "shelf": "shipped",
+   "section": {
+    "document": "style-hologram-hud",
+    "heading": null
+   },
+   "still": {
+    "path": "arsenal/stills/style-hologram-hud.jpg",
+    "sha256": "4b0c438edb75aa654a13f41958b4682cf48a4cc6fd45ac62f1791ae128bc7964"
+   }
+  },
+  {
+   "id": "style-iso-infographic",
+   "revision": "203938c6",
+   "level": "direction",
+   "name": "Isometric infographic",
+   "line": "A system diagram that comes alive: a floating isometric diorama of flat three-tone blocks on a pale ground, thin ink label pins and route lines, numbers built from rows of identical icons, circular insets that open on a leader, and a camera that pans and zooms but never breaks the projection.",
+   "good_for": "A workflow or system with several parts that connect",
+   "status": "proven",
+   "kind": "style",
+   "job": null,
+   "support": [],
+   "mood": [],
+   "needs": [],
+   "duration": null,
+   "motion": null,
+   "difficulty": null,
+   "taught_by": 1,
+   "variants": [],
+   "provides": [
+    "material: flat-vector",
+    "camera: isometric",
+    "type: label",
+    "motion: draw-on"
+   ],
+   "cost": {
+    "renderer": "classic",
+    "seconds_per_frame": 0.059,
+    "measured": "After Effects render of the 10.8 s proof at 1080x1920, 324 frames"
+   },
+   "composes": [],
+   "shelf": "shipped",
+   "section": {
+    "document": "style-iso-infographic",
+    "heading": null
+   },
+   "still": {
+    "path": "arsenal/stills/style-iso-infographic.jpg",
+    "sha256": "ec18e12f20a321ad98f8213e304ae0f9595599888da51f078ea601e7583a6299"
+   }
+  },
+  {
+   "id": "style-living-screencast",
+   "revision": "5adfee2e",
+   "level": "direction",
+   "name": "Living screencast",
+   "line": "A product walkthrough that looks like a real screen recording: a redrawn, razor-sharp app window floating on wallpaper, a recording-software camera that pushes in to the cursor, and a chunky low-res pixel mascot that lives on the top edges of the UI and acts out what the software is doing.",
+   "good_for": "Walking through a real app or tool on screen",
+   "status": "proven",
+   "kind": "style",
+   "job": null,
+   "support": [],
+   "mood": [],
+   "needs": [
+    "ffmpeg",
+    "node"
+   ],
+   "duration": null,
+   "motion": null,
+   "difficulty": null,
+   "taught_by": 1,
+   "variants": [],
+   "provides": [
+    "environment: screen",
+    "motion: cursor",
+    "camera: push",
+    "material: pixel"
+   ],
+   "cost": {
+    "renderer": "classic",
+    "seconds_per_frame": 0.084,
+    "measured": "After Effects render of the 10.8 s proof at 1080x1920, 324 frames"
+   },
+   "composes": [],
+   "shelf": "shipped",
+   "section": {
+    "document": "style-living-screencast",
+    "heading": null
+   },
+   "still": {
+    "path": "arsenal/stills/style-living-screencast.jpg",
+    "sha256": "53b3ce0180c5d47f45e2fc9d94c4fd2bfd947229478b242909471ba03b6b326a"
+   }
+  },
+  {
+   "id": "style-lowpoly-island",
+   "revision": "0cf23a9c",
+   "level": "world",
+   "also_level": [
+    "direction"
+   ],
+   "name": "Low-poly island",
+   "line": "A tiny faceted world seen through an orthographic isometric lens: an island of flat-shaded hexagonal tiles, box houses with prism roofs and cone trees floating in a faceted pastel sea, with no horizon, only a sky gradient.",
+   "good_for": "Something that grows over time, a project or system built up piece by piece",
+   "status": "proven",
+   "kind": "style",
+   "job": null,
+   "support": [],
+   "mood": [],
+   "needs": [
+    "blender",
+    "node"
+   ],
+   "duration": null,
+   "motion": null,
+   "difficulty": null,
+   "taught_by": 1,
+   "variants": [],
+   "provides": [
+    "material: low-poly",
+    "environment: outdoor",
+    "camera: isometric",
+    "light: sun",
+    "motion: bounce"
+   ],
+   "cost": {
+    "renderer": "blender",
+    "seconds_per_frame": 0.087,
+    "measured": "After Effects render of the 10.8 s proof at 1080x1920, 324 frames, Blender plates not counted"
+   },
+   "composes": [],
+   "shelf": "shipped",
+   "section": {
+    "document": "style-lowpoly-island",
+    "heading": null
+   },
+   "still": {
+    "path": "arsenal/stills/style-lowpoly-island.jpg",
+    "sha256": "c3ec89a1afcaa00ab2051c8f0ad156343f1bec4fa26bf885490e06a6583426bb"
+   }
+  },
+  {
+   "id": "style-microgame",
+   "revision": "d5ca28af",
+   "level": "direction",
+   "name": "Microgame frenzy",
+   "line": "A rapid-fire party-game film: a loud toon game-show stage with a TV, a host, a lives board and a stage badge; each beat is a few-second microgame with one shouted command word, drawn in a completely different medium (crayon, pixel, Swiss type, amber terminal), and the film keeps getting faster.",
+   "good_for": "Rapid-fire tips, one per beat, each in a different look",
+   "status": "proven",
+   "kind": "style",
+   "job": null,
+   "support": [],
+   "mood": [],
+   "needs": [
+    "ffmpeg",
+    "node"
+   ],
+   "duration": null,
+   "motion": null,
+   "difficulty": null,
+   "taught_by": 1,
+   "variants": [],
+   "provides": [
+    "environment: stage",
+    "material: flat-vector",
+    "transition: cut",
+    "type: poster"
+   ],
+   "cost": {
+    "renderer": "classic",
+    "seconds_per_frame": 0.093,
+    "measured": "After Effects render of the 10.8 s proof at 1080x1920, 324 frames"
+   },
+   "composes": [],
+   "shelf": "shipped",
+   "section": {
+    "document": "style-microgame",
+    "heading": null
+   },
+   "still": {
+    "path": "arsenal/stills/style-microgame.jpg",
+    "sha256": "50c06962f1e74fe57d8b1bb8e0682bf9772648b9e576e26551134fcec4cd9139"
+   }
+  },
+  {
+   "id": "style-midcentury-toon",
+   "revision": "18aec575",
+   "level": "direction",
+   "name": "Mid-century cartoon",
+   "line": "A 1950s flat-colour, limited-animation follow-along film, like a classroom how-to or an appliance manual come to life.",
+   "good_for": "A how-to or tutorial with a friendly presenter",
+   "status": "proven",
+   "kind": "style",
+   "job": null,
+   "support": [],
+   "mood": [],
+   "needs": [
+    "ffmpeg",
+    "node"
+   ],
+   "duration": null,
+   "motion": null,
+   "difficulty": null,
+   "taught_by": 1,
+   "variants": [],
+   "provides": [
+    "material: flat-vector",
+    "motion: limited",
+    "motion: character",
+    "backdrop: paper"
+   ],
+   "cost": {
+    "renderer": "classic",
+    "seconds_per_frame": 0.127,
+    "measured": "After Effects render of the 10.8 s proof at 1080x1920, 324 frames"
+   },
+   "composes": [],
+   "shelf": "shipped",
+   "section": {
+    "document": "style-midcentury-toon",
+    "heading": null
+   },
+   "still": {
+    "path": "arsenal/stills/style-midcentury-toon.jpg",
+    "sha256": "561857b924b9e83cfd917c3234fbcc3ca40d35fd75567b8e088fa4ed21b60602"
+   }
+  },
+  {
+   "id": "style-one-line",
+   "revision": "44a041e1",
+   "level": "direction",
+   "name": "One-line drawing",
+   "line": "A single ink line that never leaves the paper: everything on screen is that one line being drawn, the camera follows the nib, scenes morph instead of cutting, and the film pulls back at the end to show it was all one picture.",
+   "good_for": "One idea that connects everything; elegant and minimal",
+   "status": "proven",
+   "kind": "style",
+   "job": null,
+   "support": [],
+   "mood": [],
+   "needs": [
+    "ffmpeg",
+    "node"
+   ],
+   "duration": null,
+   "motion": null,
+   "difficulty": null,
+   "taught_by": 1,
+   "variants": [],
+   "provides": [
+    "material: ink",
+    "motion: draw-on",
+    "camera: travel",
+    "transition: morph"
+   ],
+   "cost": {
+    "renderer": "classic",
+    "seconds_per_frame": 0.19,
+    "measured": "After Effects render of the 10.8 s proof at 1080x1920, 324 frames"
+   },
+   "composes": [],
+   "shelf": "shipped",
+   "section": {
+    "document": "style-one-line",
+    "heading": null
+   },
+   "still": {
+    "path": "arsenal/stills/style-one-line.jpg",
+    "sha256": "00d3f86902751967b55741b5c3b085c86bad9d21013b0e9fc90c707777833b74"
+   }
+  },
+  {
+   "id": "style-paper-lantern",
+   "revision": "f13d7bec",
+   "level": "direction",
+   "name": "Paper-cut lightbox",
+   "line": "A layered paper-cut shadow box lit from behind: every shot is a shallow box of flat cut card, back sheets bright and translucent, the front almost black, a warm light glowing through the paper and soft shadows falling from each sheet onto the next.",
+   "good_for": "A warm, story-like moment told in layers of light",
+   "status": "proven",
+   "kind": "style",
+   "job": null,
+   "support": [],
+   "mood": [],
+   "needs": [],
+   "duration": null,
+   "motion": null,
+   "difficulty": null,
+   "taught_by": 1,
+   "variants": [],
+   "provides": [
+    "material: cut-paper",
+    "light: practical",
+    "depth: z-stack",
+    "depth: shadow"
+   ],
+   "cost": {
+    "renderer": "classic",
+    "seconds_per_frame": 0.251,
+    "measured": "After Effects render of the 10.8 s proof at 1080x1920, 324 frames"
+   },
+   "composes": [],
+   "shelf": "shipped",
+   "section": {
+    "document": "style-paper-lantern",
+    "heading": null
+   },
+   "still": {
+    "path": "arsenal/stills/style-paper-lantern.jpg",
+    "sha256": "48c6de167e4a52a91cf670db3bbb790d1b8ba38279aebcef437bb8c1f8737738"
+   }
+  },
+  {
+   "id": "style-pictogram-motion",
+   "revision": "b3ecbe12",
+   "level": "direction",
+   "name": "Pictogram motion",
+   "line": "A beat-locked flash-card film: a square grid of discs, half-discs and small patterned cells whose rows slide past each other, faceless geometric figures made of round-capped bars, and huge bold type that slides up out of masks, one hue per card.",
+   "good_for": "A fast list of facts or steps on a strong beat",
+   "status": "proven",
+   "kind": "style",
+   "job": null,
+   "support": [],
+   "mood": [],
+   "needs": [
+    "ffmpeg",
+    "node"
+   ],
+   "duration": null,
+   "motion": null,
+   "difficulty": null,
+   "taught_by": 1,
+   "variants": [],
+   "provides": [
+    "material: flat-vector",
+    "backdrop: pattern",
+    "type: poster",
+    "transition: slide"
+   ],
+   "cost": {
+    "renderer": "classic",
+    "seconds_per_frame": 0.361,
+    "measured": "After Effects render of the 10.8 s proof at 1080x1920, 324 frames"
+   },
+   "composes": [],
+   "shelf": "shipped",
+   "section": {
+    "document": "style-pictogram-motion",
+    "heading": null
+   },
+   "still": {
+    "path": "arsenal/stills/style-pictogram-motion.jpg",
+    "sha256": "10ba4a34d33c1b4b847bfb3bd5912744881b8ca3a368a2822c13101952044481"
+   }
+  },
+  {
+   "id": "style-pixel-headline",
+   "revision": "d3fb073b",
+   "level": "direction",
+   "name": "Pixel headline",
+   "line": "The speaker cut out on a clean ground, light or dark, with each spoken sentence set around them: a small lead-in falling into place word by word, one giant word in the accent colour that pops on the stressed syllable with a glow and a burst of pixel blocks, video cards popping in after it, a drawn line, and a tail line sliding in, while the camera eases out from the face.",
+   "good_for": "A whole talking-head reel, built by a director agent from a script and a take, where one stressed word per sentence should hit hard and forty seconds must stay in one style",
+   "status": "unproven",
+   "kind": "style",
+   "job": null,
+   "support": [],
+   "mood": [],
+   "needs": [],
+   "duration": null,
+   "motion": null,
+   "difficulty": null,
+   "taught_by": 1,
+   "variants": [],
+   "provides": [
+    "type: reveal",
+    "type: captions",
+    "depth: matte",
+    "light: glow"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
+   "section": {
+    "document": "style-pixel-headline",
+    "heading": null
+   },
+   "still": null,
+   "no_still": "no proof movie to cut a still from"
+  },
+  {
+   "id": "style-risograph",
+   "revision": "4770c0df",
+   "level": "direction",
+   "name": "Risograph print",
+   "line": "Animation that looks printed on a stencil duplicator: two or three translucent spot inks (blue, fluorescent pink, yellow) overprinted on warm paper, every tone a halftone dot screen fixed to the paper, plates that land a few pixels off and kick on the accents, a paper-white knockout halo around figures and type, and plates that roll in or lift away as the story turns.",
+   "good_for": "A zine-feeling explainer with indie, creative energy",
+   "status": "proven",
+   "kind": "style",
+   "job": null,
+   "support": [],
+   "mood": [],
+   "needs": [
+    "ffmpeg",
+    "node"
+   ],
+   "duration": null,
+   "motion": null,
+   "difficulty": null,
+   "taught_by": 1,
+   "variants": [],
+   "provides": [
+    "material: print",
+    "finish: halftone",
+    "finish: misregistration",
+    "backdrop: paper"
+   ],
+   "cost": {
+    "renderer": "classic",
+    "seconds_per_frame": 0.521,
+    "measured": "After Effects render of the 10.8 s proof at 1080x1920, 324 frames"
+   },
+   "composes": [],
+   "shelf": "shipped",
+   "section": {
+    "document": "style-risograph",
+    "heading": null
+   },
+   "still": {
+    "path": "arsenal/stills/style-risograph.jpg",
+    "sha256": "b64c182e59ea3922039cc0e358f7e56537d28f4245ee3b1a56afcd69e585248e"
+   }
+  },
+  {
+   "id": "style-rubber-hose",
+   "revision": "a23da80c",
+   "level": "direction",
+   "name": "Rubber hose cartoon",
+   "line": "A 1930s black-and-white hand-inked cartoon, projected from a worn print.",
+   "good_for": "A comedic bit where an object comes alive",
+   "status": "proven",
+   "kind": "style",
+   "job": null,
+   "support": [],
+   "mood": [],
+   "needs": [
+    "ffmpeg",
+    "node"
+   ],
+   "duration": null,
+   "motion": null,
+   "difficulty": null,
+   "taught_by": 1,
+   "variants": [],
+   "provides": [
+    "motion: character",
+    "finish: film",
+    "material: ink"
+   ],
+   "cost": {
+    "renderer": "classic",
+    "seconds_per_frame": 0.158,
+    "measured": "After Effects render of the 10.8 s proof at 1080x1920, 324 frames"
+   },
+   "composes": [],
+   "shelf": "shipped",
+   "section": {
+    "document": "style-rubber-hose",
+    "heading": null
+   },
+   "still": {
+    "path": "arsenal/stills/style-rubber-hose.jpg",
+    "sha256": "a063ba4dc2196463cceca5f8ca4a13ef25b81b14cfc9d0470c9b2a73d384eb54"
+   }
+  },
+  {
+   "id": "style-silent-film",
+   "revision": "c32f0ec9",
+   "level": "direction",
+   "name": "Silent film",
+   "line": "A 1920s silent picture as it looks projected: an inked, cross-hatched grey drawing on a flickering silver print that weaves, scratches and burns, set in a gate between velvet drapes above the footlights.",
+   "good_for": "An old-way-versus-new-way contrast, played for laughs",
+   "status": "proven",
+   "kind": "style",
+   "job": null,
+   "support": [],
+   "mood": [],
+   "needs": [
+    "ffmpeg",
+    "node"
+   ],
+   "duration": null,
+   "motion": null,
+   "difficulty": null,
+   "taught_by": 1,
+   "variants": [],
+   "provides": [
+    "finish: film",
+    "environment: stage",
+    "type: poster",
+    "material: ink"
+   ],
+   "cost": {
+    "renderer": "classic",
+    "seconds_per_frame": 0.164,
+    "measured": "After Effects render of the 10.8 s proof at 1080x1920, 324 frames"
+   },
+   "composes": [],
+   "shelf": "shipped",
+   "section": {
+    "document": "style-silent-film",
+    "heading": null
+   },
+   "still": {
+    "path": "arsenal/stills/style-silent-film.jpg",
+    "sha256": "d31270d252e1e0c0abea0ef50775dc0c5b93b81d67e8cd1314a61545f400e2ee"
+   }
+  },
+  {
+   "id": "style-silkscreen-poster",
+   "revision": "cd7ffab6",
+   "level": "direction",
+   "name": "Silkscreen poster",
+   "line": "A WPA-style screen-print travel poster printed on camera: four to six opaque flat inks, one squeegee pull per beat, stepped colour bands instead of gradients, slight misregistration with paper slivers, a dark info band whose facts print last, a real frame separated into three inks, and a series of posters hung on a wood wall at the end.",
+   "good_for": "A destination or a big promise sold like a travel poster",
+   "status": "proven",
+   "kind": "style",
+   "job": null,
+   "support": [],
+   "mood": [],
+   "needs": [
+    "ffmpeg",
+    "node"
+   ],
+   "duration": null,
+   "motion": null,
+   "difficulty": null,
+   "taught_by": 1,
+   "variants": [],
+   "provides": [
+    "material: print",
+    "finish: misregistration",
+    "type: poster",
+    "transition: wipe"
+   ],
+   "cost": {
+    "renderer": "classic",
+    "seconds_per_frame": 0.36,
+    "measured": "After Effects render of the 10.8 s proof at 1080x1920, 324 frames"
+   },
+   "composes": [],
+   "shelf": "shipped",
+   "section": {
+    "document": "style-silkscreen-poster",
+    "heading": null
+   },
+   "still": {
+    "path": "arsenal/stills/style-silkscreen-poster.jpg",
+    "sha256": "22d5d0f9442eea08130facc4e4eda462fde8a2176a53f91ff27c2b9a87c1fb2b"
+   }
+  },
+  {
+   "id": "style-spy-titles",
+   "revision": "ec1a1cf4",
+   "level": "direction",
+   "name": "Spy titles",
+   "line": "A 1960s cut-paper title sequence: four flat inks on paper, scissor-cut letters that are the set, a hatted silhouette agent on twos, a giant circle, hard cuts on the beat and a title assembled from the pieces.",
+   "good_for": "A secret, a hack or a mission; something with intrigue",
+   "status": "proven",
+   "kind": "style",
+   "job": null,
+   "support": [],
+   "mood": [],
+   "needs": [
+    "ffmpeg",
+    "node"
+   ],
+   "duration": null,
+   "motion": null,
+   "difficulty": null,
+   "taught_by": 1,
+   "variants": [],
+   "provides": [
+    "material: cut-paper",
+    "type: poster",
+    "transition: cut",
+    "motion: limited"
+   ],
+   "cost": {
+    "renderer": "classic",
+    "seconds_per_frame": 0.159,
+    "measured": "After Effects render of the 10.8 s proof at 1080x1920, 324 frames"
+   },
+   "composes": [],
+   "shelf": "shipped",
+   "section": {
+    "document": "style-spy-titles",
+    "heading": null
+   },
+   "still": {
+    "path": "arsenal/stills/style-spy-titles.jpg",
+    "sha256": "e1ed11919449978a775845b1a17a267c82e41760c3a731340fe2e81598da9b41"
+   }
+  },
+  {
+   "id": "style-stained-glass",
+   "revision": "e297636f",
+   "level": "direction",
+   "name": "Stained glass",
+   "line": "A leaded glass window in a dark stone hall that is alive only where the sun touches it.",
+   "good_for": "A big, reverent idea; something that feels like a revelation",
+   "status": "proven",
+   "kind": "style",
+   "job": null,
+   "support": [],
+   "mood": [],
+   "needs": [
+    "ffmpeg",
+    "node"
+   ],
+   "duration": null,
+   "motion": null,
+   "difficulty": null,
+   "taught_by": 1,
+   "variants": [],
+   "provides": [
+    "material: glass",
+    "light: window",
+    "environment: room"
+   ],
+   "cost": {
+    "renderer": "classic",
+    "seconds_per_frame": 0.13,
+    "measured": "After Effects render of the 10.8 s proof at 1080x1920, 324 frames"
+   },
+   "composes": [],
+   "shelf": "shipped",
+   "section": {
+    "document": "style-stained-glass",
+    "heading": null
+   },
+   "still": {
+    "path": "arsenal/stills/style-stained-glass.jpg",
+    "sha256": "e6c73cd168153b863db6e3ce56722559ca85ed5b380b77dfdfcc30bc14248077"
+   }
+  },
+  {
+   "id": "style-swiss-motion",
+   "revision": "225fb944",
+   "level": "direction",
+   "name": "Swiss motion",
+   "line": "International Typographic Style in motion: a column grid, one grotesque, black on paper with one signal red, every element wiping or snapping onto the grid on the beat.",
+   "good_for": "A clean, confident statement; the design-forward default",
+   "status": "proven",
+   "kind": "style",
+   "job": null,
+   "support": [],
+   "mood": [],
+   "needs": [
+    "ffmpeg",
+    "node"
+   ],
+   "duration": null,
+   "motion": null,
+   "difficulty": null,
+   "taught_by": 1,
+   "variants": [],
+   "provides": [
+    "type: grid",
+    "type: poster",
+    "backdrop: grid",
+    "transition: wipe"
+   ],
+   "cost": {
+    "renderer": "classic",
+    "seconds_per_frame": 0.041,
+    "measured": "After Effects render of the 10.8 s proof at 1080x1920, 324 frames"
+   },
+   "composes": [],
+   "shelf": "shipped",
+   "section": {
+    "document": "style-swiss-motion",
+    "heading": null
+   },
+   "still": {
+    "path": "arsenal/stills/style-swiss-motion.jpg",
+    "sha256": "f0c562b7f1e3e6dfc85763014756272b3178ebdd2a824dfd4a8763fcd7e2ccc6"
+   }
+  },
+  {
+   "id": "style-tilt-shift",
+   "revision": "2c8c5d25",
+   "level": "world",
+   "also_level": [
+    "direction"
+   ],
+   "name": "Tilt-shift miniature",
+   "line": "A real-looking place filmed from high above through a tilted lens, so the whole world reads as a tabletop model.",
+   "good_for": "Zooming out on a busy system; the big-picture view",
+   "status": "proven",
+   "kind": "style",
+   "job": null,
+   "support": [],
+   "mood": [],
+   "needs": [
+    "blender",
+    "ffmpeg",
+    "node"
+   ],
+   "duration": null,
+   "motion": null,
+   "difficulty": null,
+   "taught_by": 1,
+   "variants": [],
+   "provides": [
+    "camera: tilt-shift",
+    "camera: depth-of-field",
+    "environment: city",
+    "light: sun"
+   ],
+   "cost": {
+    "renderer": "blender",
+    "seconds_per_frame": 0.078,
+    "measured": "After Effects render of the 10.8 s proof at 1080x1920, 324 frames, Blender plates not counted"
+   },
+   "composes": [],
+   "shelf": "shipped",
+   "section": {
+    "document": "style-tilt-shift",
+    "heading": null
+   },
+   "still": {
+    "path": "arsenal/stills/style-tilt-shift.jpg",
+    "sha256": "15508ea02d45555d728dcc1f00211ca57495b6178f8f9bcad2fec820e9dd8358"
+   }
+  },
+  {
+   "id": "style-ukiyoe",
+   "revision": "daf7f429",
+   "level": "direction",
+   "name": "Ukiyo-e woodblock print",
+   "line": "Edo woodblock prints brought to life on a handscroll.",
+   "good_for": "A journey or a landscape of ideas, told scroll by scroll",
+   "status": "proven",
+   "kind": "style",
+   "job": null,
+   "support": [],
+   "mood": [],
+   "needs": [
+    "ffmpeg",
+    "node"
+   ],
+   "duration": null,
+   "motion": null,
+   "difficulty": null,
+   "taught_by": 1,
+   "variants": [],
+   "provides": [
+    "material: print",
+    "material: paper",
+    "finish: misregistration"
+   ],
+   "cost": {
+    "renderer": "classic",
+    "seconds_per_frame": 0.223,
+    "measured": "After Effects render of the 10.8 s proof at 1080x1920, 324 frames"
+   },
+   "composes": [],
+   "shelf": "shipped",
+   "section": {
+    "document": "style-ukiyoe",
+    "heading": null
+   },
+   "still": {
+    "path": "arsenal/stills/style-ukiyoe.jpg",
+    "sha256": "82f0c9006868c2087ca1282711358208b5ab28ef27f28be10612219fa4f208eb"
+   }
+  },
+  {
+   "id": "style-whiteboard",
+   "revision": "023b884b",
+   "level": "direction",
+   "name": "Whiteboard explainer",
+   "line": "An explainer drawn live on one glossy dry-erase board: real single-line handwriting written stroke by stroke on the voice, floating markers with no hand, magnets that hold a print, and a camera that travels across the board instead of cutting.",
+   "good_for": "Teaching a concept from scratch, explained as you'd draw it",
+   "status": "proven",
+   "kind": "style",
+   "job": null,
+   "support": [],
+   "mood": [],
+   "needs": [
+    "ffmpeg",
+    "node"
+   ],
+   "duration": null,
+   "motion": null,
+   "difficulty": null,
+   "taught_by": 1,
+   "variants": [],
+   "provides": [
+    "type: handwritten",
+    "motion: draw-on",
+    "camera: travel",
+    "material: gloss"
+   ],
+   "cost": {
+    "renderer": "classic",
+    "seconds_per_frame": 0.248,
+    "measured": "After Effects render of the 10.8 s proof at 1080x1920, 324 frames"
+   },
+   "composes": [],
+   "shelf": "shipped",
+   "section": {
+    "document": "style-whiteboard",
+    "heading": null
+   },
+   "still": {
+    "path": "arsenal/stills/style-whiteboard.jpg",
+    "sha256": "2a7d4c75da762d5336197a12e522bd96a52bca8e5f9cc61fea35fa0a2aa8b621"
+   }
+  },
+  {
+   "id": "style-woodcut",
+   "revision": "b1443515",
+   "level": "direction",
+   "name": "Woodcut print",
+   "line": "A relief print that carves itself: every frame is a black wood block on laid paper, and light exists only where a knife has cut it away.",
+   "good_for": "A bold, serious statement with grit",
+   "status": "proven",
+   "kind": "style",
+   "job": null,
+   "support": [],
+   "mood": [],
+   "needs": [
+    "ffmpeg",
+    "node"
+   ],
+   "duration": null,
+   "motion": null,
+   "difficulty": null,
+   "taught_by": 1,
+   "variants": [],
+   "provides": [
+    "material: print",
+    "type: engraved",
+    "motion: draw-on"
+   ],
+   "cost": {
+    "renderer": "classic",
+    "seconds_per_frame": 0.159,
+    "measured": "After Effects render of the 10.8 s proof at 1080x1920, 324 frames"
+   },
+   "composes": [],
+   "shelf": "shipped",
+   "section": {
+    "document": "style-woodcut",
+    "heading": null
+   },
+   "still": {
+    "path": "arsenal/stills/style-woodcut.jpg",
+    "sha256": "7557ae9b06a5e2380089ba73a8e6a35bd8353ca4d182e135325553b495b0f93a"
    }
   }
  ]

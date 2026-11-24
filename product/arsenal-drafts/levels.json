@@ -1,0 +1,1281 @@
+{
+ "about": "The three-level fields the recipe drafts and tags do not hold: the provides vocabulary, each recipe's provides and renderer (classic unless named), and each visual style's catalog entry. Read by tools/channel-learner/arsenal.mjs. Design: docs/superpowers/specs/2026-11-24-library-three-levels-design.md.",
+ "provides": {
+  "material": [
+   "glass",
+   "gloss",
+   "metal",
+   "paper",
+   "ink",
+   "print",
+   "flat-vector",
+   "low-poly",
+   "wireframe",
+   "pixel",
+   "cut-paper"
+  ],
+  "floor": [
+   "gloss-dark",
+   "shadow-catcher",
+   "ground",
+   "paper"
+  ],
+  "light": [
+   "key",
+   "rim",
+   "fill",
+   "window",
+   "glow",
+   "strip",
+   "practical",
+   "side",
+   "sun"
+  ],
+  "environment": [
+   "studio-dark",
+   "studio-light",
+   "room",
+   "outdoor",
+   "weather",
+   "map",
+   "screen",
+   "stage",
+   "city"
+  ],
+  "camera": [
+   "depth-of-field",
+   "push",
+   "orbit",
+   "focus-lock",
+   "wide-lens",
+   "telephoto",
+   "handheld",
+   "isometric",
+   "tilt-shift",
+   "travel"
+  ],
+  "depth": [
+   "shadow",
+   "z-stack",
+   "fog",
+   "extrusion",
+   "matte",
+   "parallax"
+  ],
+  "type": [
+   "reveal",
+   "3d",
+   "path",
+   "number",
+   "label",
+   "handwritten",
+   "engraved",
+   "grid",
+   "poster",
+   "terminal",
+   "captions"
+  ],
+  "transition": [
+   "wipe",
+   "slide",
+   "split",
+   "match-cut",
+   "cut",
+   "morph",
+   "sweep"
+  ],
+  "backdrop": [
+   "grid",
+   "shapes",
+   "tile",
+   "light-pockets",
+   "paper",
+   "texture",
+   "pattern"
+  ],
+  "finish": [
+   "grain",
+   "glow",
+   "blur",
+   "grade",
+   "stop-motion",
+   "emboss",
+   "halftone",
+   "vhs",
+   "crt",
+   "film",
+   "misregistration"
+  ],
+  "motion": [
+   "loop",
+   "orbit",
+   "particles",
+   "stagger",
+   "sway",
+   "cursor",
+   "counter",
+   "draw-on",
+   "bounce",
+   "swing",
+   "carousel",
+   "chart",
+   "character",
+   "limited"
+  ]
+ },
+ "beats": [
+  "title",
+  "picture",
+  "input",
+  "number",
+  "line",
+  "carry",
+  "end"
+ ],
+ "private_beats": {
+  "input": "shows the proof's own speaker; never a still"
+ },
+ "recipes": {
+  "01-shadow-map-overlay": {
+   "provides": [
+    "light: window",
+    "depth: shadow"
+   ]
+  },
+  "02-shadow-map-wipe-on": {
+   "provides": [
+    "light: window",
+    "transition: wipe"
+   ]
+  },
+  "03-graphics-orbit-a-real-object": {
+   "provides": [
+    "motion: orbit",
+    "depth: matte"
+   ]
+  },
+  "04-swap-footage-keep-edits": {
+   "provides": []
+  },
+  "05-soft-doubled-drop-shadow": {
+   "provides": [
+    "depth: shadow"
+   ]
+  },
+  "06-graphics-behind-subject-object-matte": {
+   "provides": [
+    "depth: matte"
+   ]
+  },
+  "07-key-imperfect-green-screen": {
+   "provides": [
+    "depth: matte"
+   ]
+  },
+  "08-raised-white-shapes-with-long-shadows": {
+   "provides": [
+    "backdrop: shapes",
+    "depth: shadow"
+   ]
+  },
+  "09-edge-lens-blur-and-noise-finish": {
+   "provides": [
+    "finish: blur",
+    "finish: grain"
+   ]
+  },
+  "10-2d-graphics-on-extruded-3d-plate": {
+   "provides": [
+    "material: gloss",
+    "depth: extrusion"
+   ],
+   "renderer": "advanced-3d"
+  },
+  "11-camera-depth-of-field-advanced-3d": {
+   "provides": [
+    "camera: depth-of-field",
+    "material: gloss"
+   ],
+   "renderer": "advanced-3d"
+  },
+  "01-blurred-stroked-shapes-on-light-ground": {
+   "provides": [
+    "backdrop: shapes"
+   ]
+  },
+  "02-glow-radial-blur-noise-finish-stack": {
+   "provides": [
+    "finish: glow",
+    "finish: grain"
+   ]
+  },
+  "03-blurred-light-shapes-at-frame-edges": {
+   "provides": [
+    "backdrop: light-pockets",
+    "light: glow"
+   ]
+  },
+  "04-blur-and-choke-gooey-morph": {
+   "provides": [
+    "backdrop: shapes",
+    "transition: morph"
+   ]
+  },
+  "05-path-opening-split-driven-by-moving-ball": {
+   "provides": [
+    "transition: split"
+   ]
+  },
+  "06-gradient-shapes-blur-noise-glow-posterize": {
+   "provides": [
+    "light: glow",
+    "finish: grain"
+   ]
+  },
+  "01-value-driven-counter": {
+   "provides": [
+    "type: number",
+    "motion: counter"
+   ]
+  },
+  "02-ring-fills-to-value": {
+   "provides": [
+    "motion: chart",
+    "type: number"
+   ]
+  },
+  "03-bars-grow-to-values": {
+   "provides": [
+    "motion: chart"
+   ]
+  },
+  "04-icon-fills-to-value": {
+   "provides": [
+    "motion: chart"
+   ]
+  },
+  "05-map-regions-fade-up": {
+   "provides": [
+    "environment: map"
+   ]
+  },
+  "01-pill-button-in-own-comp": {
+   "provides": [
+    "environment: screen"
+   ]
+  },
+  "02-button-soft-lift-shadow": {
+   "provides": [
+    "depth: shadow",
+    "environment: screen"
+   ]
+  },
+  "03-end-card-stack": {
+   "provides": [
+    "type: reveal",
+    "motion: stagger"
+   ]
+  },
+  "04-tap-cursor-with-rings": {
+   "provides": [
+    "motion: cursor"
+   ]
+  },
+  "05-staggered-slide-in": {
+   "provides": [
+    "motion: stagger",
+    "transition: slide"
+   ]
+  },
+  "06-cursor-travels-and-taps-button": {
+   "provides": [
+    "motion: cursor",
+    "environment: screen"
+   ]
+  },
+  "07-curved-cursor-route": {
+   "provides": [
+    "motion: cursor"
+   ]
+  },
+  "08-staggered-slide-out-exit": {
+   "provides": [
+    "transition: slide",
+    "motion: stagger"
+   ]
+  },
+  "01-dotted-stroke": {
+   "provides": [
+    "motion: loop"
+   ]
+  },
+  "02-line-with-end-dots": {
+   "provides": [
+    "motion: draw-on"
+   ]
+  },
+  "03-tapered-stroke": {
+   "provides": [
+    "motion: draw-on"
+   ]
+  },
+  "04-carousel-by-rotation": {
+   "provides": [
+    "motion: carousel",
+    "type: reveal"
+   ]
+  },
+  "05-stagger-layers-in-time": {
+   "provides": [
+    "motion: stagger"
+   ]
+  },
+  "06-3d-orbit-rings": {
+   "provides": [
+    "motion: orbit",
+    "depth: z-stack"
+   ]
+  },
+  "07-face-the-camera": {
+   "provides": [
+    "motion: orbit"
+   ]
+  },
+  "08-record-puppet-pin-motion": {
+   "provides": [
+    "motion: character"
+   ]
+  },
+  "09-endless-background-tile": {
+   "provides": [
+    "backdrop: tile",
+    "motion: loop"
+   ]
+  },
+  "10-graphic-as-particles": {
+   "provides": [
+    "motion: particles"
+   ]
+  },
+  "11-white-on-light-finish": {
+   "provides": [
+    "finish: emboss"
+   ]
+  },
+  "12-long-soft-shadow": {
+   "provides": [
+    "depth: shadow"
+   ]
+  },
+  "13-dot-grid-texture": {
+   "provides": [
+    "backdrop: grid"
+   ]
+  },
+  "14-3d-floor-shadows": {
+   "provides": [
+    "floor: shadow-catcher",
+    "depth: shadow"
+   ]
+  },
+  "15-grow-bounds-fix": {
+   "provides": []
+  },
+  "16-lock-focus-to-layer": {
+   "provides": [
+    "camera: focus-lock",
+    "camera: depth-of-field"
+   ]
+  },
+  "17-depth-fog": {
+   "provides": [
+    "depth: fog"
+   ]
+  },
+  "18-smooth-text-reveal": {
+   "provides": [
+    "type: reveal"
+   ]
+  },
+  "19-text-on-a-path": {
+   "provides": [
+    "type: path"
+   ]
+  },
+  "20-two-pass-glow": {
+   "provides": [
+    "finish: glow",
+    "light: glow"
+   ]
+  },
+  "21-texture-through-a-matte": {
+   "provides": [
+    "type: reveal",
+    "backdrop: texture",
+    "material: paper"
+   ]
+  },
+  "22-hide-layers-shy": {
+   "provides": []
+  },
+  "23-shutter-angle-blur": {
+   "provides": [
+    "finish: blur"
+   ]
+  },
+  "24-sharp-scaled-precomp": {
+   "provides": []
+  },
+  "25-custom-media-frame": {
+   "provides": [
+    "environment: screen",
+    "depth: matte"
+   ]
+  },
+  "01-rounded-shape-matte-media-card": {
+   "provides": [
+    "environment: screen"
+   ]
+  },
+  "02-pivot-null-swing-loop": {
+   "provides": [
+    "motion: swing",
+    "motion: loop"
+   ]
+  },
+  "03-tilt-and-shrink-on-swing": {
+   "provides": [
+    "motion: swing"
+   ]
+  },
+  "04-duplicate-cards-round-the-pivot": {
+   "provides": [
+    "motion: swing"
+   ]
+  },
+  "05-mask-path-to-position-loop": {
+   "provides": [
+    "motion: orbit",
+    "motion: loop"
+   ]
+  },
+  "06-path-trail-scale-rotate-in": {
+   "provides": [
+    "motion: stagger"
+   ]
+  },
+  "07-3d-spinning-box-of-cards": {
+   "provides": [
+    "motion: loop",
+    "depth: z-stack"
+   ]
+  },
+  "08-tunnel-from-stacked-boxes": {
+   "provides": [
+    "depth: z-stack",
+    "motion: loop"
+   ]
+  },
+  "09-camera-fly-through-with-depth-of-field": {
+   "provides": [
+    "camera: push",
+    "camera: depth-of-field",
+    "transition: cut"
+   ]
+  },
+  "10-inner-ring-carousel": {
+   "provides": [
+    "motion: carousel",
+    "camera: wide-lens"
+   ]
+  },
+  "11-wide-lens-camera-distortion": {
+   "provides": [
+    "camera: wide-lens"
+   ]
+  },
+  "01-bevelled-3d-text-material-texture": {
+   "provides": [
+    "type: 3d",
+    "material: metal",
+    "depth: extrusion"
+   ],
+   "renderer": "advanced-3d"
+  },
+  "02-backlit-environment-light-with-shadow-floor": {
+   "provides": [
+    "light: rim",
+    "floor: shadow-catcher",
+    "environment: studio-dark"
+   ],
+   "renderer": "advanced-3d"
+  },
+  "03-parallel-rim-light-no-shadows": {
+   "provides": [
+    "light: rim"
+   ],
+   "renderer": "advanced-3d"
+  },
+  "04-point-light-falloff-front-fill": {
+   "provides": [
+    "light: fill",
+    "light: key"
+   ],
+   "renderer": "advanced-3d"
+  },
+  "05-per-character-3d-fly-in-ramp-up": {
+   "provides": [
+    "type: 3d",
+    "type: reveal"
+   ],
+   "renderer": "advanced-3d"
+  },
+  "06-depth-of-field-camera-push-on-null": {
+   "provides": [
+    "camera: push",
+    "camera: depth-of-field"
+   ],
+   "renderer": "advanced-3d"
+  },
+  "07-gold-face-plain-sides-look": {
+   "provides": [
+    "type: 3d",
+    "material: metal"
+   ],
+   "renderer": "advanced-3d"
+  },
+  "08-outline-only-3d-title": {
+   "provides": [
+    "type: 3d",
+    "material: metal"
+   ],
+   "renderer": "advanced-3d"
+  },
+  "09-rotating-3d-text-ring-loop": {
+   "provides": [
+    "type: 3d",
+    "motion: loop"
+   ],
+   "renderer": "advanced-3d"
+  },
+  "01-vector-art-split-into-layers": {
+   "provides": []
+  },
+  "02-tritone-curves-mood-grade": {
+   "provides": [
+    "finish: grade"
+   ]
+  },
+  "03-z-depth-push-and-rescale": {
+   "provides": [
+    "depth: z-stack",
+    "depth: parallax"
+   ]
+  },
+  "04-camera-depth-of-field-focus-lock-dolly": {
+   "provides": [
+    "camera: focus-lock",
+    "camera: push"
+   ]
+  },
+  "05-looping-wind-sway-rotation": {
+   "provides": [
+    "motion: sway",
+    "environment: outdoor"
+   ]
+  },
+  "06-wave-warp-grass-wind": {
+   "provides": [
+    "motion: sway",
+    "environment: outdoor"
+   ]
+  },
+  "07-leaf-particles-blown-across": {
+   "provides": [
+    "motion: particles",
+    "environment: outdoor"
+   ]
+  },
+  "08-rainfall-matched-to-wind": {
+   "provides": [
+    "environment: weather"
+   ]
+  },
+  "10-film-grain-finish-stack": {
+   "provides": [
+    "finish: grain",
+    "finish: film"
+   ]
+  },
+  "11-matching-closeup-telephoto-compression": {
+   "provides": [
+    "camera: telephoto"
+   ]
+  },
+  "13-masked-curves-relight-track-matte": {
+   "provides": [
+    "light: side"
+   ]
+  },
+  "01-segmented-progress-bar-draws-in-order": {
+   "provides": [
+    "motion: draw-on",
+    "motion: chart"
+   ]
+  },
+  "02-labels-rise-from-behind-the-bar": {
+   "provides": [
+    "type: label"
+   ]
+  },
+  "03-step-icons-pop-with-bounce-in-sequence": {
+   "provides": [
+    "motion: bounce",
+    "motion: stagger"
+   ]
+  },
+  "04-curved-arrow-draws-between-steps": {
+   "provides": [
+    "motion: draw-on"
+   ]
+  },
+  "05-stop-motion-jitter-and-mono-finish": {
+   "provides": [
+    "finish: stop-motion"
+   ]
+  },
+  "06-faint-graph-paper-backdrop": {
+   "provides": [
+    "backdrop: grid",
+    "backdrop: paper"
+   ]
+  },
+  "07-stroked-bars-grow-in-stagger-with-value-labels": {
+   "provides": [
+    "motion: chart",
+    "type: label"
+   ]
+  },
+  "08-baseline-draws-out-from-centre": {
+   "provides": [
+    "motion: draw-on",
+    "motion: chart"
+   ]
+  },
+  "09-grid-clipped-to-the-chart-area": {
+   "provides": [
+    "backdrop: grid",
+    "motion: chart"
+   ]
+  },
+  "10-pie-slice-from-a-stroked-ring": {
+   "provides": [
+    "motion: chart"
+   ]
+  },
+  "11-label-rises-word-by-word": {
+   "provides": [
+    "type: label",
+    "type: reveal"
+   ]
+  },
+  "12-pyramid-tiers-spread-to-reveal-labels": {
+   "provides": [
+    "transition: split",
+    "type: label"
+   ]
+  },
+  "13-match-cut-carried-by-movement": {
+   "provides": [
+    "transition: match-cut"
+   ]
+  },
+  "14-pinned-photos-swaying-on-a-map": {
+   "provides": [
+    "environment: map",
+    "motion: sway"
+   ]
+  },
+  "15-map-highlights-and-border-trace": {
+   "provides": [
+    "environment: map",
+    "motion: draw-on"
+   ]
+  }
+ },
+ "styles": {
+  "art-deco": {
+   "level": "direction",
+   "provides": [
+    "material: metal",
+    "light: glow",
+    "backdrop: pattern",
+    "type: poster",
+    "transition: wipe"
+   ],
+   "cost": {
+    "renderer": "classic",
+    "seconds_per_frame": 0.164,
+    "measured": "After Effects render of the 10.8 s proof at 1080x1920, 324 frames"
+   },
+   "still": {
+    "beat": "picture"
+   },
+   "composes": []
+  },
+  "backrooms": {
+   "level": "world",
+   "also_level": [
+    "direction"
+   ],
+   "provides": [
+    "environment: room",
+    "camera: handheld",
+    "depth: fog",
+    "light: practical",
+    "finish: vhs",
+    "type: captions"
+   ],
+   "cost": {
+    "renderer": "blender",
+    "seconds_per_frame": 0.446,
+    "measured": "After Effects render of the 10.8 s proof at 1080x1920, 324 frames, Blender plates not counted"
+   },
+   "still": {
+    "beat": "picture"
+   },
+   "composes": []
+  },
+  "blueprint": {
+   "level": "direction",
+   "provides": [
+    "material: paper",
+    "backdrop: grid",
+    "motion: draw-on",
+    "type: handwritten"
+   ],
+   "cost": {
+    "renderer": "classic",
+    "seconds_per_frame": 0.075,
+    "measured": "After Effects render of the 10.8 s proof at 1080x1920, 324 frames"
+   },
+   "still": {
+    "beat": "picture"
+   },
+   "composes": []
+  },
+  "crt-terminal": {
+   "level": "direction",
+   "provides": [
+    "type: terminal",
+    "finish: crt",
+    "environment: screen"
+   ],
+   "cost": {
+    "renderer": "classic",
+    "seconds_per_frame": 0.214,
+    "measured": "After Effects render of the 10.8 s proof at 1080x1920, 324 frames"
+   },
+   "still": {
+    "beat": "picture"
+   },
+   "composes": []
+  },
+  "dark-keynote": {
+   "level": "direction",
+   "provides": [
+    "environment: studio-dark",
+    "environment: screen",
+    "backdrop: grid",
+    "light: glow",
+    "type: number",
+    "transition: sweep"
+   ],
+   "cost": {
+    "renderer": "classic",
+    "seconds_per_frame": 0.047,
+    "measured": "After Effects render of the 10.8 s proof at 1080x1920, 324 frames"
+   },
+   "still": {
+    "beat": "picture"
+   },
+   "composes": []
+  },
+  "dataviz": {
+   "level": "direction",
+   "provides": [
+    "material: paper",
+    "motion: chart",
+    "type: handwritten",
+    "motion: draw-on"
+   ],
+   "cost": {
+    "renderer": "classic",
+    "seconds_per_frame": 0.05,
+    "measured": "After Effects render of the 10.8 s proof at 1080x1920, 324 frames"
+   },
+   "still": {
+    "beat": "picture"
+   },
+   "composes": []
+  },
+  "engraving": {
+   "level": "direction",
+   "provides": [
+    "material: print",
+    "material: paper",
+    "motion: draw-on",
+    "type: engraved"
+   ],
+   "cost": {
+    "renderer": "classic",
+    "seconds_per_frame": 0.198,
+    "measured": "After Effects render of the 10.8 s proof at 1080x1920, 324 frames"
+   },
+   "still": {
+    "beat": "picture"
+   },
+   "composes": []
+  },
+  "game-show": {
+   "level": "direction",
+   "provides": [
+    "material: flat-vector",
+    "backdrop: pattern",
+    "motion: bounce",
+    "motion: character"
+   ],
+   "cost": {
+    "renderer": "classic",
+    "seconds_per_frame": 0.081,
+    "measured": "After Effects render of the 10.8 s proof at 1080x1920, 324 frames"
+   },
+   "still": {
+    "beat": "picture"
+   },
+   "composes": []
+  },
+  "glass-product": {
+   "level": "world",
+   "also_level": [
+    "direction"
+   ],
+   "provides": [
+    "material: glass",
+    "material: metal",
+    "floor: gloss-dark",
+    "environment: studio-dark",
+    "light: strip",
+    "light: rim",
+    "camera: orbit",
+    "camera: depth-of-field",
+    "type: captions"
+   ],
+   "cost": {
+    "renderer": "blender",
+    "seconds_per_frame": 0.072,
+    "measured": "After Effects render of the 10.8 s proof at 1080x1920, 324 frames, Blender plates not counted"
+   },
+   "still": {
+    "beat": "picture"
+   },
+   "composes": []
+  },
+  "halftone-dossier": {
+   "level": "direction",
+   "provides": [
+    "material: print",
+    "finish: halftone",
+    "finish: misregistration",
+    "type: poster"
+   ],
+   "cost": {
+    "renderer": "classic",
+    "seconds_per_frame": 0.124,
+    "measured": "After Effects render of the 10.8 s proof at 1080x1920, 324 frames"
+   },
+   "still": {
+    "beat": "picture"
+   },
+   "composes": []
+  },
+  "hologram-hud": {
+   "level": "direction",
+   "provides": [
+    "material: wireframe",
+    "environment: studio-dark",
+    "light: glow",
+    "camera: orbit",
+    "type: label"
+   ],
+   "cost": {
+    "renderer": "classic",
+    "seconds_per_frame": 0.285,
+    "measured": "After Effects render of the 10.8 s proof at 1080x1920, 324 frames"
+   },
+   "still": {
+    "beat": "picture"
+   },
+   "composes": []
+  },
+  "iso-infographic": {
+   "level": "direction",
+   "provides": [
+    "material: flat-vector",
+    "camera: isometric",
+    "type: label",
+    "motion: draw-on"
+   ],
+   "cost": {
+    "renderer": "classic",
+    "seconds_per_frame": 0.059,
+    "measured": "After Effects render of the 10.8 s proof at 1080x1920, 324 frames"
+   },
+   "still": {
+    "beat": "picture"
+   },
+   "composes": []
+  },
+  "living-screencast": {
+   "level": "direction",
+   "provides": [
+    "environment: screen",
+    "motion: cursor",
+    "camera: push",
+    "material: pixel"
+   ],
+   "cost": {
+    "renderer": "classic",
+    "seconds_per_frame": 0.084,
+    "measured": "After Effects render of the 10.8 s proof at 1080x1920, 324 frames"
+   },
+   "still": {
+    "beat": "picture"
+   },
+   "composes": []
+  },
+  "lowpoly-island": {
+   "level": "world",
+   "also_level": [
+    "direction"
+   ],
+   "provides": [
+    "material: low-poly",
+    "environment: outdoor",
+    "camera: isometric",
+    "light: sun",
+    "motion: bounce"
+   ],
+   "cost": {
+    "renderer": "blender",
+    "seconds_per_frame": 0.087,
+    "measured": "After Effects render of the 10.8 s proof at 1080x1920, 324 frames, Blender plates not counted"
+   },
+   "still": {
+    "beat": "picture"
+   },
+   "composes": []
+  },
+  "microgame": {
+   "level": "direction",
+   "provides": [
+    "environment: stage",
+    "material: flat-vector",
+    "transition: cut",
+    "type: poster"
+   ],
+   "cost": {
+    "renderer": "classic",
+    "seconds_per_frame": 0.093,
+    "measured": "After Effects render of the 10.8 s proof at 1080x1920, 324 frames"
+   },
+   "still": {
+    "beat": "picture"
+   },
+   "composes": []
+  },
+  "midcentury-toon": {
+   "level": "direction",
+   "provides": [
+    "material: flat-vector",
+    "motion: limited",
+    "motion: character",
+    "backdrop: paper"
+   ],
+   "cost": {
+    "renderer": "classic",
+    "seconds_per_frame": 0.127,
+    "measured": "After Effects render of the 10.8 s proof at 1080x1920, 324 frames"
+   },
+   "still": {
+    "beat": "picture"
+   },
+   "composes": []
+  },
+  "one-line": {
+   "level": "direction",
+   "provides": [
+    "material: ink",
+    "motion: draw-on",
+    "camera: travel",
+    "transition: morph"
+   ],
+   "cost": {
+    "renderer": "classic",
+    "seconds_per_frame": 0.19,
+    "measured": "After Effects render of the 10.8 s proof at 1080x1920, 324 frames"
+   },
+   "still": {
+    "beat": "picture"
+   },
+   "composes": []
+  },
+  "paper-lantern": {
+   "level": "direction",
+   "provides": [
+    "material: cut-paper",
+    "light: practical",
+    "depth: z-stack",
+    "depth: shadow"
+   ],
+   "cost": {
+    "renderer": "classic",
+    "seconds_per_frame": 0.251,
+    "measured": "After Effects render of the 10.8 s proof at 1080x1920, 324 frames"
+   },
+   "still": {
+    "beat": "picture"
+   },
+   "composes": []
+  },
+  "pictogram-motion": {
+   "level": "direction",
+   "provides": [
+    "material: flat-vector",
+    "backdrop: pattern",
+    "type: poster",
+    "transition: slide"
+   ],
+   "cost": {
+    "renderer": "classic",
+    "seconds_per_frame": 0.361,
+    "measured": "After Effects render of the 10.8 s proof at 1080x1920, 324 frames"
+   },
+   "still": {
+    "beat": "picture"
+   },
+   "composes": []
+  },
+  "pixel-headline": {
+   "level": "direction",
+   "provides": [
+    "type: reveal",
+    "type: captions",
+    "depth: matte",
+    "light: glow"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "still": null,
+   "composes": []
+  },
+  "risograph": {
+   "level": "direction",
+   "provides": [
+    "material: print",
+    "finish: halftone",
+    "finish: misregistration",
+    "backdrop: paper"
+   ],
+   "cost": {
+    "renderer": "classic",
+    "seconds_per_frame": 0.521,
+    "measured": "After Effects render of the 10.8 s proof at 1080x1920, 324 frames"
+   },
+   "still": {
+    "beat": "picture"
+   },
+   "composes": []
+  },
+  "rubber-hose": {
+   "level": "direction",
+   "provides": [
+    "motion: character",
+    "finish: film",
+    "material: ink"
+   ],
+   "cost": {
+    "renderer": "classic",
+    "seconds_per_frame": 0.158,
+    "measured": "After Effects render of the 10.8 s proof at 1080x1920, 324 frames"
+   },
+   "still": {
+    "beat": "picture"
+   },
+   "composes": []
+  },
+  "silent-film": {
+   "level": "direction",
+   "provides": [
+    "finish: film",
+    "environment: stage",
+    "type: poster",
+    "material: ink"
+   ],
+   "cost": {
+    "renderer": "classic",
+    "seconds_per_frame": 0.164,
+    "measured": "After Effects render of the 10.8 s proof at 1080x1920, 324 frames"
+   },
+   "still": {
+    "beat": "picture"
+   },
+   "composes": []
+  },
+  "silkscreen-poster": {
+   "level": "direction",
+   "provides": [
+    "material: print",
+    "finish: misregistration",
+    "type: poster",
+    "transition: wipe"
+   ],
+   "cost": {
+    "renderer": "classic",
+    "seconds_per_frame": 0.36,
+    "measured": "After Effects render of the 10.8 s proof at 1080x1920, 324 frames"
+   },
+   "still": {
+    "beat": "picture"
+   },
+   "composes": []
+  },
+  "spy-titles": {
+   "level": "direction",
+   "provides": [
+    "material: cut-paper",
+    "type: poster",
+    "transition: cut",
+    "motion: limited"
+   ],
+   "cost": {
+    "renderer": "classic",
+    "seconds_per_frame": 0.159,
+    "measured": "After Effects render of the 10.8 s proof at 1080x1920, 324 frames"
+   },
+   "still": {
+    "beat": "picture"
+   },
+   "composes": []
+  },
+  "stained-glass": {
+   "level": "direction",
+   "provides": [
+    "material: glass",
+    "light: window",
+    "environment: room"
+   ],
+   "cost": {
+    "renderer": "classic",
+    "seconds_per_frame": 0.13,
+    "measured": "After Effects render of the 10.8 s proof at 1080x1920, 324 frames"
+   },
+   "still": {
+    "beat": "picture"
+   },
+   "composes": []
+  },
+  "swiss-motion": {
+   "level": "direction",
+   "provides": [
+    "type: grid",
+    "type: poster",
+    "backdrop: grid",
+    "transition: wipe"
+   ],
+   "cost": {
+    "renderer": "classic",
+    "seconds_per_frame": 0.041,
+    "measured": "After Effects render of the 10.8 s proof at 1080x1920, 324 frames"
+   },
+   "still": {
+    "beat": "picture"
+   },
+   "composes": []
+  },
+  "tilt-shift": {
+   "level": "world",
+   "also_level": [
+    "direction"
+   ],
+   "provides": [
+    "camera: tilt-shift",
+    "camera: depth-of-field",
+    "environment: city",
+    "light: sun"
+   ],
+   "cost": {
+    "renderer": "blender",
+    "seconds_per_frame": 0.078,
+    "measured": "After Effects render of the 10.8 s proof at 1080x1920, 324 frames, Blender plates not counted"
+   },
+   "still": {
+    "beat": "picture"
+   },
+   "composes": []
+  },
+  "ukiyoe": {
+   "level": "direction",
+   "provides": [
+    "material: print",
+    "material: paper",
+    "finish: misregistration"
+   ],
+   "cost": {
+    "renderer": "classic",
+    "seconds_per_frame": 0.223,
+    "measured": "After Effects render of the 10.8 s proof at 1080x1920, 324 frames"
+   },
+   "still": {
+    "beat": "picture"
+   },
+   "composes": []
+  },
+  "whiteboard": {
+   "level": "direction",
+   "provides": [
+    "type: handwritten",
+    "motion: draw-on",
+    "camera: travel",
+    "material: gloss"
+   ],
+   "cost": {
+    "renderer": "classic",
+    "seconds_per_frame": 0.248,
+    "measured": "After Effects render of the 10.8 s proof at 1080x1920, 324 frames"
+   },
+   "still": {
+    "beat": "picture"
+   },
+   "composes": []
+  },
+  "woodcut": {
+   "level": "direction",
+   "provides": [
+    "material: print",
+    "type: engraved",
+    "motion: draw-on"
+   ],
+   "cost": {
+    "renderer": "classic",
+    "seconds_per_frame": 0.159,
+    "measured": "After Effects render of the 10.8 s proof at 1080x1920, 324 frames"
+   },
+   "still": {
+    "beat": "picture"
+   },
+   "composes": []
+  }
+ }
+}

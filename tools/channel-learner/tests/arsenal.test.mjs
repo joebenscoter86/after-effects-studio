@@ -7,7 +7,7 @@ import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { buildCatalog } from '../catalog.mjs';
-import { scrubRecipe, buildArsenal, writeArsenal, galleryBlock, withGallery, creatorsOf, publicJobs, publicStatus, JOBS_REWORDING, PRIVATE_NAMES } from '../arsenal.mjs';
+import { scrubRecipe, buildArsenal, writeArsenal, galleryBlock, withGallery, creatorsOf, publicJobs, publicStatus, JOBS_REWORDING, PRIVATE_NAMES, levelsProblems, readStyles, parseProvides } from '../arsenal.mjs';
 
 const CLI = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'arsenal.mjs');
 const ACCEPTED = 'status: proven (accepted by the owner 2026-11-14: rebuilt and compared)';
@@ -148,7 +148,7 @@ test('build: a group too big for one package file is split into numbered parts, 
   assert.match(index.documents.find((d) => d.id === 'arsenal-line-2').title, /part 2 of \d/);
   for (const f of parts) assert.ok(Buffer.byteLength(files.get(f)) <= limit, `${f} over the limit`);
   const docs = new Map(index.documents.map((d) => [d.id, d.path.replace(/^arsenal\//, '')]));
-  for (const r of JSON.parse(files.get('catalog.json')).recipes) {
+  for (const r of JSON.parse(files.get('catalog.json')).entries) {
     const file = docs.get(r.section.document);
     assert.ok(file, `${r.id} points at ${r.section.document}, which the index does not list`);
     assert.match(files.get(file), new RegExp(`^## ${r.section.heading}\\nid: ${r.id}$`, 'm'));
@@ -165,12 +165,12 @@ test('build: each shipped recipe carries its id, revision and jobs, and none of 
   const text = files.get('recipes-picture.md');
   const cat = JSON.parse(files.get('catalog.json'));
   assert.match(text, /^id: 01-pic$/m);
-  assert.match(text, new RegExp(`^revision: ${cat.recipes[0].revision}$`, 'm'));
+  assert.match(text, new RegExp(`^revision: ${cat.entries[0].revision}$`, 'm'));
   assert.match(text, /^job: add-depth; support: before-after$/m);
   assert.match(text, /^status: proven \(accepted 2026-11-14\)$/m);
   assert.doesNotMatch(text, /accepted by|rebuilt and compared/);
   assert.doesNotMatch(text, /vidAAAAAAAA|\bf\d{4,6}\b|scratch\//);
-  assert.equal(JSON.parse(files.get('catalog.json')).recipes[0].status, 'proven');
+  assert.equal(JSON.parse(files.get('catalog.json')).entries[0].status, 'proven');
 });
 
 test('status: a shipped status line keeps the acceptance date and drops who accepted it and what they said', () => {
@@ -197,7 +197,7 @@ test('build: the catalog line is scrubbed like the recipe text', () => {
   try {
     catalog.recipes[0].line = 'Sets up depth (off at f010901) as in vidAAAAAAAA.';
     const { files } = buildArsenal({ catalog, jobs: JOBS, examples: EXAMPLES, draftsDir: dir, stills: {}, creators: [] });
-    assert.equal(JSON.parse(files.get('catalog.json')).recipes[0].line, 'Sets up depth (off) as in the source video.');
+    assert.equal(JSON.parse(files.get('catalog.json')).entries[0].line, 'Sets up depth (off) as in the source video.');
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 });
 
@@ -206,7 +206,7 @@ test('build: the catalog records point at the shipped document and drop the sour
   const cat = JSON.parse(files.get('catalog.json'));
   assert.equal(cat.vocab, 'jobs-v1');
   assert.deepEqual(cat.jobs, ['before-after', 'add-depth', 'hand-over']);
-  const [r] = cat.recipes;
+  const [r] = cat.entries;
   assert.deepEqual(r.section, { document: 'arsenal-picture', heading: 'Name pic' });
   for (const field of ['video', 'n', 'why', 'group']) assert.equal(field in r, false, field);
   assert.deepEqual(r.mood, ['calm']);
@@ -224,7 +224,7 @@ test('build: a still ships only for a proven technique, with its path and hash',
     { slug: 'aid', status: 'proven', kind: 'build-aid', job: null },
   ], { proofs: { '01-p': 'x/01.png', '02-u': 'x/02.png', '03-aid': 'x/03.png' }, stills: { '01-p': jpg, '03-aid': jpg } });
   const cat = JSON.parse(files.get('catalog.json'));
-  assert.deepEqual(cat.recipes.map((r) => r.still), [{ path: 'arsenal/stills/01-p.jpg', sha256: sha(jpg) }, null, null]);
+  assert.deepEqual(cat.entries.map((r) => r.still), [{ path: 'arsenal/stills/01-p.jpg', sha256: sha(jpg) }, null, null]);
   assert.deepEqual(Object.keys(stills), ['01-p']);
 });
 
@@ -398,7 +398,7 @@ test('variants: a variant ships beside its parent, in the parent\'s job group fi
   const order = [...text.matchAll(/^## (.+)$/gm)].map((m) => m[1]);
   assert.deepEqual(order, ['Name parent', 'Name var', 'Name other']);
   const cat = JSON.parse(files.get('catalog.json'));
-  const by = Object.fromEntries(cat.recipes.map((r) => [r.id, r]));
+  const by = Object.fromEntries(cat.entries.map((r) => [r.id, r]));
   assert.deepEqual(by['01-var'].section, { document: 'arsenal-line', heading: 'Name var' });
   assert.equal(by['01-var'].variant_of, '01-parent');
   assert.equal(by['01-var'].job, 'add-depth');
@@ -424,7 +424,7 @@ test('variants: the name guard runs on the variant lines', () => {
 });
 
 test('gallery: a recipe with variants shows how many', () => {
-  const block = galleryBlock({ recipes: [
+  const block = galleryBlock({ entries: [
     { id: '01-p', name: 'Round dots', still: { path: 'arsenal/stills/01-p.jpg' }, variants: ['02-a', '03-b'] },
     { id: '04-q', name: 'One more', still: { path: 'arsenal/stills/04-q.jpg' }, variants: ['05-c'] },
     { id: '06-r', name: 'Plain', still: { path: 'arsenal/stills/06-r.jpg' }, variants: [] },
@@ -452,7 +452,7 @@ test('write: writes the files, makes each wanted still once, keeps an existing o
     assert.deepEqual(fs.readdirSync(path.join(out, 'stills')).sort(), ['01-p.jpg', '02-q.jpg']);
     assert.deepEqual(fs.readdirSync(out).sort(), ['catalog.json', 'index.json', 'jobs-v1.json', 'recipes-line.md', 'stills']);
     const cat = JSON.parse(fs.readFileSync(path.join(out, 'catalog.json'), 'utf8'));
-    assert.equal(cat.recipes[1].still.sha256, sha('kept'));
+    assert.equal(cat.entries[1].still.sha256, sha('kept'));
     assert.deepEqual(res.missing, []);
   } finally { fs.rmSync(dir, { recursive: true, force: true }); fs.rmSync(out, { recursive: true, force: true }); }
 });
@@ -464,14 +464,14 @@ test('write: a wanted still with no render and no existing copy is reported miss
     const makeStill = () => { throw new Error('no such render'); };
     const res = writeArsenal({ catalog, jobs: JOBS, examples: EXAMPLES, draftsDir: dir, outDir: out, rendersRoot: null, makeStill, creators: [] });
     assert.deepEqual(res.missing, ['01-p']);
-    assert.equal(JSON.parse(fs.readFileSync(path.join(out, 'catalog.json'), 'utf8')).recipes[0].still, null);
+    assert.equal(JSON.parse(fs.readFileSync(path.join(out, 'catalog.json'), 'utf8')).entries[0].still, null);
   } finally { fs.rmSync(dir, { recursive: true, force: true }); fs.rmSync(out, { recursive: true, force: true }); }
 });
 
 // ---------- README gallery ----------
 
 test('gallery: shows each shipped still with Markdown image syntax, under its recipe name', () => {
-  const cat = { recipes: [
+  const cat = { entries: [
     { id: '01-p', name: 'Round dots', still: { path: 'arsenal/stills/01-p.jpg' } },
     { id: '02-u', name: 'No still', still: null },
   ] };
@@ -512,4 +512,120 @@ test('cli: one command builds the arsenal from drafts, tags and a jobs file, and
     assert.deepEqual(fs.readdirSync(out).sort(), ['catalog.json', 'index.json', 'jobs-v1.json', 'recipes-line.md']);
     assert.match(r.stdout, /"recipes":1/);
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+// ---------- three levels: levels.json, style entries, stills required or marked ----------
+
+const VOCAB = { material: ['glass', 'paper'], floor: ['gloss-dark'], depth: [] };
+const STYLE = { id: 'glassy', title: 'Glassy', summary: 'A glass object on a dark floor. More words.', goodFor: 'A product reveal', needs: ['blender'], contentStatus: 'proven', pluginProof: null };
+const levelsFor = (catalog, o = {}) => ({
+  provides: VOCAB, beats: ['title', 'picture', 'input'], private_beats: { input: 'the speaker' },
+  recipes: Object.fromEntries(catalog.recipes.map((r) => [r.id, { provides: ['depth'] }])),
+  styles: { glassy: { level: 'world', also_level: ['direction'], provides: ['material: glass', 'floor: gloss-dark'], cost: { renderer: 'blender', seconds_per_frame: 0.07 }, still: { beat: 'picture' }, composes: [] } },
+  ...o,
+});
+const buildLevels = (entries, edit = (l) => l, o = {}) => {
+  const { dir, catalog } = fixture(entries, o.proofs);
+  try {
+    return buildArsenal({ catalog, jobs: JOBS, examples: EXAMPLES, draftsDir: dir, stills: o.stills ?? {}, creators: [],
+      levels: edit(levelsFor(catalog)), styles: o.styles ?? [STYLE], styleDocs: { glassy: '# Glassy\n\nText.\n' } });
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+};
+
+test('levels: provides is "key" or "key: word"', () => {
+  assert.deepEqual(parseProvides('material: glass'), ['material', 'glass']);
+  assert.deepEqual(parseProvides('depth'), ['depth', null]);
+  assert.equal(parseProvides('Material Glass!'), null);
+});
+
+test('levels: every entry gets level, provides, cost, composes and shelf; recipes are level recipe', () => {
+  const jpg = Buffer.from('jpeg');
+  const cat = JSON.parse(buildLevels([{ slug: 'p', status: 'proven' }], (l) => l, { proofs: { '01-p': 'x.png' }, stills: { '01-p': jpg, 'style-glassy': jpg } }).files.get('catalog.json'));
+  assert.deepEqual(cat.levels, ['direction', 'world', 'recipe']);
+  assert.deepEqual(cat.provides, VOCAB);
+  const [r, s] = cat.entries;
+  assert.equal(r.level, 'recipe');
+  assert.deepEqual(r.provides, ['depth']);
+  assert.deepEqual(r.cost, { renderer: 'classic' });
+  assert.deepEqual(r.composes, []);
+  assert.equal(r.shelf, 'shipped');
+  assert.equal(s.id, 'style-glassy');
+  assert.equal(s.level, 'world');
+  assert.deepEqual(s.also_level, ['direction']);
+  assert.equal(s.kind, 'style');
+  assert.equal(s.job, null);
+  assert.equal(s.line, 'A glass object on a dark floor.');
+  assert.deepEqual(s.section, { document: 'style-glassy', heading: null });
+  assert.deepEqual(s.still, { path: 'arsenal/stills/style-glassy.jpg', sha256: sha(jpg) });
+  assert.match(s.revision, /^[0-9a-f]{8}$/);
+});
+
+test('levels: recipe revisions are the same with or without levels, so pinned ids keep resolving', () => {
+  const plain = JSON.parse(build([{ slug: 'p', status: 'proven' }]).files.get('catalog.json')).entries;
+  const lv = JSON.parse(buildLevels([{ slug: 'p', status: 'proven' }]).files.get('catalog.json')).entries;
+  assert.equal(lv[0].revision, plain[0].revision);
+});
+
+test('levels: an entry with no still carries the reason, never a bare null', () => {
+  const cat = JSON.parse(buildLevels([{ slug: 'u' }, { slug: 'aid', status: 'proven', kind: 'build-aid', job: null }]).files.get('catalog.json'));
+  const by = Object.fromEntries(cat.entries.map((e) => [e.id, e]));
+  assert.match(by['01-u'].no_still, /unproven/);
+  assert.match(by['02-aid'].no_still, /build aid/);
+  assert.match(by['style-glassy'].no_still, /no still made yet/);
+  for (const e of cat.entries) assert.ok(e.still || e.no_still, e.id);
+});
+
+test('levels: refuses provides outside the vocabulary, a technique with none, and a recipe with no record', () => {
+  const entries = [{ slug: 'p', status: 'proven' }];
+  assert.throws(() => buildLevels(entries, (l) => ({ ...l, recipes: { '01-p': { provides: ['sparkle'] } } })), /provides key "sparkle" is not in the vocabulary/);
+  assert.throws(() => buildLevels(entries, (l) => ({ ...l, recipes: { '01-p': { provides: ['material: wood'] } } })), /"material: wood" is not one of the material words/);
+  assert.throws(() => buildLevels(entries, (l) => ({ ...l, recipes: { '01-p': { provides: [] } } })), /a technique needs at least one provides/);
+  assert.throws(() => buildLevels(entries, (l) => ({ ...l, recipes: {} })), /recipe 01-p has no levels record/);
+  assert.throws(() => buildLevels(entries, (l) => ({ ...l, recipes: { ...l.recipes, '09-x': { provides: ['depth'] } } })), /levels record for 09-x, which is not a recipe/);
+});
+
+test('levels: refuses a style without a record, a record without a style, a bad level and a still from a private beat', () => {
+  const entries = [{ slug: 'p', status: 'proven' }];
+  assert.throws(() => buildLevels(entries, (l) => ({ ...l, styles: {} })), /style glassy has no levels record/);
+  assert.throws(() => buildLevels(entries, (l) => l, { styles: [] }), /levels record for style glassy, which is not in the style index/);
+  assert.throws(() => buildLevels(entries, (l) => ({ ...l, styles: { glassy: { ...l.styles.glassy, level: 'recipe' } } })), /level "recipe" is not direction or world/);
+  assert.throws(() => buildLevels(entries, (l) => ({ ...l, styles: { glassy: { ...l.styles.glassy, still: { beat: 'input' } } } })), /still beat "input" is private/);
+});
+
+test('write: a style still is cut once from its proof movie at the named beat, then kept', () => {
+  const { dir, catalog } = fixture([{ slug: 'p', status: 'proven' }], { '01-p': 'proofs/01.png' });
+  const out = fs.mkdtempSync(path.join(tmpdir(), 'arsenal-out-'));
+  const proofs = fs.mkdtempSync(path.join(tmpdir(), 'style-proofs-'));
+  try {
+    fs.mkdirSync(path.join(proofs, 'glassy', 'proof'), { recursive: true });
+    fs.writeFileSync(path.join(proofs, 'glassy', 'proof', 'card.json'), JSON.stringify({ beatTimes: [0.65, 2.17, 3.79] }));
+    const cuts = [];
+    const args = { catalog, jobs: JOBS, examples: EXAMPLES, draftsDir: dir, outDir: out, rendersRoot: '/r', creators: [],
+      makeStill: (from, to) => fs.writeFileSync(to, 'recipe'),
+      levels: levelsFor(catalog), styles: [STYLE], styleDocs: { glassy: '# Glassy\n' }, styleProofs: proofs,
+      makeStyleStill: (from, t, to) => { cuts.push([path.relative(proofs, from), t]); fs.writeFileSync(to, 'style'); } };
+    writeArsenal(args);
+    writeArsenal(args);
+    assert.deepEqual(cuts, [['glassy/proof/proof.mp4', 2.17]]);
+    const cat = JSON.parse(fs.readFileSync(path.join(out, 'catalog.json'), 'utf8'));
+    assert.equal(cat.entries.find((e) => e.id === 'style-glassy').still.sha256, sha('style'));
+  } finally { for (const d of [dir, out, proofs]) fs.rmSync(d, { recursive: true, force: true }); }
+});
+
+test('gallery: styles are shown with their level, recipes as before', () => {
+  const block = galleryBlock({ entries: [
+    { id: 'style-g', kind: 'style', level: 'world', also_level: ['direction'], name: 'Glassy', still: { path: 'arsenal/stills/style-g.jpg' } },
+    { id: '01-p', kind: 'technique', name: 'Round dots', still: { path: 'arsenal/stills/01-p.jpg' }, variants: [] },
+  ] });
+  assert.match(block, /^!\[Glassy \(world and direction\)\]\(library\/arsenal\/stills\/style-g\.jpg\)$/m);
+  assert.match(block, /^!\[Round dots\]\(library\/arsenal\/stills\/01-p\.jpg\)$/m);
+});
+
+test('guard: the repo\'s levels.json is sound against its drafts and the shipped style index', () => {
+  const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
+  const drafts = path.join(root, 'product', 'arsenal-drafts');
+  const jobs = JSON.parse(fs.readFileSync(path.join(root, 'plugin', 'library', 'arsenal', 'jobs-v1.json'), 'utf8'));
+  const catalog = buildCatalog({ draftsDir: drafts, jobs, tags: JSON.parse(fs.readFileSync(path.join(drafts, 'tags.json'), 'utf8')) });
+  const { styles } = readStyles(path.join(root, 'plugin', 'library', 'styles'));
+  assert.deepEqual(levelsProblems(JSON.parse(fs.readFileSync(path.join(drafts, 'levels.json'), 'utf8')), catalog, styles), []);
 });

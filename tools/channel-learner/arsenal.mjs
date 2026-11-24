@@ -2,7 +2,7 @@
 // The arsenal as Comp Room ships it: plugin/library/arsenal/, generated from the recipe drafts in one command.
 //   node tools/channel-learner/arsenal.mjs [--renders <folder holding quality/renders>] [--jobs <Content's jobs.json>]
 //     [--examples <file>] [--drafts <dir>] [--tags <file>] [--proofs <file>] [--credits <file>] [--out <dir>]
-//     [--readme <file>] [--no-manifest]
+//     [--readme <file>] [--no-manifest] [--levels <levels.json>] [--styles <plugin/library/styles>] [--style-proofs <style packages>]
 // Writes the jobs file (Content's version, groups, tags, ids, names and definitions, with the public examples in
 // arsenal-public-examples.json, since Content's own examples come from the owner's reels; the fields the runtime does not
 // read are dropped), the catalog data file, an index and the recipes grouped by job group, each proven recipe's status
@@ -84,6 +84,109 @@ export function scrubRecipe(text, { videos = [] } = {}) {
   return text.split('\n').filter((l) => !DROPPED_FIELDS.test(l)).map((l) => scrubLine(l, videos)).join('\n');
 }
 
+// ---------- three levels: directions, worlds, recipes ----------
+// Design: docs/superpowers/specs/2026-11-24-library-three-levels-design.md. The fields the drafts and tags do not hold
+// come from product/arsenal-drafts/levels.json: the provides vocabulary, each recipe's provides and renderer, and each
+// visual style's entry (level, provides, cost, the proof beat its still is cut from, composes).
+
+export const LEVELS = ['direction', 'world', 'recipe'];
+export const RENDERERS = ['classic', 'advanced-3d', 'blender'];
+export const STYLE_PREFIX = 'style-';
+
+/** "material: glass" -> ["material", "glass"]; "depth" -> ["depth", null]. */
+export function parseProvides(p) {
+  const m = String(p).match(/^\s*([a-z-]+)\s*(?::\s*([a-z0-9-]+)\s*)?$/);
+  return m ? [m[1], m[2] ?? null] : null;
+}
+const normProvides = (p) => { const k = parseProvides(p); return k ? (k[1] ? `${k[0]}: ${k[1]}` : k[0]) : String(p); };
+
+/** Problems with one provides list against the vocabulary (keys, each with its fixed words). */
+export function providesProblems(list, vocab, where) {
+  const out = [];
+  if (!Array.isArray(list)) return [`${where}: provides is not a list`];
+  for (const p of list) {
+    const k = parseProvides(p);
+    if (!k) out.push(`${where}: provides "${p}" is not "key" or "key: word"`);
+    else if (!vocab[k[0]]) out.push(`${where}: provides key "${k[0]}" is not in the vocabulary (${Object.keys(vocab).join(', ')})`);
+    else if (k[1] && !vocab[k[0]].includes(k[1])) out.push(`${where}: provides "${k[0]}: ${k[1]}" is not one of the ${k[0]} words (${vocab[k[0]].join(', ')})`);
+  }
+  return out;
+}
+
+/** Why an entry has no still; null when it should have one. */
+export function noStillReason(r) {
+  if (r.kind === 'build-aid') return 'build aid: serves no beat, so no proof still';
+  if (r.kind === 'unmatched') return 'unmatched: fits no job yet, so no proof still';
+  if (r.status !== 'proven') return 'unproven: no proof build yet';
+  return null;
+}
+
+/** The proof movie time a style still is cut from: the card's beat time for the beat levels.json names. */
+export function styleStillTime(card, beat, beats) {
+  const i = beats.indexOf(beat);
+  if (i < 0 || !Array.isArray(card?.beatTimes) || card.beatTimes[i] === undefined) throw new Error(`no time for beat "${beat}" in the proof card`);
+  return card.beatTimes[i];
+}
+
+/**
+ * Checks levels.json against the catalog and the style index; returns the problems (empty when it is sound).
+ * Every recipe needs a record and every technique at least one provides; every style needs a record and the reverse;
+ * a style still is never cut from a private beat.
+ */
+export function levelsProblems(levels, catalog, styles = []) {
+  const p = [];
+  const vocab = levels.provides ?? {};
+  for (const [k, words] of Object.entries(vocab)) if (!Array.isArray(words)) p.push(`provides key "${k}" has no word list`);
+  const ids = new Set(catalog.recipes.map((r) => r.id));
+  for (const r of catalog.recipes) {
+    const l = levels.recipes?.[r.id];
+    if (!l) { p.push(`recipe ${r.id} has no levels record`); continue; }
+    p.push(...providesProblems(l.provides, vocab, `recipe ${r.id}`));
+    if (r.kind === 'technique' && Array.isArray(l.provides) && !l.provides.length) p.push(`recipe ${r.id}: a technique needs at least one provides`);
+    if (l.renderer !== undefined && !RENDERERS.includes(l.renderer)) p.push(`recipe ${r.id}: renderer "${l.renderer}" is not one of ${RENDERERS.join(', ')}`);
+  }
+  for (const id of Object.keys(levels.recipes ?? {})) if (!ids.has(id)) p.push(`levels record for ${id}, which is not a recipe`);
+  const styleIds = new Set(styles.map((s) => s.id));
+  const beats = levels.beats ?? [];
+  for (const s of styles) {
+    const l = levels.styles?.[s.id];
+    if (!l) { p.push(`style ${s.id} has no levels record`); continue; }
+    if (!['direction', 'world'].includes(l.level)) p.push(`style ${s.id}: level "${l.level}" is not direction or world`);
+    for (const a of l.also_level ?? []) if (!LEVELS.includes(a) || a === l.level) p.push(`style ${s.id}: also_level "${a}" is not another level`);
+    p.push(...providesProblems(l.provides, vocab, `style ${s.id}`));
+    if (Array.isArray(l.provides) && !l.provides.length) p.push(`style ${s.id}: needs at least one provides`);
+    if (!RENDERERS.includes(l.cost?.renderer)) p.push(`style ${s.id}: cost.renderer "${l.cost?.renderer}" is not one of ${RENDERERS.join(', ')}`);
+    if (l.still) {
+      if (!beats.includes(l.still.beat)) p.push(`style ${s.id}: still beat "${l.still.beat}" is not one of ${beats.join(', ')}`);
+      if (levels.private_beats?.[l.still.beat]) p.push(`style ${s.id}: still beat "${l.still.beat}" is private (${levels.private_beats[l.still.beat]})`);
+    }
+    for (const c of l.composes ?? []) if (!ids.has(c) && !styleIds.has(c.replace(STYLE_PREFIX, ''))) p.push(`style ${s.id}: composes ${c}, which is in no catalog`);
+  }
+  for (const id of Object.keys(levels.styles ?? {})) if (!styleIds.has(id)) p.push(`levels record for style ${id}, which is not in the style index`);
+  return p;
+}
+
+const sha8 = (text) => createHash('sha256').update(text).digest('hex').slice(0, 8);
+const firstSentence = (text) => (String(text).match(/^.*?\.(?=\s|$)/) ?? [text])[0];
+
+/** One catalog entry for a visual style: its ae_library document, its level and what it provides. */
+export function styleEntry(s, l, styleDoc, still) {
+  const record = {
+    id: `${STYLE_PREFIX}${s.id}`, level: l.level, ...(l.also_level?.length ? { also_level: l.also_level } : {}),
+    name: s.title, line: firstSentence(s.summary), good_for: s.goodFor,
+    status: s.contentStatus === 'proven' || s.pluginProof?.technical === 'passed' ? 'proven' : 'unproven',
+    kind: 'style', job: null, support: [], mood: [], needs: s.needs ?? [], duration: null, motion: null, difficulty: null, taught_by: 1, variants: [],
+    provides: l.provides.map(normProvides), cost: l.cost, composes: l.composes ?? [], shelf: 'shipped',
+    section: { document: `${STYLE_PREFIX}${s.id}`, heading: null },
+    still: still ?? null,
+  };
+  record.revision = sha8(`${styleDoc}\n${JSON.stringify({ ...record, still: undefined })}`);
+  if (!record.still) record.no_still = l.still ? 'no still made yet from its proof movie' : 'no proof movie to cut a still from';
+  // Field order: id and revision first, as the recipes have them.
+  const { id, revision, ...rest } = record;
+  return { id, revision, ...rest };
+}
+
 // ---------- building ----------
 
 function sectionsOf(text) {
@@ -147,7 +250,11 @@ export function publicJobs(content, examples) {
  * public `examples` (publicJobs); `stills` maps id -> JPEG bytes already made; `creators` are names no shipped file may
  * contain, checked with PRIVATE_NAMES.
  */
-export function buildArsenal({ catalog, jobs, examples, draftsDir, stills = {}, creators = [], fileLimit = FILE_LIMIT }) {
+export function buildArsenal({ catalog, jobs, examples, draftsDir, stills = {}, creators = [], fileLimit = FILE_LIMIT, levels = null, styles = [], styleDocs = {} }) {
+  if (levels) {
+    const bad = levelsProblems(levels, catalog, styles);
+    if (bad.length) throw new Error(`refused: ${bad.join('; ')}`);
+  } else if (styles.length) throw new Error('refused: styles need levels.json');
   const jobsText = publicJobs(jobs, examples);
   const videos = [...new Set(catalog.recipes.map((r) => r.video).filter(Boolean))];
   const drafts = new Map();
@@ -175,11 +282,14 @@ export function buildArsenal({ catalog, jobs, examples, draftsDir, stills = {}, 
       still = { path: `arsenal/stills/${r.id}.jpg`, sha256: sha(stills[r.id]) };
       shippedStills[r.id] = stills[r.id];
     }
+    const lv = levels?.recipes?.[r.id];
     records.push({
-      id: r.id, revision: r.revision, name: r.name, line: scrubLine(r.line, videos), status: r.status, kind: r.kind, job: r.job, support: r.support,
+      id: r.id, revision: r.revision, level: 'recipe', name: r.name, line: scrubLine(r.line, videos), status: r.status, kind: r.kind, job: r.job, support: r.support,
       mood: r.mood, needs: r.needs, duration: r.duration, motion: r.motion, difficulty: r.difficulty, taught_by: r.taught_by,
       ...(r.variant_of ? { variant_of: r.variant_of } : {}), variants: r.variants ?? [],
+      provides: (lv?.provides ?? []).map(normProvides), cost: { renderer: lv?.renderer ?? 'classic' }, composes: [], shelf: 'shipped',
       section: { document: docId(g), heading: r.name }, still,
+      ...(still ? {} : { no_still: noStillReason(r) ?? 'no still made yet from its proof render' }),
     });
   }
   // A parent and its variants are one chunk, so they always share a file.
@@ -221,17 +331,34 @@ export function buildArsenal({ catalog, jobs, examples, draftsDir, stills = {}, 
     });
   }
   for (const rec of records) rec.section.document = docOf.get(rec.id);
-  files.set('catalog.json', `${JSON.stringify({ vocab: catalog.vocab, version: catalog.version, jobs: catalog.jobs, recipes: records }, null, 1)}\n`);
+  const styleRecords = styles.map((s) => {
+    const sid = `${STYLE_PREFIX}${s.id}`;
+    let still = null;
+    if (levels.styles[s.id].still && stills[sid]) {
+      still = { path: `arsenal/stills/${sid}.jpg`, sha256: sha(stills[sid]) };
+      shippedStills[sid] = stills[sid];
+    }
+    if (styleDocs[s.id] === undefined) throw new Error(`refused: no STYLE.md text for style ${s.id}`);
+    return styleEntry(s, levels.styles[s.id], styleDocs[s.id], still);
+  });
+  const entries = [...records, ...styleRecords];
+  for (const e of entries) if (!e.still && !e.no_still) throw new Error(`refused: ${e.id} has no still and no reason for it`);
+  // The catalog version: the recipes' as before when there are no styles, else over every entry.
+  const version = styleRecords.length ? sha8(entries.map((e) => `${e.id}@${e.revision}`).sort().join('\n')) : catalog.version;
+  files.set('catalog.json', `${JSON.stringify({ vocab: catalog.vocab, version, jobs: catalog.jobs, levels: LEVELS, provides: levels?.provides ?? {}, entries }, null, 1)}\n`);
   const documents = [
     { id: 'arsenal-index', title: 'Technique arsenal index: documents, vocabulary and counts', path: 'arsenal/index.json', kind: 'catalog' },
-    { id: 'arsenal-catalog', title: 'Technique arsenal catalog: one record per recipe, queried by ae_arsenal', path: 'arsenal/catalog.json', kind: 'catalog' },
+    { id: 'arsenal-catalog', title: 'Library catalog: one record per direction, world and recipe, queried by ae_arsenal', path: 'arsenal/catalog.json', kind: 'catalog' },
     { id: 'arsenal-jobs', title: `Job vocabulary ${catalog.vocab}: the jobs a beat asks for`, path: `arsenal/${jobsFile(jobs)}`, kind: 'catalog' },
     ...recipeDocs,
   ];
   const index = {
-    arsenal: 'Technique recipes for beats, filed under the job vocabulary. Ask ae_arsenal per beat by job (find), read the chosen recipe (get), list the jobs (jobs).',
-    tool: 'ae_arsenal', vocab: catalog.vocab, version: catalog.version, documents,
-    counts: { recipes: records.length, proven: records.filter((r) => r.status === 'proven').length, stills: Object.keys(shippedStills).length },
+    arsenal: 'The library at three levels: directions (how a whole piece holds together), worlds (a set a section lives in) and recipes (one technique for one beat), each with a still and what it provides. Look at a level as pictures with ae_arsenal browse, ask by what an entry provides or per beat by job with find, read any entry with get, list the jobs and the provides vocabulary with jobs.',
+    tool: 'ae_arsenal', vocab: catalog.vocab, version, documents,
+    counts: {
+      recipes: records.length, proven: records.filter((r) => r.status === 'proven').length, stills: Object.keys(shippedStills).length,
+      ...(styleRecords.length ? Object.fromEntries(LEVELS.map((l) => [`${l}s`, entries.filter((e) => e.level === l || e.also_level?.includes(l)).length])) : {}),
+    },
   };
   files.set('index.json', `${JSON.stringify(index, null, 1)}\n`);
 
@@ -251,7 +378,8 @@ export function buildArsenal({ catalog, jobs, examples, draftsDir, stills = {}, 
 }
 
 /** Writes the arsenal into outDir, which it owns: makes missing stills, keeps existing ones, removes what is stale. */
-export function writeArsenal({ catalog, jobs, examples, draftsDir, outDir, rendersRoot, makeStill = ffmpegStill, creators = [] }) {
+export function writeArsenal({ catalog, jobs, examples, draftsDir, outDir, rendersRoot, makeStill = ffmpegStill, creators = [],
+  levels = null, styles = [], styleDocs = {}, styleProofs = null, makeStyleStill = ffmpegStyleStill }) {
   const stillsDir = path.join(outDir, 'stills');
   fs.mkdirSync(stillsDir, { recursive: true });
   const stills = {};
@@ -264,7 +392,22 @@ export function writeArsenal({ catalog, jobs, examples, draftsDir, outDir, rende
     }
     stills[id] = fs.readFileSync(to);
   }
-  const built = buildArsenal({ catalog, jobs, examples, draftsDir, stills, creators });
+  // A style's still: one frame of its proof movie (<styleProofs>/<id>/proof/proof.mp4) at the beat levels.json names.
+  for (const st of styles) {
+    const l = levels?.styles?.[st.id];
+    if (!l?.still) continue;
+    const sid = `${STYLE_PREFIX}${st.id}`;
+    const to = path.join(stillsDir, `${sid}.jpg`);
+    if (!fs.existsSync(to)) {
+      if (!styleProofs) { missing.push(sid); continue; }
+      try {
+        const card = JSON.parse(fs.readFileSync(path.join(styleProofs, st.id, 'proof', 'card.json'), 'utf8'));
+        makeStyleStill(path.join(styleProofs, st.id, 'proof', 'proof.mp4'), styleStillTime(card, l.still.beat, levels.beats), to);
+      } catch { missing.push(sid); continue; }
+    }
+    stills[sid] = fs.readFileSync(to);
+  }
+  const built = buildArsenal({ catalog, jobs, examples, draftsDir, stills, creators, levels, styles, styleDocs });
   for (const f of fs.readdirSync(stillsDir)) if (!built.stills[f.replace(/\.jpg$/, '')]) fs.rmSync(path.join(stillsDir, f));
   for (const f of fs.readdirSync(outDir)) if (f !== 'stills' && !built.files.has(f)) fs.rmSync(path.join(outDir, f), { recursive: true });
   for (const [f, text] of built.files) fs.writeFileSync(path.join(outDir, f), text);
@@ -279,13 +422,35 @@ function ffmpegStill(from, to) {
   if (r.status !== 0) throw new Error(`ffmpeg failed on ${from}: ${r.stderr}`);
 }
 
+/** One frame of a style's proof movie at `time` seconds, as a small JPEG STILL_WIDTH wide. */
+function ffmpegStyleStill(from, time, to) {
+  if (!fs.existsSync(from)) throw new Error(`no proof movie at ${from}`);
+  const r = spawnSync('ffmpeg', ['-loglevel', 'error', '-y', '-ss', String(time), '-i', from, '-frames:v', '1', '-vf', `scale=${STILL_WIDTH}:-2:flags=lanczos`, '-q:v', '4', to], { encoding: 'utf8' });
+  if (r.status !== 0) throw new Error(`ffmpeg failed on ${from}: ${r.stderr}`);
+}
+
+/** The visual styles the catalog lists, with each STYLE.md's text: from plugin/library/styles (index.json and folders). */
+export function readStyles(stylesDir) {
+  const index = JSON.parse(fs.readFileSync(path.join(stylesDir, 'index.json'), 'utf8'));
+  const docs = Object.fromEntries(index.styles.map((st) => [st.id, fs.readFileSync(path.join(stylesDir, st.id, 'STYLE.md'), 'utf8')]));
+  return { styles: index.styles, styleDocs: docs };
+}
+
 // ---------- the README gallery ----------
 
 /** The README block that shows every shipped still (paths relative to the package root). */
 export function galleryBlock(catalog) {
-  const shown = catalog.recipes.filter((r) => r.still);
-  if (!shown.length) return 'No proven technique has a still yet.';
+  const all = catalog.entries ?? [];
+  const shown = all.filter((r) => r.still && r.kind !== 'style');
+  const styled = all.filter((r) => r.still && r.kind === 'style');
+  if (!shown.length && !styled.length) return 'No proven technique has a still yet.';
   return [
+    ...(styled.length ? [
+      'Directions and worlds in the library: the visual styles, each a frame of its own proof build. ae_arsenal browse shows them by level.',
+      '',
+      ...styled.map((r) => `![${r.name} (${[r.level, ...(r.also_level ?? [])].join(' and ')})](library/${r.still.path})`),
+      '',
+    ] : []),
     'Proven techniques in the arsenal, each a still of our own proof build. The ae_arsenal tool returns them with its shortlist.',
     '',
     ...shown.map((r) => {
@@ -335,15 +500,20 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     const proofs = JSON.parse(fs.readFileSync(arg(argv, '--proofs', path.join(drafts, 'proof-stills.json')), 'utf8'));
     const creators = creatorsOf(fs.readFileSync(arg(argv, '--credits', path.join(drafts, 'CREDITS.md')), 'utf8'));
     const catalog = buildCatalog({ draftsDir: drafts, tags, jobs, proofs });
+    const levelsPath = arg(argv, '--levels', path.join(drafts, 'levels.json'));
+    const levels = fs.existsSync(levelsPath) ? JSON.parse(fs.readFileSync(levelsPath, 'utf8')) : null;
+    const stylesDir = arg(argv, '--styles', path.join(ROOT, 'plugin', 'library', 'styles'));
+    const { styles, styleDocs } = levels && fs.existsSync(path.join(stylesDir, 'index.json')) ? readStyles(stylesDir) : { styles: [], styleDocs: {} };
     fs.mkdirSync(out, { recursive: true });
-    const res = writeArsenal({ catalog, jobs, examples, draftsDir: drafts, outDir: out, rendersRoot: arg(argv, '--renders', ROOT), creators });
+    const res = writeArsenal({ catalog, jobs, examples, draftsDir: drafts, outDir: out, rendersRoot: arg(argv, '--renders', ROOT), creators,
+      levels, styles, styleDocs, styleProofs: arg(argv, '--style-proofs', null) });
     const readme = arg(argv, '--readme', path.join(ROOT, 'claude', 'src', 'README.md'));
     fs.writeFileSync(readme, withGallery(fs.readFileSync(readme, 'utf8'), galleryBlock(JSON.parse(res.files.get('catalog.json')))));
     if (!argv.includes('--no-manifest')) {
       const m = spawnSync(process.execPath, [path.join(ROOT, 'plugin', 'scripts', 'manifest.mjs')], { encoding: 'utf8' });
       if (m.status !== 0) throw new Error(`manifest: ${m.stderr}`);
     }
-    console.log(JSON.stringify({ vocab: catalog.vocab, version: catalog.version, recipes: catalog.recipes.length, stills: Object.keys(res.stills).length, missing: res.missing, out }));
-    if (res.missing.length) console.error(`no still for ${res.missing.join(', ')}: no proof render found; pass --renders <folder holding quality/renders>`);
+    console.log(JSON.stringify({ vocab: catalog.vocab, version: res.index.version, recipes: catalog.recipes.length, styles: styles.length, stills: Object.keys(res.stills).length, missing: res.missing, out }));
+    if (res.missing.length) console.error(`no still for ${res.missing.join(', ')}: no proof render found; pass --renders <folder holding quality/renders>, or --style-proofs <folder of style packages with proof/proof.mp4> for a style`);
   } catch (e) { console.error(e.message); process.exit(e.usage ? 2 : 1); }
 }

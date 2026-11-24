@@ -1,8 +1,8 @@
 {
- "arsenal": "Technique recipes for beats, filed under the job vocabulary. Ask ae_arsenal per beat by job (find), read the chosen recipe (get), list the jobs (jobs).",
+ "arsenal": "The library at three levels: directions (how a whole piece holds together), worlds (a set a section lives in) and recipes (one technique for one beat), each with a still and what it provides. Look at a level as pictures with ae_arsenal browse, ask by what an entry provides or per beat by job with find, read any entry with get, list the jobs and the provides vocabulary with jobs.",
  "tool": "ae_arsenal",
  "vocab": "jobs-v1",
- "version": "c859987b",
+ "version": "c4945901",
  "documents": [
   {
    "id": "arsenal-index",
@@ -12,7 +12,7 @@
   },
   {
    "id": "arsenal-catalog",
-   "title": "Technique arsenal catalog: one record per recipe, queried by ae_arsenal",
+   "title": "Library catalog: one record per direction, world and recipe, queried by ae_arsenal",
    "path": "arsenal/catalog.json",
    "kind": "catalog"
   },
@@ -62,6 +62,8 @@
  "counts": {
   "recipes": 101,
   "proven": 85,
-  "stills": 76
+  "stills": 106,
+  "directions": 31,
+  "worlds": 4
  }
 }
