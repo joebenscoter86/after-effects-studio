@@ -115,3 +115,19 @@ Steps 1 to 3 are the first deliverable and are useful alone.
 ## How to tell it worked
 
 A fresh agent, given only "a reel wants glass keys on a dark floor with a real screen on a slab", reaches `style-glass-product` (or its world entry) within its first two library calls. Today it does not.
+
+## Where the build differs from this design (added 2026-11-24, build steps 1 to 3)
+
+Checked against the code at commit 741342b. Where the design and the code disagreed, the build follows the code.
+
+- **The catalog build** is `tools/channel-learner/arsenal.mjs` (a development tool, not shipped), fed by the recipe drafts in `product/arsenal-drafts/`. The new fields live in one new drafts file, `product/arsenal-drafts/levels.json` (the `provides` vocabulary, each recipe's `provides` and renderer, each style's entry). `tags.json` and the drafts are untouched, so every recipe revision is unchanged and pinned `<id>@<revision>` ids resolve with no warning.
+- **The 25 recipes with no still** are 10 build aids (no picture by design: they serve no beat), 14 unproven techniques and one unmatched recipe. None was given a still; each carries `no_still` with its reason, and `browse` hides them unless asked (`include_unpictured`) and says how many it hid. The build refuses an entry with neither a still nor a reason.
+- **31 styles, not 30**: `pixel-headline` is the plugin's own style and has no proof movie, so it is listed with `no_still`. Styles were also reachable through the `visual-styles` skill's table, not only `ae_library` `style-index`.
+- **Style stills** are one frame of each style's proof movie in Content (`production/styles/<id>/proof/proof.mp4`) at the "picture" beat, 480 wide like the recipe stills, made once by `arsenal.mjs --style-proofs <dir>` and kept. The "input" beat shows the proof's own speaker, so `levels.json` marks it private and the build refuses it.
+- **One entry per style**, id `style-<id>` (its `ae_library` document id). `level` is a single value; a style that serves two levels lists the other in `also_level`, and a level query matches either. The four 3D styles (backrooms, glass-product, lowpoly-island, tilt-shift) are worlds that are also directions; the rest are directions.
+- **Contact sheets**: the runtime has no dependencies beyond the MCP SDK and zod, no JPEG decoder, and its sheet font draws digits only. `browse` therefore returns a legend and each tile as its own labelled still, not one composed image.
+- **`find`** with `job` is unchanged (162 asks across every job compared field for field with the old catalog; only the catalog version string differs). A `find` with `job` and `level`/`provides` together is refused rather than guessed at.
+- **`get` for a world** returns its catalog facts and its `STYLE.md` (the same reply `ae_library` gives). Builders and slots arrive with step 4.
+- **`cost`**: recipes carry the renderer only (none has a measured time); styles carry seconds per frame measured from their proof card (After Effects render of the 10.8 s, 324-frame proof; Blender plates not counted). `needs: blender` comes from the style index; no recipe needs Blender, and no entry was marked `plates`.
+- **`composes`** is empty everywhere for now: nothing records which recipes were proven inside which style.
+- **The catalog's list** is renamed from `recipes` to `entries`, and gains `levels` and `provides` (the vocabulary). The catalog version moves because it now covers every entry.

@@ -4246,7 +4246,7 @@ function findTechniques(catalog, ask) {
 	const exclude = new Set(ask.exclude ?? []);
 	const limit = ask.limit ?? 5;
 	const tier = (r) => r.job === ask.job ? 0 : r.support.includes(ask.job) ? 1 : [r.job, ...r.support].some((j) => j !== null && support.includes(j)) ? 2 : null;
-	const byJob = catalog.recipes.filter((r) => r.kind === "technique" && !r.variant_of && tier(r) !== null && !exclude.has(r.id));
+	const byJob = catalog.entries.filter((r) => r.kind === "technique" && !r.variant_of && tier(r) !== null && !exclude.has(r.id));
 	const pass = (r, loose) => (loose.includes("status") || ask.constraints?.status === "any" || r.status === "proven") && (loose.includes("needs") || have === null || unmet(r.needs, have).length === 0);
 	let relaxed = [];
 	let hits = byJob.filter((r) => pass(r, relaxed));
@@ -4304,11 +4304,131 @@ function findTechniques(catalog, ask) {
 	if (relaxed.length && out.results.length) out.relaxed = relaxed;
 	return out;
 }
+function parseProvides(p) {
+	const m = /^\s*([a-z-]+)\s*(?::\s*([a-z0-9-]+)\s*)?$/.exec(String(p).toLowerCase());
+	return m ? [m[1], m[2] ?? null] : null;
+}
+function askedProvides(catalog, asked) {
+	const vocab = catalog.provides ?? {};
+	return (asked ?? []).map((p) => {
+		const k = parseProvides(p);
+		if (!k) throw new ArsenalRefusal(`refused: provides "${p}" is not "key" or "key: word"; keys: ${Object.keys(vocab).join(", ")}`);
+		if (!vocab[k[0]]) throw new ArsenalRefusal(`refused: unknown provides key "${k[0]}"; valid keys: ${Object.keys(vocab).join(", ")}`);
+		if (k[1] && !vocab[k[0]].includes(k[1])) throw new ArsenalRefusal(`refused: unknown ${k[0]} word "${k[1]}"; valid ${k[0]} words: ${vocab[k[0]].join(", ")}`);
+		return k;
+	});
+}
+function checkLevel(level) {
+	if (level === void 0) return void 0;
+	if (!LEVELS.includes(level)) throw new ArsenalRefusal(`refused: unknown level "${level}"; valid levels: ${LEVELS.join(", ")}`);
+	return level;
+}
+function matched(e, asked) {
+	const own = e.provides.map(parseProvides).filter((x) => x !== null);
+	return asked.filter(([k, w]) => own.some(([ok, ow]) => ok === k && (w === null || ow === w))).map(showProvides);
+}
+function findByProvides(catalog, ask) {
+	const level = checkLevel(ask.level);
+	const asked = askedProvides(catalog, ask.provides);
+	if (!level && !asked.length) throw new ArsenalRefusal("refused: find needs a job, a level or provides");
+	const exclude = new Set(ask.exclude ?? []);
+	const limit = ask.limit ?? 5;
+	const pool = catalog.entries.filter((e) => !e.variant_of && !exclude.has(e.id) && (!level || atLevel(e, level)) && (!ask.shelf || e.shelf === ask.shelf) && (!asked.length || matched(e, asked).length > 0));
+	let relaxed = [];
+	let hits = pool.filter((e) => ask.status === "any" || e.status === "proven");
+	if (!hits.length && pool.length) {
+		relaxed = ["status"];
+		hits = pool;
+	}
+	const ranked = hits.map((e, i) => ({
+		e,
+		key: [
+			-matched(e, asked).length,
+			e.still ? 0 : 1,
+			i
+		]
+	})).sort((a, b) => {
+		for (let i = 0; i < a.key.length; i++) if (a.key[i] !== b.key[i]) return a.key[i] - b.key[i];
+		return 0;
+	}).slice(0, limit);
+	const out = {
+		vocab: catalog.vocab,
+		version: catalog.version,
+		results: ranked.map(({ e }) => {
+			const m = matched(e, asked);
+			return {
+				id: e.id,
+				revision: e.revision,
+				level: e.level,
+				...e.also_level?.length ? { also_level: e.also_level } : {},
+				name: e.name,
+				line: e.line,
+				status: e.status,
+				kind: e.kind,
+				provides: e.provides,
+				needs: e.needs,
+				cost: e.cost,
+				still: e.still?.path ?? null,
+				section: e.section,
+				fit: [
+					levelText(e),
+					m.length ? `provides ${m.join(", ")}` : null,
+					e.status === "proven" ? "proven" : "unproven, needs a test build first",
+					e.still ? null : `no still: ${e.no_still ?? "none shipped"}`
+				].filter(Boolean).join("; "),
+				...e.variants?.length ? { variants: e.variants } : {}
+			};
+		})
+	};
+	if (relaxed.length && out.results.length) out.relaxed = relaxed;
+	return out;
+}
+function browseCatalog(catalog, ask = {}) {
+	const level = checkLevel(ask.level);
+	const asked = askedProvides(catalog, ask.provides);
+	const size = Math.min(Math.max(1, Math.floor(ask.page_size ?? 12)), 24);
+	const order = level ? [level] : [...LEVELS];
+	const seen = /* @__PURE__ */ new Set();
+	const all = [];
+	for (const l of order) for (const e of catalog.entries) {
+		if (seen.has(e.id) || e.variant_of || !atLevel(e, l)) continue;
+		if (ask.shelf && e.shelf !== ask.shelf) continue;
+		if (asked.length && !matched(e, asked).length) continue;
+		seen.add(e.id);
+		all.push(e);
+	}
+	const shown = ask.include_unpictured ? all : all.filter((e) => e.still);
+	const pages = Math.max(1, Math.ceil(shown.length / size));
+	const page = Math.min(Math.max(1, Math.floor(ask.page ?? 1)), pages);
+	const tiles = shown.slice((page - 1) * size, page * size).map((e, i) => ({
+		n: (page - 1) * size + i + 1,
+		id: e.id,
+		name: e.name,
+		level: e.level,
+		...e.also_level?.length ? { also_level: e.also_level } : {},
+		provides: e.provides,
+		status: e.status,
+		...e.still ? {} : { no_still: e.no_still ?? "none shipped" }
+	}));
+	return {
+		vocab: catalog.vocab,
+		version: catalog.version,
+		level: level ?? "all",
+		...asked.length ? { provides: asked.map(showProvides) } : {},
+		page,
+		pages,
+		page_size: size,
+		total: shown.length,
+		hidden_without_still: all.length - shown.length,
+		tiles
+	};
+}
 function loadCatalog(root = LIBRARY) {
 	return JSON.parse(readLibraryEntry("arsenal-catalog", root).content);
 }
 function listJobs(root = LIBRARY) {
 	const file = JSON.parse(readLibraryEntry("arsenal-jobs", root).content);
+	const catalog = loadCatalog(root);
 	return {
 		vocab: `jobs-v${String(file.version).replace(/^v/, "")}`,
 		groups: file.groups,
@@ -4318,20 +4438,37 @@ function listJobs(root = LIBRARY) {
 			name,
 			definition
 		})),
-		tags: file.tags
+		tags: file.tags,
+		levels: catalog.levels ?? LEVELS,
+		provides: catalog.provides ?? {}
 	};
 }
 function recipeReply(id, revision, root = LIBRARY) {
 	const catalog = loadCatalog(root);
-	const r = catalog.recipes.find((x) => x.id === id);
-	if (!r) throw new ArsenalRefusal(`refused: unknown recipe "${id}"; ae_arsenal find returns ids for a beat`);
+	const r = catalog.entries.find((x) => x.id === id);
+	if (!r) throw new ArsenalRefusal(`refused: unknown id "${id}"; ae_arsenal browse and find return ids`);
+	const warning = revision !== void 0 && revision !== r.revision ? `WARNING: pinned revision ${revision}; the shipped revision is ${r.revision}. The ${r.kind === "style" ? "entry" : "recipe"} changed since it was pinned: this is the shipped text, not the pinned one. Check it still fits the beat.` : null;
+	if (r.kind === "style") return [
+		`ae_arsenal ${r.level} ${r.id}@${r.revision} (${levelText(r)}; ${r.status}; shelf ${r.shelf}; catalog ${catalog.version}; its document is library document ${r.section.document}, also readable with ae_library)`,
+		warning,
+		...[
+			`provides: ${r.provides.join("; ")}`,
+			`needs: ${r.needs.length ? r.needs.join(", ") : "nothing"}`,
+			`cost: renderer ${r.cost.renderer}${r.cost.seconds_per_frame !== void 0 ? `, ${r.cost.seconds_per_frame} s per frame (${r.cost.measured ?? "measured"})` : ""}`,
+			`composes: ${r.composes.length ? r.composes.join(", ") : "none recorded yet"}`,
+			...r.good_for ? [`good for: ${r.good_for}`] : []
+		],
+		"",
+		libraryDocumentReply(r.section.document, void 0, root)
+	].filter((l) => l !== null).join("\n");
 	const { content } = readLibraryEntry(r.section.document, root);
-	const section = content.split(/^(?=## )/m).find((s) => s.startsWith(`## ${r.section.heading}
+	const section = content.split(/^(?=## )/m).find((s) => s.startsWith(`## ${r.section.heading ?? ""}
 `) && new RegExp(`^id: ${r.id}$`, "m").test(s));
 	if (!section) throw new Error(`the arsenal is inconsistent: ${r.section.document} has no section for ${r.id}`);
 	return [
 		`ae_arsenal recipe ${r.id}@${r.revision} (${r.status}, ${r.kind}; ${r.variant_of ? `variant of ${r.variant_of}; ` : ""}${catalog.vocab}, catalog ${catalog.version}; from library document ${r.section.document})`,
-		revision !== void 0 && revision !== r.revision ? `WARNING: pinned revision ${revision}; the shipped revision is ${r.revision}. The recipe changed since it was pinned: this is the shipped text, not the pinned one. Check it still fits the beat.` : null,
+		warning,
+		r.provides?.length ? `provides: ${r.provides.join("; ")}` : null,
 		"",
 		section.trimEnd()
 	].filter((l) => l !== null).join("\n");
@@ -4345,18 +4482,18 @@ function readStill(still, root = LIBRARY) {
 	if (createHash("sha256").update(bytes).digest("hex") !== still.sha256) throw new Error(`Arsenal still hash mismatch: ${still.path}`);
 	return bytes;
 }
-function stillContent(r, root = LIBRARY) {
+function stillContent(r, root = LIBRARY, label) {
 	if (!r.still) return [];
 	return [{
 		type: "text",
-		text: `Still of ${r.id} (${r.name}), from our own proof build:`
+		text: label ?? `Still of ${r.id} (${r.name}), from our own proof build:`
 	}, {
 		type: "image",
 		data: readStill(r.still, root).toString("base64"),
 		mimeType: "image/jpeg"
 	}];
 }
-var LIBRARY, ArsenalRefusal, MET_BY, lower, unmet, askShape, arsenalTool;
+var LIBRARY, LEVELS, ArsenalRefusal, MET_BY, lower, unmet, showProvides, atLevel, levelText, BROWSE_PAGE, BROWSE_PAGE_MAX, providesArg, askShape, listOf, arsenalTool;
 function init_arsenal() {
 	return (init_arsenal = __esmMin((() => {
 		init_schemas();
@@ -4365,6 +4502,11 @@ function init_arsenal() {
 		init_define_tool();
 		init_library();
 		LIBRARY = path.resolve(PACKAGE_ROOT, "../library");
+		LEVELS = [
+			"direction",
+			"world",
+			"recipe"
+		];
 		ArsenalRefusal = class extends Error {};
 		MET_BY = {
 			footage: ["footage", "screen"],
@@ -4378,12 +4520,25 @@ function init_arsenal() {
 		};
 		lower = (xs) => (xs ?? []).map((x) => String(x).toLowerCase());
 		unmet = (needs, have) => lower(needs).filter((n) => MET_BY[n] && !MET_BY[n].some((a) => have.includes(a)));
+		showProvides = ([k, w]) => w ? `${k}: ${w}` : k;
+		atLevel = (e, level) => e.level === level || (e.also_level ?? []).includes(level);
+		levelText = (e) => [e.level, ...(e.also_level ?? []).map((l) => `also ${l}`)].join(", ");
+		BROWSE_PAGE = 12;
+		BROWSE_PAGE_MAX = 24;
+		providesArg = union([string$1(), array(string$1())]).optional().describe("browse and find: what an entry must provide, \"key\" or \"key: word\" (e.g. \"material: glass\", \"floor\"), one or a list; action jobs lists the vocabulary");
 		askShape = {
 			action: _enum([
+				"browse",
 				"find",
 				"get",
 				"jobs"
-			]).describe("find: a shortlist for one beat; get: one recipe's full text; jobs: the job vocabulary"),
+			]).describe("browse: a level as labelled stills, a page at a time; find: a shortlist by job for one beat, or by level and/or provides across levels; get: any entry by id; jobs: the job and provides vocabularies"),
+			level: _enum(LEVELS).optional().describe("browse and find: direction (how a whole piece holds together), world (a set a section lives in) or recipe (one technique for one beat); browse without it shows every level, directions first"),
+			provides: providesArg,
+			shelf: _enum(["shipped", "user"]).optional().describe("browse and find: only entries from this shelf"),
+			page: number().int().positive().optional().describe("browse: which page, from 1"),
+			page_size: number().int().positive().max(24).optional().describe(`browse: tiles per page, default ${12}`),
+			include_unpictured: boolean().optional().describe("browse: also list entries with no still (build aids, unproven recipes); hidden by default and counted"),
 			vocab: string$1().optional().describe("find: the job vocabulary the beat was written against (e.g. jobs-v1); omitted means the shipped one"),
 			job: string$1().optional().describe("find: the beat's job id, from action jobs (e.g. add-depth, land-number, hand-over)"),
 			support: array(string$1()).optional().describe("find: up to two support job ids"),
@@ -4399,38 +4554,87 @@ function init_arsenal() {
 				aspect: string$1().optional(),
 				theme: string$1().optional(),
 				palette: string$1().optional(),
-				status: _enum(["proven", "any"]).optional().describe("proven (the default) or any, to let unproven recipes through")
+				status: _enum(["proven", "any"]).optional().describe("proven (the default) or any, to let unproven entries through")
 			}).optional(),
-			exclude: array(string$1()).optional().describe("find: recipe ids already used or ruled out"),
+			exclude: array(string$1()).optional().describe("find: ids already used or ruled out"),
 			limit: number().int().positive().max(20).optional().describe("find: how many candidates, default 5"),
-			id: string$1().optional().describe("get: the recipe id from find"),
+			id: string$1().optional().describe("get: an id from browse or find, at any level"),
 			revision: string$1().optional().describe("get: the revision the brief pinned; a different shipped revision is answered with a warning")
 		};
+		listOf = (p) => p === void 0 ? void 0 : Array.isArray(p) ? p : [p];
 		arsenalTool = defineTool({
 			name: "ae_arsenal",
-			title: "Technique arsenal",
+			title: "Library: directions, worlds and recipes",
 			group: "document",
 			effect: "read",
 			blockedInReadOnly: false,
-			description: "Find proven After Effects techniques for a beat by the job it must do, then read the chosen recipe. Use it while planning shots, once per beat, before building. action jobs lists the job vocabulary (ids with one-line definitions). action find takes the beat (job, and optionally support, duration, mood, assets, constraints.status, exclude, limit) and returns a ranked shortlist (proven recipes only unless constraints.status is any; relaxed names any filter loosened when nothing passed; never another job) with each candidate's still from our own proof build; a candidate taught in other ways lists their ids as variants, each readable with get. An unknown job is refused with the valid ids: pick one, never invent one. action get takes id (and the pinned revision) and returns the full recipe. Offline; no After Effects needed.",
+			description: `The library at three levels, each entry with a still from our own proof build and what it provides: directions (how a whole piece holds together), worlds (a set a section lives in: floor, light, environment, materials) and recipes (one technique for one beat). The visual styles are directions and worlds here. action browse shows a level as labelled stills, a page at a time (level, provides, shelf, page, page_size); start a brief there. action find with job returns a ranked shortlist of recipes for one beat, exactly as before (job, and optionally support, duration, mood, assets, constraints.status, exclude, limit; proven only unless constraints.status is any; relaxed names any filter loosened when nothing passed; never another job; a candidate taught in other ways lists their ids as variants). action find with level and/or provides (e.g. "material: glass", "floor: gloss-dark") returns entries across levels that provide it. An unknown job, level or provides word is refused with the valid ones: pick one, never invent one. action jobs lists the job and provides vocabularies. action get takes any id (and the pinned revision) and returns the recipe, or a direction's or world's document, with its still. Offline; no After Effects needed.`,
 			inputShape: askShape,
 			handler: async (args) => {
 				try {
 					if (args.action === "jobs") return jsonResult(listJobs());
+					const catalog = loadCatalog();
+					const byId = new Map(catalog.entries.map((r) => [r.id, r]));
 					if (args.action === "get") {
-						if (!args.id) return errorResult("INVALID_ARGS", "get needs id: a recipe id from ae_arsenal find");
-						const text = recipeReply(args.id, args.revision);
-						const r = loadCatalog().recipes.find((x) => x.id === args.id);
+						if (!args.id) return errorResult("INVALID_ARGS", "get needs id: an id from ae_arsenal browse or find");
 						return {
 							content: [{
 								type: "text",
-								text
-							}, ...stillContent(r)],
+								text: recipeReply(args.id, args.revision)
+							}, ...stillContent(byId.get(args.id))],
 							isError: false
 						};
 					}
-					if (!args.job) return errorResult("INVALID_ARGS", "find needs job: a job id from ae_arsenal action jobs", { hint: "call ae_arsenal with action jobs for the valid ids" });
-					const catalog = loadCatalog();
+					if (args.action === "browse") {
+						const page = browseCatalog(catalog, {
+							level: args.level,
+							provides: listOf(args.provides),
+							shelf: args.shelf,
+							page: args.page,
+							page_size: args.page_size,
+							include_unpictured: args.include_unpictured
+						});
+						const label = (t) => `Tile ${t.n}: ${t.id} \xB7 ${t.name} \xB7 ${[t.level, ...(t.also_level ?? []).map((l) => `also ${l}`)].join(", ")} \xB7 provides ${t.provides.length ? t.provides.join(", ") : "nothing listed"}${t.status === "proven" ? "" : " · unproven"}`;
+						const images2 = page.tiles.flatMap((t) => byId.get(t.id).still ? stillContent(byId.get(t.id), LIBRARY, label(t)) : [{
+							type: "text",
+							text: `${label(t)} \xB7 no still: ${t.no_still}`
+						}]);
+						const next = page.page < page.pages ? ` Next: page ${page.page + 1}.` : "";
+						return {
+							content: [{
+								type: "text",
+								text: `${`ae_arsenal browse: ${page.level === "all" ? "every level, directions first" : `level ${page.level}`}${page.provides ? `, providing ${page.provides.join(" or ")}` : ""}; page ${page.page} of ${page.pages}, tiles ${page.tiles.length ? `${page.tiles[0].n} to ${page.tiles.at(-1).n}` : "none"} of ${page.total}${page.hidden_without_still ? `; ${page.hidden_without_still} without a still hidden (include_unpictured lists them)` : ""}.${next} Read one with get.`}
+${JSON.stringify({
+									ok: true,
+									...page
+								}, null, 2)}`
+							}, ...images2],
+							isError: false
+						};
+					}
+					if (!args.job) {
+						if (args.level === void 0 && args.provides === void 0) return errorResult("INVALID_ARGS", "find needs job (a job id from ae_arsenal action jobs), or level and/or provides", { hint: "call ae_arsenal with action jobs for the valid job ids and provides words" });
+						const answer2 = findByProvides(catalog, {
+							level: args.level,
+							provides: listOf(args.provides),
+							shelf: args.shelf,
+							status: args.constraints?.status,
+							exclude: args.exclude,
+							limit: args.limit
+						});
+						const images2 = answer2.results.flatMap((c) => stillContent(byId.get(c.id)));
+						return {
+							content: [{
+								type: "text",
+								text: JSON.stringify({
+									ok: true,
+									...answer2
+								}, null, 2)
+							}, ...images2],
+							isError: false
+						};
+					}
+					if (args.level !== void 0 || args.provides !== void 0 || args.shelf !== void 0) return errorResult("INVALID_ARGS", "find asks by job for one beat, or by level and provides across levels, not both: drop job, or drop level, provides and shelf");
 					const answer = findTechniques(catalog, {
 						vocab: args.vocab ?? catalog.vocab,
 						job: args.job,
@@ -4443,7 +4647,6 @@ function init_arsenal() {
 						exclude: args.exclude,
 						limit: args.limit
 					});
-					const byId = new Map(catalog.recipes.map((r) => [r.id, r]));
 					const images = answer.results.flatMap((c) => stillContent(byId.get(c.id)));
 					return {
 						content: [{

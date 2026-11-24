@@ -83,6 +83,39 @@ Six skills (motion-studio, ae-control, motion-review, typography, paper-collage 
 The library also holds a catalog of technique recipes filed by the job a beat needs (land a number, add depth, hand over to the next picture). The `ae_arsenal` tool lists the jobs, returns a ranked shortlist for one beat (proven recipes only, unless asked) and reads the chosen recipe.
 
 <!-- arsenal-stills:start -->
+Directions and worlds in the library: the visual styles, each a frame of its own proof build. ae_arsenal browse shows them by level.
+
+![Art Deco (direction)](library/arsenal/stills/style-art-deco.jpg)
+![Liminal found footage (world and direction)](library/arsenal/stills/style-backrooms.jpg)
+![Blueprint (direction)](library/arsenal/stills/style-blueprint.jpg)
+![CRT terminal (direction)](library/arsenal/stills/style-crt-terminal.jpg)
+![Dark keynote (direction)](library/arsenal/stills/style-dark-keynote.jpg)
+![Data storytelling (direction)](library/arsenal/stills/style-dataviz.jpg)
+![Copperplate engraving (direction)](library/arsenal/stills/style-engraving.jpg)
+![Game Show (direction)](library/arsenal/stills/style-game-show.jpg)
+![Glass product (world and direction)](library/arsenal/stills/style-glass-product.jpg)
+![Halftone dossier (direction)](library/arsenal/stills/style-halftone-dossier.jpg)
+![Hologram HUD (direction)](library/arsenal/stills/style-hologram-hud.jpg)
+![Isometric infographic (direction)](library/arsenal/stills/style-iso-infographic.jpg)
+![Living screencast (direction)](library/arsenal/stills/style-living-screencast.jpg)
+![Low-poly island (world and direction)](library/arsenal/stills/style-lowpoly-island.jpg)
+![Microgame frenzy (direction)](library/arsenal/stills/style-microgame.jpg)
+![Mid-century cartoon (direction)](library/arsenal/stills/style-midcentury-toon.jpg)
+![One-line drawing (direction)](library/arsenal/stills/style-one-line.jpg)
+![Paper-cut lightbox (direction)](library/arsenal/stills/style-paper-lantern.jpg)
+![Pictogram motion (direction)](library/arsenal/stills/style-pictogram-motion.jpg)
+![Risograph print (direction)](library/arsenal/stills/style-risograph.jpg)
+![Rubber hose cartoon (direction)](library/arsenal/stills/style-rubber-hose.jpg)
+![Silent film (direction)](library/arsenal/stills/style-silent-film.jpg)
+![Silkscreen poster (direction)](library/arsenal/stills/style-silkscreen-poster.jpg)
+![Spy titles (direction)](library/arsenal/stills/style-spy-titles.jpg)
+![Stained glass (direction)](library/arsenal/stills/style-stained-glass.jpg)
+![Swiss motion (direction)](library/arsenal/stills/style-swiss-motion.jpg)
+![Tilt-shift miniature (world and direction)](library/arsenal/stills/style-tilt-shift.jpg)
+![Ukiyo-e woodblock print (direction)](library/arsenal/stills/style-ukiyoe.jpg)
+![Whiteboard explainer (direction)](library/arsenal/stills/style-whiteboard.jpg)
+![Woodcut print (direction)](library/arsenal/stills/style-woodcut.jpg)
+
 Proven techniques in the arsenal, each a still of our own proof build. The ae_arsenal tool returns them with its shortlist.
 
 ![Window-light shadow map over a flat layout](library/arsenal/stills/01-shadow-map-overlay.jpg)
