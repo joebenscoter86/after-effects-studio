@@ -1,16 +1,16 @@
 // piece: land-on
 // name: Carry an object onto another
 // does: One object travels in an arc toward the camera and seats itself on a plate's face, taking the plate's angle, with a small settle; it can shrink as it lands.
-// use it for: a seal or stamp on a result (a stamp of approval); a piece fitting into place; the thing that carried one idea arriving on the next
+// use it for: a seal or stamp on a result (a stamp of approval); a piece fitting into place; a carried object from the previous beat arriving on the next thing; the thing that carried one idea arriving on the next
 // job: hand-over; support: show-proof, relate-things
 // provides: motion: bounce
-// works with: piece-two-sided, piece-stand-up, piece-plate
+// works with: piece-two-sided, piece-stand-up, piece-plate, piece-move
 // call: PCS.landOn(obj, plate, { at, t, dur, lift, scale, gap })
 // option at: [x, y] on the plate's face from its centre, default [0, 0]
 // option t: when it leaves (required)
 // option dur: seconds, default 0.5
 // option lift: how far toward the camera it comes on the way, default 260, so it never cuts through the plate
-// option scale: its size in percent at landing (optional), with a small overshoot
+// option scale: its size in percent at landing, absolute (100 is its own size, whatever scale it had before), with a small overshoot; left out, it keeps its size
 // option gap: space in front of the face, default 4
 // returns: where it lands, [x, y, z] in the comp
 // example:

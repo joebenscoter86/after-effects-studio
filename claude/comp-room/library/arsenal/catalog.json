@@ -1,6 +1,6 @@
 {
  "vocab": "jobs-v1",
- "version": "f934b060",
+ "version": "84b3f868",
  "jobs": [
   "land-number",
   "count-things",
@@ -236,11 +236,11 @@
   },
   {
    "id": "piece-hand-over",
-   "revision": "66c5435e",
+   "revision": "861db960",
    "level": "recipe",
    "name": "Hand over from a face card beat to a cutaway room",
    "line": "In one comp with one camera, turns a face card beat into a full-frame cutaway: the face card slides away, the dark backplate falls away to reveal a lit room, the stage's light gives way to the room's, the camera travels from the face-on view down into the room, and the object that carried the idea flies into the room and lands where it belongs.",
-   "use_for": "the moment the explanation leaves the speaker for a cutaway; continuity between a face card beat and the cutaway after it",
+   "use_for": "the moment the explanation leaves the speaker for a cutaway; continuity between a face card beat and the cutaway after it; a carried object from the previous beat flying into the room",
    "status": "proven",
    "kind": "piece",
    "job": "hand-over",
@@ -447,6 +447,10 @@
       "text": "overrides on"
      },
      {
+      "name": "maxWidth",
+      "text": "shrinks the size until the line fits this width"
+     },
+     {
       "name": "anchor",
       "text": "'left' sets the anchor at the line's left edge (default its centre)"
      },
@@ -472,11 +476,11 @@
   },
   {
    "id": "piece-land-on",
-   "revision": "626652b3",
+   "revision": "a48a9e75",
    "level": "recipe",
    "name": "Carry an object onto another",
    "line": "One object travels in an arc toward the camera and seats itself on a plate's face, taking the plate's angle, with a small settle; it can shrink as it lands.",
-   "use_for": "a seal or stamp on a result (a stamp of approval); a piece fitting into place; the thing that carried one idea arriving on the next",
+   "use_for": "a seal or stamp on a result (a stamp of approval); a piece fitting into place; a carried object from the previous beat arriving on the next thing; the thing that carried one idea arriving on the next",
    "status": "proven",
    "kind": "piece",
    "job": "hand-over",
@@ -500,7 +504,8 @@
    "composes": [
     "piece-two-sided",
     "piece-stand-up",
-    "piece-plate"
+    "piece-plate",
+    "piece-move"
    ],
    "shelf": "shipped",
    "requires": [],
@@ -529,7 +534,7 @@
      },
      {
       "name": "scale",
-      "text": "its size in percent at landing (optional), with a small overshoot"
+      "text": "its size in percent at landing, absolute (100 is its own size, whatever scale it had before), with a small overshoot; left out, it keeps its size"
      },
      {
       "name": "gap",
@@ -551,6 +556,93 @@
    "still": {
     "path": "arsenal/stills/piece-land-on.jpg",
     "sha256": "f37a9498eab6683f244cdeb8a0a16ce89f9b3cd63d5a96b7b347bf95c74254ae"
+   }
+  },
+  {
+   "id": "piece-move",
+   "revision": "3b1029bf",
+   "level": "recipe",
+   "name": "Move or grow an object to a new place",
+   "line": "Takes an object from wherever it is at a time to a new resting place, a new size, or both, eased, with an optional overshoot; it chains with the other moves on the same object (a flip, a stand-up, a landing), and its pool of light follows it and grows with it.",
+   "use_for": "an object growing and coming forward to become the hero; a carried object from the previous beat moving to its new place; a tile rising into the question while it turns over; making room for what comes next",
+   "status": "proven",
+   "kind": "piece",
+   "job": "relate-things",
+   "support": [
+    "hand-over",
+    "reveal-headline",
+    "add-impact"
+   ],
+   "mood": [],
+   "needs": [],
+   "duration": null,
+   "motion": null,
+   "difficulty": null,
+   "taught_by": 1,
+   "variants": [],
+   "provides": [
+    "motion: bounce"
+   ],
+   "cost": {
+    "renderer": "advanced-3d"
+   },
+   "composes": [
+    "piece-flip",
+    "piece-stand-up",
+    "piece-land-on",
+    "piece-spot",
+    "piece-two-sided"
+   ],
+   "shelf": "shipped",
+   "requires": [],
+   "call": {
+    "load": "move",
+    "functions": [
+     "move",
+     "moveKeys"
+    ],
+    "signature": "PCS.move(layer, { t, dur, to, by, scale, overshoot })",
+    "options": [
+     {
+      "name": "t",
+      "text": "when it starts (required)"
+     },
+     {
+      "name": "dur",
+      "text": "seconds, default 0.5"
+     },
+     {
+      "name": "to",
+      "text": "[x, y] or [x, y, z], where it comes to rest (its position: in the comp, or in its parent's space if it has one); a missing z keeps its depth"
+     },
+     {
+      "name": "by",
+      "text": "[dx, dy] or [dx, dy, dz] instead of to: how far it moves from where it is at t"
+     },
+     {
+      "name": "scale",
+      "text": "its size in percent at rest, absolute (100 is its own size, whatever scale it had before); a number, or [x, y]"
+     },
+     {
+      "name": "overshoot",
+      "text": "percent of the move it goes past before settling back, default 0 (a plain ease); 6 to 10 gives a small bounce"
+     }
+    ],
+    "returns": "the layer",
+    "example": "var tile = PCS.twoSided(st.comp, { name: 'tile', w: 360, h: 360, round: 64, color: PCS.S.accent, backColor: PCS.S.quiet, pos: [540, 846, 0] });\nPCS.flip(tile.front, { t: 0.84, dur: 0.5 });\nPCS.move(tile.front, { t: 0.84, dur: 0.5, to: [540, 560], scale: 150, overshoot: 6 });   // grows and rises into the question as it turns",
+    "notes": [
+     "moves chain in time order: each one starts from where the object is at its t and drops any keys of the same kind after its t, so add an object's moves from first to last.",
+     "on a two-sided object move its front; the back follows it. Start a move after a stand-up has settled.",
+     "rendered positions differ from comp positions (the camera sits low and left): check where it lands with a render or PCS.onScreen."
+    ]
+   },
+   "section": {
+    "document": "piece-move",
+    "heading": null
+   },
+   "still": {
+    "path": "arsenal/stills/piece-move.jpg",
+    "sha256": "c38b80f958215e8e3e806e5f2f5319403e09c8f1d4678504b21fe59f8c4a4b0f"
    }
   },
   {
@@ -746,6 +838,10 @@
     "signature": "PCS.plate(comp, { name, w, h, round, color, depth, bevel, pos, tilt })",
     "options": [
      {
+      "name": "w, h",
+      "text": "size in pixels"
+     },
+     {
       "name": "round",
       "text": "corner radius; h / 2 makes a pill"
      },
@@ -838,12 +934,24 @@
     "signature": "PCS.room({ name, duration, comp, t, dur, cam })",
     "options": [
      {
+      "name": "name, duration",
+      "text": "a new comp's name and length in seconds"
+     },
+     {
       "name": "comp",
       "text": "build the room inside this comp instead (piece-hand-over does this); its lights then rise from 0 at t over dur"
      },
      {
+      "name": "t, dur",
+      "text": "with comp, when the room's lights come up (default 0) and over how long (0.8)"
+     },
+     {
       "name": "cam",
       "text": "with comp, the camera to take over from t; without it a new camera named 'cam' is made"
+     },
+     {
+      "name": "camDur",
+      "text": "with cam, how long the camera takes to reach the room's view, default dur"
      }
     ],
     "returns": "{ comp, floor, wall, key, fill, wash, env, cam, floorY, stand(h, x, z), lie(x, z, depth) }",
@@ -866,7 +974,7 @@
   },
   {
    "id": "piece-rows",
-   "revision": "4a43e684",
+   "revision": "1c053358",
    "level": "recipe",
    "name": "Raised rows of content on a card",
    "line": "Lays thin lit bars on a plate's face as lines of a log, a list or a document, each growing in from the left in turn, with an optional tick before each.",
@@ -916,7 +1024,19 @@
      },
      {
       "name": "widths",
-      "text": "each row's share of rowWidth (0 to 1), varied by default"
+      "text": "each row's share of rowWidth (0 to 1), default [0.86, 0.62, 0.94, 0.5, 0.78, 0.7], repeating"
+     },
+     {
+      "name": "left, top",
+      "text": "where the first row starts, from the plate's centre (default left = -rowWidth / 2, top = 0: the first row on the plate's middle line, the rest below it)"
+     },
+     {
+      "name": "rowWidth",
+      "text": "the longest row's width, default 70 percent of the plate's width; with ticks, the rows start 2.2 x h to the right of left, after the tick"
+     },
+     {
+      "name": "h, gap",
+      "text": "row height, default 22, and the space between rows, default 34, so row i sits at top + i x (h + gap) and n rows take n x h + (n - 1) x gap"
      },
      {
       "name": "color",
@@ -925,6 +1045,10 @@
      {
       "name": "ticks",
       "text": "true puts a small tick before each row"
+     },
+     {
+      "name": "t, stagger",
+      "text": "the first row grows in at t, the next one stagger seconds later (default 0.09); each row grows from its left over 0.22 s and its tick pops in with it, so the last row is in at t + (n - 1) x stagger + 0.22; without t all show from the start"
      }
     ],
     "returns": "{ rows, ticks }",
@@ -942,7 +1066,7 @@
   },
   {
    "id": "piece-spot",
-   "revision": "bf6061d1",
+   "revision": "e49c201a",
    "level": "recipe",
    "name": "Spot light, or a pool of light on the hero",
    "line": "Adds one spot light coloured by the style. Given an object (on), it lights that object from in front, up and to one side, with a pool sized to it that follows the object wherever it moves and goes out when the object is hidden or tips away; it can rise as the object arrives while the stage's key dips, so the lit thing is the one to look at.",
@@ -972,7 +1096,8 @@
    "composes": [
     "piece-stage",
     "piece-plate",
-    "piece-hide"
+    "piece-hide",
+    "piece-move"
    ],
    "shelf": "shipped",
    "requires": [],
@@ -986,15 +1111,31 @@
     "options": [
      {
       "name": "on",
-      "text": "a layer to light: aims at its centre from in front, up and to the left, cone sized to it, feather 75. The light follows the layer (moves added before or after are both followed), is off while the layer is hidden or out of its time, and in front its light stops just past the object, so no pool is left on the wall behind"
+      "text": "a layer to light: aims at its centre from in front, up and to the left, cone sized to it, feather 75. The light follows the layer (moves added before or after are both followed) and its pool grows and shrinks with it, is off while the layer is hidden or out of its time, and in front its light stops just past the object, so no pool is left on the wall behind"
      },
      {
       "name": "from",
       "text": "with on, 'front' (default, for a face card stage) or 'above' (for a room: high above, so the pool also falls on the floor around it)"
      },
      {
+      "name": "t, dur",
+      "text": "the pool rises from 0 at t over dur seconds (default 0.8); without t it is on from the start. A long dur (3 or more) is a light that keeps rising, which keeps a held picture alive"
+     },
+     {
+      "name": "dimKey",
+      "text": "0 to 1, the stage's key and fill fall to this share of their strength over the same time (0.6 makes the pool read twice as strong)"
+     },
+     {
       "name": "intensity",
       "text": "percent; with on, by how light the object is and how much light already reaches it: 1.0 x the style's key plus fill on a dark object, down to 0.5 x on a near-white or fully saturated one, so a pool reads on graphite and never clips cream; else 80"
+     },
+     {
+      "name": "pos, aim",
+      "text": "[x, y, z] where the light sits and the point it points at (without on)"
+     },
+     {
+      "name": "cone, feather",
+      "text": "cone angle in degrees (default 80, or sized to the object with on) and feather percent (90, or 75 with on)"
      },
      {
       "name": "color",
@@ -1024,7 +1165,7 @@
   },
   {
    "id": "piece-stage",
-   "revision": "b316edeb",
+   "revision": "ba407e03",
    "level": "recipe",
    "name": "Lit stage for a face card beat",
    "line": "Makes a vertical Advanced 3D comp with a dark ground, a backplate that catches light and shadow, a key with soft shadows, a fill, a slowly drifting camera and grain on the graphics only, all coloured by the style.",
@@ -1068,7 +1209,7 @@
     "functions": [
      "stage"
     ],
-    "signature": "PCS.stage({ name, duration, env, stitch })",
+    "signature": "PCS.stage({ name, duration, env, stitch, replace })",
     "options": [
      {
       "name": "name",
@@ -1085,15 +1226,19 @@
      {
       "name": "stitch",
       "text": "{ path, start } puts the speaker's clip in a rounded card at the bottom, starting at that time in the clip"
+     },
+     {
+      "name": "replace",
+      "text": "true rebuilds the comp in its place: an earlier comp of this name is removed first, with its solids, nulls and the light map it brought in (footage from elsewhere, such as the speaker's clip, stays), and the new one goes in the same folder; for look-and-fix rounds. It refuses a comp used inside another"
      }
     ],
     "returns": "{ comp, backplate, key, fill, cam, grain, warnings }",
-    "example": "PCS.use('example-warm-paper');\nvar st = PCS.stage({ name: 'BEAT 3', duration: 5 });",
+    "example": "PCS.use('example-warm-paper');\nvar st = PCS.stage({ name: 'BEAT 3', duration: 5, replace: true });",
     "notes": [
      "2D layers (grain, the face card) stay on top; pieces seat new 3D layers under them by themselves.",
-     "read before placing anything. Graphics live in y 220 to 1180, above the speaker's card; fill that area: no more than about a fifth of it empty, so make objects big.",
+     "read before placing anything. Graphics live on screen in y 220 to 1180, above the speaker's card (its top edge is at screen y 1360); fill that area: no more than about a fifth of it empty, so make objects big.",
      "one hero per picture: bigger, nearer, or in the pool of light (piece-spot). Two equal plates means no hero.",
-     "the camera sits left of centre and low, so objects show a little off their y and lean differently at the top and bottom of the stage: set positions by render, not by arithmetic.",
+     "those numbers are on screen; the positions you give are the comp's, and the camera (low, left of centre, drifting) shows an object at depth 0 higher than its comp y: about 50 px in the lower half and 60 to 80 px near the top. So screen y 220 to 1180 is comp y about 285 to 1230 at depth 0. Objects also lean differently at the top and bottom. Check a placing with PCS.onScreen(layer, null, t), which gives [x, y] on screen, or a render, not by arithmetic.",
      "type on a plate is flat (piece-label); only a hero word is an object (piece-type3d). Move things off with piece-tip-away, never a fade.",
      "the camera's slow drift keeps a held picture alive by itself; a pool that keeps rising (piece-spot, long dur) adds to it. No other motion is needed to hold."
     ]
@@ -1109,11 +1254,11 @@
   },
   {
    "id": "piece-stand-up",
-   "revision": "e3ea8aba",
+   "revision": "d6990a01",
    "level": "recipe",
    "name": "Stand an object up",
-   "line": "An object lying flat on its back stands up on its bottom edge, past upright, and settles back, from wherever its rotation is; what sits on it stays hidden until it is half way up, so no type is seen squashed edge-on.",
-   "use_for": "a pill, a card or a result arriving by standing up; the one item chosen from many standing up to be seen",
+   "line": "An object (a plate, a card, a two-sided tile's front or a hero word from piece-type3d) lying flat on its back stands up on its bottom edge, past upright, and settles back, from wherever its rotation is; what sits on it stays hidden until it is half way up, so no type is seen squashed edge-on.",
+   "use_for": "a pill, a card or a result arriving by standing up; a big word (piece-type3d) arriving; the one item chosen from many standing up to be seen",
    "status": "proven",
    "kind": "piece",
    "job": "reveal-headline",
@@ -1136,9 +1281,11 @@
    },
    "composes": [
     "piece-plate",
+    "piece-type3d",
     "piece-on-face",
     "piece-flip",
-    "piece-land-on"
+    "piece-land-on",
+    "piece-move"
    ],
    "shelf": "shipped",
    "requires": [],
@@ -1148,7 +1295,7 @@
      "standUp",
      "hingeBottom"
     ],
-    "signature": "PCS.standUp(plate, { t, dur, hide, hinge })",
+    "signature": "PCS.standUp(layer, { t, dur, hide, hinge })",
     "options": [
      {
       "name": "t",
@@ -1164,7 +1311,7 @@
      },
      {
       "name": "hinge",
-      "text": "'bottom' (default) pivots on its bottom edge, as a thing standing up does: it lies back away from the camera and never sweeps through what is in front of or below it; 'centre' turns about its middle. Once it has settled it turns about its middle again, so later flips stay in place"
+      "text": "'bottom' (default) pivots on its bottom edge (for type, the bottom of its letters' box), as a thing standing up does: it lies back away from the camera and never sweeps through what is in front of or below it; 'centre' turns about its middle. Once it has settled it turns about its middle again, so later flips stay in place"
      }
     ],
     "returns": "the layer",
@@ -1382,7 +1529,7 @@
    },
    "still": {
     "path": "arsenal/stills/piece-tip-away.jpg",
-    "sha256": "7711085a3817a481cc34c26608c3ea40f8737f9c1665d74228b3fcf4d595a868"
+    "sha256": "3b21c9eae3a31ade381a987a40d78e29feb3d4064d0e45ffe91cf65a262ef9cd"
    }
   },
   {
@@ -1436,8 +1583,16 @@
       "text": "the front, default the style's surface"
      },
      {
+      "name": "backColor",
+      "text": "the back, default the style's quiet colour"
+     },
+     {
       "name": "axis",
       "text": "the axis it will flip on, 'y' (default) or 'x', so the back reads the right way up"
+     },
+     {
+      "name": "w, h, round, depth, bevel, pos, tilt",
+      "text": "as piece-plate"
      }
     ],
     "returns": "{ front, back }: move and flip front; seat things with PCS.onFace(layer, obj.front) and PCS.onFace(layer, obj.back)",
@@ -1455,11 +1610,11 @@
   },
   {
    "id": "piece-type3d",
-   "revision": "8636ea1c",
+   "revision": "10f752c0",
    "level": "recipe",
    "name": "One hero word or number as a lit object",
    "line": "Makes one word or number a solid, lit object with a shallow extrusion and no bevel, that casts a shadow and shows its side wall.",
-   "use_for": "the number the line lands on; the one word that is the answer; never a sentence",
+   "use_for": "a big word on its own (a yes, a no, a name) or a big number; the number the line lands on; the one word that is the answer; never a sentence",
    "status": "proven",
    "kind": "piece",
    "job": "land-number",
@@ -1484,14 +1639,17 @@
    "composes": [
     "piece-stage",
     "piece-label",
-    "piece-tip-away"
+    "piece-stand-up",
+    "piece-tip-away",
+    "piece-move"
    ],
    "shelf": "shipped",
    "requires": [],
    "call": {
     "load": "type3d",
     "functions": [
-     "type3d"
+     "type3d",
+     "typeColor"
     ],
     "signature": "PCS.type3d(comp, { text, size, depth, weight, color, pos, tilt, maxWidth, name })",
     "options": [
@@ -1509,7 +1667,7 @@
      },
      {
       "name": "color",
-      "text": "default the style's type colour"
+      "text": "default the style's type colour; the face renders as that colour under the style's light (its typeLit)"
      },
      {
       "name": "pos",
@@ -1518,12 +1676,17 @@
      {
       "name": "tilt",
       "text": "[x, y] resting angle, default the style's tilt"
+     },
+     {
+      "name": "maxWidth",
+      "text": "shrinks the size until it fits, default 860"
      }
     ],
     "returns": "the text layer",
     "example": "var n = PCS.type3d(st.comp, { text: '42', size: 420, pos: [540, 560, 0] });\nPCS.label(st.comp, { text: 'tests passed', size: 64, pos: [540, 860, 0] });",
     "notes": [
-     "no bevel and a shallow depth: deeper or bevelled type reads as word art. Supporting words are piece-label."
+     "no bevel and a shallow depth: deeper or bevelled type reads as word art. Supporting words are piece-label.",
+     "its face is lit and set (the style's typeLit) to render as the cream type colour at rest in the middle and lower stage; near the top of the stage it reads a shade darker. Bring it in with piece-stand-up and take it off with piece-tip-away."
     ]
    },
    "section": {
@@ -1532,7 +1695,7 @@
    },
    "still": {
     "path": "arsenal/stills/piece-type3d.jpg",
-    "sha256": "3cff9f42aa1da14dcaf5c57e150d01e6c0742492940ecf51d951c9a61c5ffc3a"
+    "sha256": "6a7329a39e346cd1855c24fd73e98a303e64bc97a0738f8c1e1264d8044959c1"
    }
   },
   {
@@ -5931,7 +6094,7 @@
   },
   {
    "id": "style-house",
-   "revision": "5d59c227",
+   "revision": "db47a1cc",
    "level": "style",
    "name": "House: graphite",
    "line": "The house look: dark graphite objects a shade above a near-black ground, cream type, one vermilion, Jost SemiBold, no grain.",
@@ -5981,7 +6144,7 @@
   },
   {
    "id": "style-example-night-glass",
-   "revision": "22d4d276",
+   "revision": "6d509692",
    "level": "style",
    "name": "Example: night glass",
    "line": "An example, not a house look: thin blue-slate plates with a metallic sheen under cool light, one mint accent.",
@@ -6026,7 +6189,7 @@
   },
   {
    "id": "style-example-warm-paper",
-   "revision": "145db954",
+   "revision": "0076ae8e",
    "level": "style",
    "name": "Example: warm paper",
    "line": "An example, not a house look: cream plates under a warm key on a deep blue-black ground, one red-orange accent, light grain.",

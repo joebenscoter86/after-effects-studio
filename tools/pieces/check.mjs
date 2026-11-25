@@ -21,7 +21,8 @@
 // ('CR PIECE PROOF <piece> <style>'), so do not keep work in comps of that name.
 //
 // --accept writes the new stills as the saved ones (quality/renders/pieces/<name>.png and the catalog still) for the
-// pieces checked, for when a piece was changed on purpose; then run `node tools/channel-learner/arsenal.mjs`.
+// pieces checked, for when a piece was changed on purpose, and the first still of a new piece; then run
+// `node tools/channel-learner/arsenal.mjs`.
 import { spawnSync } from 'node:child_process';
 import { createRequire } from 'node:module';
 import fs from 'node:fs';
@@ -191,6 +192,13 @@ async function main(argv) {
         const fresh = `${stem}.jpg`;
         ffmpeg(['-i', full, '-vf', `scale=${STILL_WIDTH}:-2:flags=lanczos`, '-q:v', '4', fresh]);
         const saved = path.join(STILLS, `piece-${name}.jpg`);
+        if (!fs.existsSync(saved) && flag('--accept')) {   // a new piece: its first still becomes the saved one
+          fs.mkdirSync(path.join(ROOT, 'quality', 'renders', 'pieces'), { recursive: true });
+          fs.copyFileSync(full, path.join(ROOT, 'quality', 'renders', 'pieces', `${name}.png`));
+          fs.copyFileSync(fresh, saved);
+          console.log(`NEW  ${name.padEnd(14)}no saved still yet: saved this one (${((Date.now() - t0) / 1000).toFixed(1)} s)`);
+          continue;
+        }
         if (!fs.existsSync(saved)) throw new Error(`no saved still at plugin/library/arsenal/stills/piece-${name}.jpg`);
         const A = readRGB(saved); const B = readRGB(fresh);
         if (A.width !== B.width || A.height !== B.height) throw new Error(`the new still is ${B.width} x ${B.height}, the saved one ${A.width} x ${A.height}`);

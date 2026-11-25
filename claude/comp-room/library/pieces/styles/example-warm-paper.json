@@ -78,6 +78,7 @@
   "fillReach": 0,
   "litCap": 0,
   "rowDepth": 6,
-  "rowBevel": 0
+  "rowBevel": 0,
+  "typeLit": 0
  }
 }

@@ -671,6 +671,9 @@ test('pieces: the header gives the fields, the options, the example lines and th
   assert.deepEqual(h.notes, ['put the back face on first.']);
   assert.deepEqual(parseJobLine(h.job), ['before-after', ['hand-over']]);
   assert.throws(() => parsePieceHeader('// piece: x\nPCS.x = 1;\n', 'x.jsx'), /x\.jsx has no header ending in "\/\/ ---"/);
+  // camelCase option names and options listed together are kept (they were dropped, so their defaults never reached get)
+  const r = parsePieceHeader('// piece: rows\n// option rowWidth: default 70 percent\n// option h, gap: row height, default 22\n// ---\n');
+  assert.deepEqual(r.options, [['rowWidth', 'default 70 percent'], ['h, gap', 'row height, default 22']]);
 });
 
 test('pieces: an entry is a recipe of kind piece with its call, the pieces it loads, a still, and comes first', () => {
@@ -729,7 +732,7 @@ test('pieces: the shipped folder reads clean, each with a proof scene, and the c
 const VALUES = { ground: [0.06, 0.06, 0.07], backplate: [0.08, 0.08, 0.1], surface: [0.2, 0.2, 0.22], ink: [0.95, 0.93, 0.89], type: [0.95, 0.93, 0.89],
   accent: [1, 0.37, 0.24], onAccent: [0.95, 0.93, 0.89], quiet: [0.34, 0.35, 0.4], keyColor: [1, 0.95, 0.88], fillColor: [0.92, 0.94, 1],
   keyIntensity: 170, fillIntensity: 80, envIntensity: 60, grain: 0, font: 'Jost', weight: 'SemiBold', depth: 36, bevel: 4, tilt: [4, -8], material: { specular: 60 },
-  fillReach: 0, litCap: 0, rowDepth: 6, rowBevel: 0 };
+  fillReach: 0, litCap: 0, rowDepth: 6, rowBevel: 0, typeLit: 0 };
 const blockOf = (id, o = {}) => {
   const block = { id, title: `T ${id}`, role: id === 'house' ? 'house' : id.startsWith('example-') ? 'example' : 'look', line: 'A line.', source: 'Somewhere.',
     provides: ['depth: extrusion'], values: VALUES, ...(id === 'house' ? { default: true } : {}), ...o };
@@ -759,6 +762,9 @@ test('style blocks: the build refuses no house default, two defaults, a bad valu
   assert.deepEqual(styleBlockProblems([blockOf('house', { previous: { date: '2026-11-24', why: 'before the tune', values: { fillIntensity: 80, quiet: [0.34, 0.35, 0.4] } } })], { vocab: BLOCK_VOCAB }), []);
   assert.match(probs([blockOf('house', { previous: { values: { fillIntensity: 80 } } })]), /previous needs a date and a why/);
   assert.match(probs([blockOf('house', { previous: { date: 'd', why: 'w', values: { glow: 1 } } })]), /previous has unknown value "glow"/);
+  // typeLit is a colour, or 0 for the type colour itself
+  assert.deepEqual(styleBlockProblems([blockOf('house', { values: { ...VALUES, typeLit: [0.6, 0.6, 0.55] } })], { vocab: BLOCK_VOCAB }), []);
+  assert.match(probs([blockOf('house', { values: { ...VALUES, typeLit: 2 } })]), /typeLit is not \[r, g, b\] from 0 to 1, or 0/);
 });
 
 test('style blocks: house and examples become style entries, house first; a look adds block to its style; the name guard covers block text', () => {

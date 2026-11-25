@@ -73,7 +73,13 @@ PCS.use = function (s) {
 // ---- helpers -------------------------------------------------------------
 PCS.TG = function (L) { return L.property('ADBE Transform Group'); };
 PCS.sp = function (L, grp, mn, v) { try { L.property(grp).property(mn).setValue(v); return true; } catch (e) { return false; } };
-PCS.ease = function (p) { for (var j = 1; j <= p.numKeys; j++) { try { AE.setEase(p, j, 70, 70); } catch (err) {} } };
+// Eases every key except held ones: a hold (a stand-up's hinge, a cut) stays a hold when a later move is chained on.
+PCS.ease = function (p) {
+  var H = KeyframeInterpolationType.HOLD;
+  for (var j = 1; j <= p.numKeys; j++) {
+    try { if (p.keyOutInterpolationType(j) === H || p.keyInInterpolationType(j) === H) { continue; } AE.setEase(p, j, 70, 70); } catch (err) {}
+  }
+};
 // Replaces ALL keys on the property. keys: [[time, value], ...]
 PCS.kf = function (p, keys) {
   while (p.numKeys > 0) { p.removeKey(1); }
@@ -210,6 +216,21 @@ PCS.toWorld = function (layer, local, t) {
   var src = N.source; N.remove();
   try { if (src && src.usedIn.length === 0) { src.remove(); } } catch (e) {}   // a null leaves its solid in the project
   return p;
+};
+// Where a point of a layer (its own coordinates, default its anchor) shows on screen at time t, through the comp's
+// camera: [x, y] in the 1080 x 1920 frame. A 3D layer's comp position is not where it shows (the stage's camera sits low
+// and left and drifts), so check placing with this or a render, not by arithmetic.
+PCS.onScreen = function (layer, local, t) {
+  var comp = layer.containingComp;
+  var N = comp.layers.addNull(); N.threeDLayer = true; N.parent = layer; PCS.zero(N);
+  PCS.TG(N).property('ADBE Anchor Point').setValue([0, 0, 0]);
+  PCS.TG(N).property('ADBE Position').setValue(local || PCS.TG(layer).property('ADBE Anchor Point').valueAtTime(t || 0, false));
+  var fx = N.property('ADBE Effect Parade').addProperty('ADBE Point Control');
+  fx.property(1).expression = 'var p = toComp([0,0,0]); [p[0], p[1]];';
+  var p = fx.property(1).valueAtTime(t || 0, false);
+  var src = N.source; N.remove();
+  try { if (src && src.usedIn.length === 0) { src.remove(); } } catch (e) {}
+  return [Math.round(p[0]), Math.round(p[1])];
 };
 // An expression's reference to a layer, by name. Expressions find a layer by its name, so a name shared with another
 // layer in the comp is made unique first (with a warning), or the expression would follow the wrong one.

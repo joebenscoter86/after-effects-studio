@@ -2,7 +2,7 @@
  "arsenal": "The library at three levels: styles (a look a section can borrow: colour, type, light, material), worlds (a set a section lives in) and recipes (one technique for one beat). Among the recipes, pieces are runnable code: one file each, called by name. Every entry has a still and says what it provides. Look at a level as pictures with ae_arsenal browse; ask per beat by job, by what an entry provides, or in plain words, with find (pieces come first); read any entry with get (a piece answers with its call); list the jobs and the provides vocabulary with jobs.",
  "tool": "ae_arsenal",
  "vocab": "jobs-v1",
- "version": "f934b060",
+ "version": "84b3f868",
  "documents": [
   {
    "id": "arsenal-index",
@@ -158,6 +158,18 @@
    "id": "piece-land-on-proof",
    "title": "Proof scene for the Carry an object onto another piece",
    "path": "pieces/proof/land-on.jsx",
+   "kind": "code"
+  },
+  {
+   "id": "piece-move",
+   "title": "Piece: Move or grow an object to a new place",
+   "path": "pieces/move.jsx",
+   "kind": "code"
+  },
+  {
+   "id": "piece-move-proof",
+   "title": "Proof scene for the Move or grow an object to a new place piece",
+   "path": "pieces/proof/move.jsx",
    "kind": "code"
   },
   {
@@ -330,10 +342,10 @@
   }
  ],
  "counts": {
-  "recipes": 120,
+  "recipes": 121,
   "proven": 85,
-  "stills": 128,
-  "pieces": 19,
+  "stills": 129,
+  "pieces": 20,
   "style_blocks": 5,
   "styles": 34,
   "worlds": 4

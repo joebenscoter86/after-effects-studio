@@ -1,15 +1,15 @@
 // piece: stand-up
 // name: Stand an object up
-// does: An object lying flat on its back stands up on its bottom edge, past upright, and settles back, from wherever its rotation is; what sits on it stays hidden until it is half way up, so no type is seen squashed edge-on.
-// use it for: a pill, a card or a result arriving by standing up; the one item chosen from many standing up to be seen
+// does: An object (a plate, a card, a two-sided tile's front or a hero word from piece-type3d) lying flat on its back stands up on its bottom edge, past upright, and settles back, from wherever its rotation is; what sits on it stays hidden until it is half way up, so no type is seen squashed edge-on.
+// use it for: a pill, a card or a result arriving by standing up; a big word (piece-type3d) arriving; the one item chosen from many standing up to be seen
 // job: reveal-headline; support: show-proof, list-items
 // provides: motion: bounce
-// works with: piece-plate, piece-on-face, piece-flip, piece-land-on
-// call: PCS.standUp(plate, { t, dur, hide, hinge })
+// works with: piece-plate, piece-type3d, piece-on-face, piece-flip, piece-land-on, piece-move
+// call: PCS.standUp(layer, { t, dur, hide, hinge })
 // option t: when it starts (required)
 // option dur: seconds, default 0.5 (past upright at 60 percent, settled at the end)
 // option hide: false keeps it visible before t (default: hidden until t)
-// option hinge: 'bottom' (default) pivots on its bottom edge, as a thing standing up does: it lies back away from the camera and never sweeps through what is in front of or below it; 'centre' turns about its middle. Once it has settled it turns about its middle again, so later flips stay in place
+// option hinge: 'bottom' (default) pivots on its bottom edge (for type, the bottom of its letters' box), as a thing standing up does: it lies back away from the camera and never sweeps through what is in front of or below it; 'centre' turns about its middle. Once it has settled it turns about its middle again, so later flips stay in place
 // returns: the layer
 // example:
 //   var card = PCS.plate(st.comp, { name: 'card', w: 720, h: 470, round: 34, pos: [540, 900, 0] });

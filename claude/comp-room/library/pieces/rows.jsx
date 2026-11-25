@@ -7,13 +7,13 @@
 // works with: piece-plate, piece-tick, piece-stand-up
 // call: PCS.rows(comp, plate, { n, widths, left, top, rowWidth, h, gap, color, ticks, t, stagger })
 // option n: how many rows, default 3
-// option widths: each row's share of rowWidth (0 to 1), varied by default
-// option left, top: where the first row starts, from the plate's centre (default the left of rowWidth, and 0)
-// option rowWidth: default 70 percent of the plate's width
-// option h, gap: row height (22) and the space between rows (34)
+// option widths: each row's share of rowWidth (0 to 1), default [0.86, 0.62, 0.94, 0.5, 0.78, 0.7], repeating
+// option left, top: where the first row starts, from the plate's centre (default left = -rowWidth / 2, top = 0: the first row on the plate's middle line, the rest below it)
+// option rowWidth: the longest row's width, default 70 percent of the plate's width; with ticks, the rows start 2.2 x h to the right of left, after the tick
+// option h, gap: row height, default 22, and the space between rows, default 34, so row i sits at top + i x (h + gap) and n rows take n x h + (n - 1) x gap
 // option color: default a tone between the style's surface and ink
 // option ticks: true puts a small tick before each row
-// option t, stagger: the first row grows in at t, the next one stagger seconds later (0.09); without t all show from the start
+// option t, stagger: the first row grows in at t, the next one stagger seconds later (default 0.09); each row grows from its left over 0.22 s and its tick pops in with it, so the last row is in at t + (n - 1) x stagger + 0.22; without t all show from the start
 // returns: { rows, ticks }
 // example:
 //   var card = PCS.plate(st.comp, { name: 'card', w: 720, h: 470, round: 34, pos: [540, 900, 0] });

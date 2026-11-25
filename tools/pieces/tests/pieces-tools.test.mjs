@@ -105,16 +105,44 @@ test('words: placed by pos or under an object, centred on what is shown, and the
 test('styles: the house tune is recoverable as house-previous, and the other styles keep their old look', () => {
   const read = (n) => JSON.parse(fs.readFileSync(path.join(PIECES, 'styles', `${n}.json`), 'utf8'));
   const h = read('house');
-  assert.deepEqual(h.previous.values, { fillIntensity: 80, depth: 36, bevel: 4, fillReach: 0, litCap: 0, rowDepth: 6, rowBevel: 0, quiet: [0.34, 0.35, 0.4] });
+  assert.deepEqual(h.previous.values, { fillIntensity: 80, depth: 36, bevel: 4, fillReach: 0, litCap: 0, rowDepth: 6, rowBevel: 0, quiet: [0.34, 0.35, 0.4], typeLit: 0 });
   assert.deepEqual([h.values.ground, h.values.surface, h.values.ink, h.values.accent], [[0.063, 0.063, 0.071], [0.2, 0.2, 0.225], [0.949, 0.933, 0.894], [1, 0.373, 0.243]], "the house's four colours stay");
   for (const n of ['dark-keynote', 'example-night-glass', 'example-warm-paper', 'glass-product']) {
     const v = read(n).values;
-    assert.deepEqual([v.fillReach, v.litCap, v.rowDepth, v.rowBevel], [0, 0, 6, 0], `${n} keeps the old behaviour`);
+    assert.deepEqual([v.fillReach, v.litCap, v.rowDepth, v.rowBevel, v.typeLit], [0, 0, 6, 0, 0], `${n} keeps the old behaviour`);
   }
   assert.match(piece('pcs-core'), /out\[block\.id \+ '-previous'\] = pv;/);
 });
 
 test('catalog: the stage carries the placing know-how a cold builder needs', () => {
   const t = piece('stage');
-  for (const re of [/y 220 to 1180/, /no more than about a fifth of it empty/, /one hero per picture/, /set positions by render/, /type on a plate is flat/, /keeps a held picture alive/]) assert.match(t, re);
+  for (const re of [/on screen in y 220 to 1180/, /no more than about a fifth of it empty/, /one hero per picture/, /comp y about 285 to 1230/, /PCS\.onScreen\(layer, null, t\)/, /type on a plate is flat/, /keeps a held picture alive/]) assert.match(t, re);
+});
+
+test('move: to a place and a size, eased, chainable, and the pool grows with it', () => {
+  const t = piece('move');
+  for (const o of ['t', 'dur', 'to', 'by', 'scale', 'overshoot']) assert.match(t, new RegExp(`// option ${o}:`), o);
+  assert.match(t, /absolute \(100 is its own size/);
+  assert.match(t, /if \(p\.keyTime\(k\) >= t - 0\.0005\) \{ p\.removeKey\(k\); \}/, 'keys before t are kept, so moves chain');
+  assert.match(piece('spot'), /'ADBE Light Cone Angle'\)\.expression = 'var s = '/, "the pool's cone follows the object's scale");
+  assert.match(piece('pcs-core'), /keyOutInterpolationType\(j\) === H \|\| p\.keyInInterpolationType\(j\) === H\) \{ continue; \}/, 'easing leaves held keys held');
+  assert.ok(fs.existsSync(path.join(PIECES, 'proof', 'move.jsx')), 'it has a proof scene');
+});
+
+test('stage: replace rebuilds a comp in its place and refuses one used inside another', () => {
+  const t = piece('stage');
+  assert.match(t, /\/\/ option replace: true rebuilds the comp in its place/);
+  assert.match(t, /PCS\.removeComp\(same\[r\]\)/);
+  assert.match(t, /usedIn\.length\) \{ throw new Error/);
+  assert.match(piece('pcs-core'), /PCS\.onScreen = function \(layer, local, t\)/);
+});
+
+test('get texts: rows states its defaults, land-on its absolute scale, stand-up takes hero words, type3d reads as cream', () => {
+  const r = piece('rows');
+  for (const re of [/default \[0\.86, 0\.62, 0\.94, 0\.5, 0\.78, 0\.7\]/, /row height, default 22/, /between rows, default 34/, /\(default 0\.09\)/, /over 0\.22 s/]) assert.match(r, re);
+  assert.match(piece('land-on'), /absolute \(100 is its own size/);
+  assert.match(piece('stand-up'), /a hero word from piece-type3d/);
+  assert.match(piece('type3d'), /PCS\.typeColor\(o\.color\)/);
+  const h = JSON.parse(fs.readFileSync(path.join(PIECES, 'styles', 'house.json'), 'utf8'));
+  assert.ok(Array.isArray(h.values.typeLit), 'the house sets the colour a lit hero word needs to render cream');
 });

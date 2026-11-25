@@ -4,9 +4,9 @@
 // use it for: the one thing the line is about ("the light tells the story"); a light that keeps rising on a held picture; the key and fill of a stage
 // job: light-the-hero; support: add-depth, reveal-headline, keep-it-alive
 // provides: light: key; light: fill
-// works with: piece-stage, piece-plate, piece-hide
+// works with: piece-stage, piece-plate, piece-hide, piece-move
 // call: PCS.spot(comp, { name, on, from, t, dur, dimKey, pos, aim, color, intensity, cone, feather, shadow, darkness, diffusion })
-// option on: a layer to light: aims at its centre from in front, up and to the left, cone sized to it, feather 75. The light follows the layer (moves added before or after are both followed), is off while the layer is hidden or out of its time, and in front its light stops just past the object, so no pool is left on the wall behind
+// option on: a layer to light: aims at its centre from in front, up and to the left, cone sized to it, feather 75. The light follows the layer (moves added before or after are both followed) and its pool grows and shrinks with it, is off while the layer is hidden or out of its time, and in front its light stops just past the object, so no pool is left on the wall behind
 // option from: with on, 'front' (default, for a face card stage) or 'above' (for a room: high above, so the pool also falls on the floor around it)
 // option t, dur: the pool rises from 0 at t over dur seconds (default 0.8); without t it is on from the start. A long dur (3 or more) is a light that keeps rising, which keeps a held picture alive
 // option dimKey: 0 to 1, the stage's key and fill fall to this share of their strength over the same time (0.6 makes the pool read twice as strong)
@@ -39,7 +39,7 @@ PCS.spot = function (comp, o) {
     aim = [c[0] + aimOff[0], c[1] + aimOff[1], c[2] + aimOff[2]]; pos = [c[0] + off[0], c[1] + off[1], c[2] + off[2]];
     if (cone === undefined) { cone = Math.min(90, 2 * Math.atan(r / dist) * 180 / Math.PI + 4); }
     if (feather === undefined) { feather = 75; }
-    follow = { ref: PCS.ref(o.on), off: off, aimOff: aimOff, reach: o.from === 'above' ? 0 : dist + half + PCS.depthOf(o.on) + 60 };
+    follow = { ref: PCS.ref(o.on), off: off, aimOff: aimOff, reach: o.from === 'above' ? 0 : dist + half + PCS.depthOf(o.on) + 60, grow: o.cone === undefined };
   }
   var L = comp.layers.addLight(o.name || 'spot', [540, 960]); L.lightType = LightType.SPOT;
   PCS.TG(L).property('ADBE Position').setValue(pos);
@@ -56,6 +56,9 @@ PCS.spot = function (comp, o) {
     try { PCS.TG(L).property('ADBE Anchor Point').expression = at + ' + ' + v3(follow.aimOff) + ';'; } catch (e3) {}
     // Off while the object is hidden (its opacity) or out of its time; hide and tip-away cut the opacity.
     L.property(G).property('ADBE Light Intensity').expression = 'var L = ' + follow.ref + '; L.active ? value * L.transform.opacity / 100 : 0;';
+    if (follow.grow) {   // the pool keeps its size on the object as the object grows or shrinks (piece-move, piece-land-on)
+      L.property(G).property('ADBE Light Cone Angle').expression = 'var s = ' + follow.ref + '.transform.scale[0] / 100; var h = (value - 4) / 2 * Math.PI / 180; Math.min(90, 2 * Math.atan(Math.tan(h) * s) * 180 / Math.PI + 4);';
+    }
     if (follow.reach) {   // the light stops just past the object: nothing reaches the backplate behind it
       PCS.sp(L, G, 'ADBE Light Falloff Type', 2); PCS.sp(L, G, 'ADBE Light Falloff Start', Math.round(follow.reach)); PCS.sp(L, G, 'ADBE Light Falloff Distance', 250);
     }

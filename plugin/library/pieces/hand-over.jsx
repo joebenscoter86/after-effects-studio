@@ -1,7 +1,7 @@
 // piece: hand-over
 // name: Hand over from a face card beat to a cutaway room
 // does: In one comp with one camera, turns a face card beat into a full-frame cutaway: the face card slides away, the dark backplate falls away to reveal a lit room, the stage's light gives way to the room's, the camera travels from the face-on view down into the room, and the object that carried the idea flies into the room and lands where it belongs.
-// use it for: the moment the explanation leaves the speaker for a cutaway; continuity between a face card beat and the cutaway after it
+// use it for: the moment the explanation leaves the speaker for a cutaway; continuity between a face card beat and the cutaway after it; a carried object from the previous beat flying into the room
 // job: hand-over; support: establish-place, move-camera
 // provides: camera: travel; environment: room
 // works with: piece-stage, piece-room, piece-land-on, piece-tip-away, piece-stand-up

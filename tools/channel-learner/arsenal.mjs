@@ -209,7 +209,7 @@ export function parsePieceHeader(text, file = 'piece') {
     if (/^---\s*$/.test(line)) { ended = true; break; }
     if (inExample && /^\s{2,}\S/.test(line)) { out.example.push(line.replace(/^\s{2}/, '')); continue; }
     inExample = false;
-    const m = line.match(/^([a-z][a-z ]*?):\s*(.*)$/);
+    const m = line.match(/^([a-z][A-Za-z0-9 ,]*?):\s*(.*)$/);   // option names may be camelCase or a list (option h, gap:)
     if (!m) continue;
     const [, key, value] = m;
     if (key === 'example') { inExample = true; if (value.trim()) out.example.push(value.trim()); continue; }
@@ -293,7 +293,10 @@ const BLOCK_COLOURS = ['ground', 'backplate', 'surface', 'ink', 'type', 'accent'
 // lit colour's channel may be (0: no cap), so a saturated colour renders saturated; rowDepth, rowBevel: piece-rows' bars.
 const BLOCK_NUMBERS = ['keyIntensity', 'fillIntensity', 'envIntensity', 'grain', 'depth', 'bevel', 'fillReach', 'litCap', 'rowDepth', 'rowBevel'];
 const BLOCK_STRINGS = ['font', 'weight'];
-export const BLOCK_KEYS = [...BLOCK_COLOURS, ...BLOCK_NUMBERS, ...BLOCK_STRINGS, 'tilt', 'material'];
+// typeLit: the colour to give a lit hero word so its face renders as the type colour under the style's light, set by
+// render; 0 uses the type colour itself.
+const BLOCK_COLOUR_OR_OFF = ['typeLit'];
+export const BLOCK_KEYS = [...BLOCK_COLOURS, ...BLOCK_NUMBERS, ...BLOCK_STRINGS, ...BLOCK_COLOUR_OR_OFF, 'tilt', 'material'];
 const MATERIAL_KEYS = ['specular', 'shininess', 'metal'];
 
 /** The style blocks in pieces/styles/: { id, file, text, block }. */
@@ -340,6 +343,7 @@ export function styleBlockProblems(blocks, { vocab = {}, styleIds = [] } = {}) {
     for (const k of BLOCK_COLOURS) if (k in v && !isColour(v[k])) p.push(`${where}: ${k} is not [r, g, b] from 0 to 1`);
     for (const k of BLOCK_NUMBERS) if (k in v && !isNumber(v[k])) p.push(`${where}: ${k} is not a number of 0 or more`);
     for (const k of BLOCK_STRINGS) if (k in v && !(typeof v[k] === 'string' && v[k].trim())) p.push(`${where}: ${k} is not a name`);
+    for (const k of BLOCK_COLOUR_OR_OFF) if (k in v && v[k] !== 0 && !isColour(v[k])) p.push(`${where}: ${k} is not [r, g, b] from 0 to 1, or 0`);
     if (b.previous) {   // the values before the last tune, loadable as <id>-previous
       const pv = b.previous.values ?? {};
       if (!b.previous.date || !b.previous.why) p.push(`${where}: previous needs a date and a why`);

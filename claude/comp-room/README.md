@@ -126,6 +126,7 @@ Proven techniques in the arsenal, each a still of our own proof build. The ae_ar
 ![Show or hide an object with what sits on it](library/arsenal/stills/piece-hide.jpg)
 ![Flat crisp label](library/arsenal/stills/piece-label.jpg)
 ![Carry an object onto another](library/arsenal/stills/piece-land-on.jpg)
+![Move or grow an object to a new place](library/arsenal/stills/piece-move.jpg)
 ![Seat a layer on a face of an object](library/arsenal/stills/piece-on-face.jpg)
 ![A picture or screenshot as the face of an object](library/arsenal/stills/piece-picture-face.jpg)
 ![Thick lit plate](library/arsenal/stills/piece-plate.jpg)
