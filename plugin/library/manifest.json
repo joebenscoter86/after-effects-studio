@@ -748,14 +748,14 @@
       "title": "Technique arsenal index: documents, vocabulary and counts",
       "path": "arsenal/index.json",
       "kind": "catalog",
-      "sha256": "c3f0fe6bb9e2e656a55672cd62007be1fd3503912533279a58c723617812951b"
+      "sha256": "f079cd26ada7e6505239cbf01f185e55b8348ba80fd55bfbfb4bde5d86a8853d"
     },
     {
       "id": "arsenal-catalog",
-      "title": "Library catalog: one record per direction, world and recipe, queried by ae_arsenal",
+      "title": "Library catalog: one record per style, world, recipe and piece, queried by ae_arsenal",
       "path": "arsenal/catalog.json",
       "kind": "catalog",
-      "sha256": "57b97e37ecb4dcffdf07b25a3e0033364aef4a533b5726dbe6c3b6db7ef2b4f8"
+      "sha256": "52ff6407ed2801595cb81f1598b6e41319aeba5b43536772202d85cc4d3f668c"
     },
     {
       "id": "arsenal-jobs",
@@ -805,6 +805,69 @@
       "path": "arsenal/recipes-build-aid.md",
       "kind": "recipes",
       "sha256": "7bc9a6ac7868fab8de2a16823e333da60d1e47e00e8972c6b52c9cb2a5a1e50a"
+    },
+    {
+      "id": "pieces-core-jsx",
+      "title": "Pieces: the shared helpers every piece uses (PCS core)",
+      "path": "pieces/pcs-core.jsx",
+      "kind": "code",
+      "sha256": "4781676cc3ec0845e91899885bc00cb10e845c9214590d7098d584ab4525f35f"
+    },
+    {
+      "id": "piece-flip",
+      "title": "Piece: Flip an object over",
+      "path": "pieces/flip.jsx",
+      "kind": "code",
+      "sha256": "a37cb4a700c737074bd6d6ee217cc2a7452c2cc6dd20822c755d2417da6d0d6a"
+    },
+    {
+      "id": "piece-flip-proof",
+      "title": "Proof scene for the Flip an object over piece",
+      "path": "pieces/proof/flip.jsx",
+      "kind": "code",
+      "sha256": "00747bc893bfd6a0be450708208e9e087747db6bcbb74b3fecb67043c2969fc9"
+    },
+    {
+      "id": "piece-plate",
+      "title": "Piece: Thick lit plate",
+      "path": "pieces/plate.jsx",
+      "kind": "code",
+      "sha256": "77b1e0b2ea46be6025870cadfd15ddc8348d247800ca415bab1490c13cf0ab72"
+    },
+    {
+      "id": "piece-plate-proof",
+      "title": "Proof scene for the Thick lit plate piece",
+      "path": "pieces/proof/plate.jsx",
+      "kind": "code",
+      "sha256": "d47404c22d532ed14de02007969c930e07cb0460b17e86e185d783c1b0c92be3"
+    },
+    {
+      "id": "piece-spot",
+      "title": "Piece: Spot light",
+      "path": "pieces/spot.jsx",
+      "kind": "code",
+      "sha256": "a8a357ea463738d4c87e7a1c40802b36c985779c2dc9f3fc547b31e6f7a57d39"
+    },
+    {
+      "id": "piece-spot-proof",
+      "title": "Proof scene for the Spot light piece",
+      "path": "pieces/proof/spot.jsx",
+      "kind": "code",
+      "sha256": "3e5e8404444daeac35dbe7c399fc249d3faf47759ec4c09d572f686309dbcd80"
+    },
+    {
+      "id": "piece-stage",
+      "title": "Piece: Lit stage for a face card beat",
+      "path": "pieces/stage.jsx",
+      "kind": "code",
+      "sha256": "f00e8a2d611013cd25002a3511692e71758e8fae2c36351e3840d8e64529b8fd"
+    },
+    {
+      "id": "piece-stage-proof",
+      "title": "Proof scene for the Lit stage for a face card beat piece",
+      "path": "pieces/proof/stage.jsx",
+      "kind": "code",
+      "sha256": "21a328345675dcb4fd8a72ef24df7681bf69cccc5569ba053688809573f5bc33"
     }
   ]
 }

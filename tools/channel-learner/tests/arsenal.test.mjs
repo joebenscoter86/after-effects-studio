@@ -7,7 +7,7 @@ import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { buildCatalog } from '../catalog.mjs';
-import { scrubRecipe, buildArsenal, writeArsenal, galleryBlock, withGallery, creatorsOf, publicJobs, publicStatus, JOBS_REWORDING, PRIVATE_NAMES, levelsProblems, readStyles, parseProvides } from '../arsenal.mjs';
+import { scrubRecipe, buildArsenal, writeArsenal, galleryBlock, withGallery, creatorsOf, publicJobs, publicStatus, JOBS_REWORDING, PRIVATE_NAMES, levelsProblems, readStyles, parseProvides, parsePieceHeader, parseJobLine, readPieces, piecesProblems } from '../arsenal.mjs';
 
 const CLI = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'arsenal.mjs');
 const ACCEPTED = 'status: proven (accepted by the owner 2026-11-14: rebuilt and compared)';
@@ -521,7 +521,7 @@ const STYLE = { id: 'glassy', title: 'Glassy', summary: 'A glass object on a dar
 const levelsFor = (catalog, o = {}) => ({
   provides: VOCAB, beats: ['title', 'picture', 'input'], private_beats: { input: 'the speaker' },
   recipes: Object.fromEntries(catalog.recipes.map((r) => [r.id, { provides: ['depth'] }])),
-  styles: { glassy: { level: 'world', also_level: ['direction'], provides: ['material: glass', 'floor: gloss-dark'], cost: { renderer: 'blender', seconds_per_frame: 0.07 }, still: { beat: 'picture' }, composes: [] } },
+  styles: { glassy: { level: 'world', also_level: ['style'], provides: ['material: glass', 'floor: gloss-dark'], cost: { renderer: 'blender', seconds_per_frame: 0.07 }, still: { beat: 'picture' }, composes: [] } },
   ...o,
 });
 const buildLevels = (entries, edit = (l) => l, o = {}) => {
@@ -541,7 +541,7 @@ test('levels: provides is "key" or "key: word"', () => {
 test('levels: every entry gets level, provides, cost, composes and shelf; recipes are level recipe', () => {
   const jpg = Buffer.from('jpeg');
   const cat = JSON.parse(buildLevels([{ slug: 'p', status: 'proven' }], (l) => l, { proofs: { '01-p': 'x.png' }, stills: { '01-p': jpg, 'style-glassy': jpg } }).files.get('catalog.json'));
-  assert.deepEqual(cat.levels, ['direction', 'world', 'recipe']);
+  assert.deepEqual(cat.levels, ['style', 'world', 'recipe']);
   assert.deepEqual(cat.provides, VOCAB);
   const [r, s] = cat.entries;
   assert.equal(r.level, 'recipe');
@@ -551,7 +551,7 @@ test('levels: every entry gets level, provides, cost, composes and shelf; recipe
   assert.equal(r.shelf, 'shipped');
   assert.equal(s.id, 'style-glassy');
   assert.equal(s.level, 'world');
-  assert.deepEqual(s.also_level, ['direction']);
+  assert.deepEqual(s.also_level, ['style']);
   assert.equal(s.kind, 'style');
   assert.equal(s.job, null);
   assert.equal(s.line, 'A glass object on a dark floor.');
@@ -588,7 +588,7 @@ test('levels: refuses a style without a record, a record without a style, a bad 
   const entries = [{ slug: 'p', status: 'proven' }];
   assert.throws(() => buildLevels(entries, (l) => ({ ...l, styles: {} })), /style glassy has no levels record/);
   assert.throws(() => buildLevels(entries, (l) => l, { styles: [] }), /levels record for style glassy, which is not in the style index/);
-  assert.throws(() => buildLevels(entries, (l) => ({ ...l, styles: { glassy: { ...l.styles.glassy, level: 'recipe' } } })), /level "recipe" is not direction or world/);
+  assert.throws(() => buildLevels(entries, (l) => ({ ...l, styles: { glassy: { ...l.styles.glassy, level: 'recipe' } } })), /level "recipe" is not style or world/);
   assert.throws(() => buildLevels(entries, (l) => ({ ...l, styles: { glassy: { ...l.styles.glassy, still: { beat: 'input' } } } })), /still beat "input" is private/);
 });
 
@@ -614,10 +614,10 @@ test('write: a style still is cut once from its proof movie at the named beat, t
 
 test('gallery: styles are shown with their level, recipes as before', () => {
   const block = galleryBlock({ entries: [
-    { id: 'style-g', kind: 'style', level: 'world', also_level: ['direction'], name: 'Glassy', still: { path: 'arsenal/stills/style-g.jpg' } },
+    { id: 'style-g', kind: 'style', level: 'world', also_level: ['style'], name: 'Glassy', still: { path: 'arsenal/stills/style-g.jpg' } },
     { id: '01-p', kind: 'technique', name: 'Round dots', still: { path: 'arsenal/stills/01-p.jpg' }, variants: [] },
   ] });
-  assert.match(block, /^!\[Glassy \(world and direction\)\]\(library\/arsenal\/stills\/style-g\.jpg\)$/m);
+  assert.match(block, /^!\[Glassy \(world and style\)\]\(library\/arsenal\/stills\/style-g\.jpg\)$/m);
   assert.match(block, /^!\[Round dots\]\(library\/arsenal\/stills\/01-p\.jpg\)$/m);
 });
 
@@ -628,4 +628,98 @@ test('guard: the repo\'s levels.json is sound against its drafts and the shipped
   const catalog = buildCatalog({ draftsDir: drafts, jobs, tags: JSON.parse(fs.readFileSync(path.join(drafts, 'tags.json'), 'utf8')) });
   const { styles } = readStyles(path.join(root, 'plugin', 'library', 'styles'));
   assert.deepEqual(levelsProblems(JSON.parse(fs.readFileSync(path.join(drafts, 'levels.json'), 'utf8')), catalog, styles), []);
+});
+
+// ---------- pieces: one runnable file each, read from its header ----------
+
+const PIECE_TEXT = `// piece: flip
+// name: Flip an object over
+// does: Turns an object over to its other side.
+// use it for: something that turns over
+// job: before-after; support: hand-over
+// provides: motion: flip
+// works with: piece-plate
+// call: PCS.flip(layer, { t, axis })
+// option t: start time in seconds
+// option axis: 'y' or 'x'
+// returns: the layer
+// example:
+//   PCS.flip(pill, { t: 1.2 });
+//   PCS.flip(pill, { t: 3.0 });   // and back
+// note: put the back face on first.
+// ---
+PCS.need('plate');
+PCS.flip = function (plate, o) { return plate; };
+`;
+const PLATE_TEXT = PIECE_TEXT.replace(/^\/\/ piece: flip$/m, '// piece: plate').replace(/^\/\/ works with: .*$/m, '// works with: piece-flip').replace("PCS.need('plate');\n", '');
+const pieceOf = (name, text, proof = true) => ({ name, file: `${name}.jsx`, text, header: parsePieceHeader(text, `${name}.jsx`), proof });
+const PIECE_VOCAB = { ...VOCAB, motion: ['flip'] };
+const buildPieces = (pieces, o = {}) => {
+  const { dir, catalog } = fixture([{ slug: 'p', status: 'proven' }], { '01-p': 'x.png' });
+  try {
+    return buildArsenal({ catalog, jobs: JOBS, examples: EXAMPLES, draftsDir: dir, stills: o.stills ?? { '01-p': Buffer.from('jpeg') }, creators: [],
+      levels: { ...levelsFor(catalog), provides: PIECE_VOCAB, styles: {} }, styles: [], styleDocs: {}, pieces });
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+};
+
+test('pieces: the header gives the fields, the options, the example lines and the notes', () => {
+  const h = parsePieceHeader(PIECE_TEXT);
+  assert.equal(h.piece, 'flip');
+  assert.equal(h.call, 'PCS.flip(layer, { t, axis })');
+  assert.deepEqual(h.options, [['t', 'start time in seconds'], ['axis', "'y' or 'x'"]]);
+  assert.deepEqual(h.example, ['PCS.flip(pill, { t: 1.2 });', 'PCS.flip(pill, { t: 3.0 });   // and back']);
+  assert.deepEqual(h.notes, ['put the back face on first.']);
+  assert.deepEqual(parseJobLine(h.job), ['before-after', ['hand-over']]);
+  assert.throws(() => parsePieceHeader('// piece: x\nPCS.x = 1;\n', 'x.jsx'), /x\.jsx has no header ending in "\/\/ ---"/);
+});
+
+test('pieces: an entry is a recipe of kind piece with its call, the pieces it loads, a still, and comes first', () => {
+  const jpg = Buffer.from('jpeg');
+  const built = buildPieces([pieceOf('flip', PIECE_TEXT), pieceOf('plate', PLATE_TEXT)], { stills: { '01-p': jpg, 'piece-flip': jpg } });
+  const cat = JSON.parse(built.files.get('catalog.json'));
+  assert.deepEqual(cat.entries.map((e) => e.id), ['piece-flip', 'piece-plate', '01-p']);
+  const flip = cat.entries[0];
+  assert.equal(flip.level, 'recipe');
+  assert.equal(flip.kind, 'piece');
+  assert.equal(flip.status, 'proven');
+  assert.equal(flip.job, 'before-after');
+  assert.deepEqual(flip.support, ['hand-over']);
+  assert.deepEqual(flip.provides, ['motion: flip']);
+  assert.deepEqual(flip.composes, ['piece-plate']);
+  assert.deepEqual(flip.requires, ['plate']);
+  assert.equal(flip.use_for, 'something that turns over');
+  assert.deepEqual(flip.call, { load: 'flip', signature: 'PCS.flip(layer, { t, axis })', options: [{ name: 't', text: 'start time in seconds' }, { name: 'axis', text: "'y' or 'x'" }],
+    returns: 'the layer', example: 'PCS.flip(pill, { t: 1.2 });\nPCS.flip(pill, { t: 3.0 });   // and back', notes: ['put the back face on first.'] });
+  assert.equal(flip.still.path, 'arsenal/stills/piece-flip.jpg');
+  const plate = cat.entries[1];
+  assert.equal(plate.still, null);
+  assert.equal(plate.status, 'unproven');
+  assert.match(plate.no_still, /render pieces\/proof\/plate\.jsx/);
+  const index = JSON.parse(built.files.get('index.json'));
+  assert.equal(index.counts.pieces, 2);
+  for (const id of ['pieces-core-jsx', 'piece-flip', 'piece-flip-proof']) assert.ok(index.documents.some((d) => d.id === id), id);
+});
+
+test('pieces: the build refuses an unknown job or provides word, a works-with id in no catalog, a missing field and a missing proof scene', () => {
+  const bad = (edit, proof = true) => piecesProblems([pieceOf('flip', edit(PIECE_TEXT), proof), pieceOf('plate', PLATE_TEXT)], { jobs: ['before-after', 'hand-over'], vocab: PIECE_VOCAB, ids: [] }).join('; ');
+  assert.equal(bad((t) => t), '');
+  assert.match(bad((t) => t.replace('job: before-after', 'job: make-it-pop')), /job "make-it-pop" is not in the job vocabulary/);
+  assert.match(bad((t) => t.replace('motion: flip', 'motion: spin')), /spin/);
+  assert.match(bad((t) => t.replace('works with: piece-plate', 'works with: piece-ghost')), /works with piece-ghost, which is in no catalog/);
+  assert.match(bad((t) => t.replace(/^\/\/ call: .*\n/m, '')), /no "call" line/);
+  assert.match(bad((t) => t.replace('piece: flip', 'piece: flop')), /says "piece: flop", but its file is flip\.jsx/);
+  assert.match(bad((t) => t, false), /no proof scene at pieces\/proof\/flip\.jsx/);
+  assert.throws(() => buildPieces([pieceOf('flip', PIECE_TEXT.replace('job: before-after', 'job: make-it-pop')), pieceOf('plate', PLATE_TEXT)]), /refused: .*make-it-pop/);
+});
+
+test('pieces: the shipped folder reads clean, each with a proof scene, and the core is not a piece', () => {
+  const dir = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..', 'plugin', 'library', 'pieces');
+  const pieces = readPieces(dir);
+  assert.ok(pieces.length >= 4);
+  assert.ok(!pieces.some((x) => x.name === 'pcs-core'));
+  const jobs = JSON.parse(fs.readFileSync(path.join(dir, '..', 'arsenal', 'catalog.json'), 'utf8'));
+  const levels = JSON.parse(fs.readFileSync(path.join(dir, '..', '..', '..', 'product', 'arsenal-drafts', 'levels.json'), 'utf8'));
+  assert.deepEqual(piecesProblems(pieces, { jobs: jobs.jobs, vocab: levels.provides, ids: jobs.entries.map((e) => e.id) }), []);
+  const flip = pieces.find((x) => x.name === 'flip');
+  assert.match(`${flip.header['use it for']} ${flip.header.does}`, /turns/);
 });

@@ -3,6 +3,7 @@
 //   node tools/channel-learner/arsenal.mjs [--renders <folder holding quality/renders>] [--jobs <Content's jobs.json>]
 //     [--examples <file>] [--drafts <dir>] [--tags <file>] [--proofs <file>] [--credits <file>] [--out <dir>]
 //     [--readme <file>] [--no-manifest] [--levels <levels.json>] [--styles <plugin/library/styles>] [--style-proofs <style packages>]
+//     [--pieces <plugin/library/pieces>]
 // Writes the jobs file (Content's version, groups, tags, ids, names and definitions, with the public examples in
 // arsenal-public-examples.json, since Content's own examples come from the owner's reels; the fields the runtime does not
 // read are dropped), the catalog data file, an index and the recipes grouped by job group, each proven recipe's status
@@ -84,12 +85,12 @@ export function scrubRecipe(text, { videos = [] } = {}) {
   return text.split('\n').filter((l) => !DROPPED_FIELDS.test(l)).map((l) => scrubLine(l, videos)).join('\n');
 }
 
-// ---------- three levels: directions, worlds, recipes ----------
+// ---------- three levels: styles, worlds, recipes (pieces among them) ----------
 // Design: docs/superpowers/specs/2026-11-24-library-three-levels-design.md. The fields the drafts and tags do not hold
 // come from product/arsenal-drafts/levels.json: the provides vocabulary, each recipe's provides and renderer, and each
 // visual style's entry (level, provides, cost, the proof beat its still is cut from, composes).
 
-export const LEVELS = ['direction', 'world', 'recipe'];
+export const LEVELS = ['style', 'world', 'recipe'];
 export const RENDERERS = ['classic', 'advanced-3d', 'blender'];
 export const STYLE_PREFIX = 'style-';
 
@@ -151,7 +152,7 @@ export function levelsProblems(levels, catalog, styles = []) {
   for (const s of styles) {
     const l = levels.styles?.[s.id];
     if (!l) { p.push(`style ${s.id} has no levels record`); continue; }
-    if (!['direction', 'world'].includes(l.level)) p.push(`style ${s.id}: level "${l.level}" is not direction or world`);
+    if (!['style', 'world'].includes(l.level)) p.push(`style ${s.id}: level "${l.level}" is not style or world`);
     for (const a of l.also_level ?? []) if (!LEVELS.includes(a) || a === l.level) p.push(`style ${s.id}: also_level "${a}" is not another level`);
     p.push(...providesProblems(l.provides, vocab, `style ${s.id}`));
     if (Array.isArray(l.provides) && !l.provides.length) p.push(`style ${s.id}: needs at least one provides`);
@@ -185,6 +186,94 @@ export function styleEntry(s, l, styleDoc, still) {
   // Field order: id and revision first, as the recipes have them.
   const { id, revision, ...rest } = record;
   return { id, revision, ...rest };
+}
+
+// ---------- pieces: runnable code, one file each ----------
+// A piece is one ES3 file in plugin/library/pieces/ that makes one object or one move (pcs-core.jsx is what they share).
+// Its header (comment lines "// key: value" up to "// ---") says what it does, the jobs it serves and how to call it;
+// its proof picture is a render of pieces/proof/<name>.jsx, kept at quality/renders/pieces/<name>.png.
+
+export const PIECE_PREFIX = 'piece-';
+const PIECE_REQUIRED = ['piece', 'name', 'does', 'use it for', 'job', 'call', 'example'];
+const PIECE_SINGLE = ['piece', 'name', 'does', 'use it for', 'job', 'provides', 'needs', 'works with', 'call', 'returns', 'renderer'];
+
+/** A piece file's header: { piece, name, does, ..., options: [[name, text]], example: [lines], notes: [text] }. */
+export function parsePieceHeader(text, file = 'piece') {
+  const out = { options: [], example: [], notes: [] };
+  let inExample = false;
+  let ended = false;
+  for (const raw of text.split('\n')) {
+    if (!raw.startsWith('//')) { if (raw.trim()) break; continue; }
+    const line = raw.replace(/^\/\/ ?/, '');
+    if (/^---\s*$/.test(line)) { ended = true; break; }
+    if (inExample && /^\s{2,}\S/.test(line)) { out.example.push(line.replace(/^\s{2}/, '')); continue; }
+    inExample = false;
+    const m = line.match(/^([a-z][a-z ]*?):\s*(.*)$/);
+    if (!m) continue;
+    const [, key, value] = m;
+    if (key === 'example') { inExample = true; if (value.trim()) out.example.push(value.trim()); continue; }
+    if (key === 'note') { out.notes.push(value.trim()); continue; }
+    const opt = key.match(/^option (.+)$/);
+    if (opt) { out.options.push([opt[1].trim(), value.trim()]); continue; }
+    if (PIECE_SINGLE.includes(key)) out[key] = value.trim();
+  }
+  if (!ended) throw new Error(`refused: ${file} has no header ending in "// ---"`);
+  return out;
+}
+
+const listOf = (v) => String(v ?? '').split(/[;,]\s*/).map((x) => x.trim()).filter(Boolean);
+
+/** The pieces in a folder: every <name>.jsx but the core, with its header and text. */
+export function readPieces(piecesDir) {
+  if (!piecesDir || !fs.existsSync(piecesDir)) return [];
+  return fs.readdirSync(piecesDir).filter((n) => n.endsWith('.jsx') && n !== 'pcs-core.jsx').sort().map((n) => {
+    const text = fs.readFileSync(path.join(piecesDir, n), 'utf8');
+    return { name: n.replace(/\.jsx$/, ''), file: n, text, header: parsePieceHeader(text, n), proof: fs.existsSync(path.join(piecesDir, 'proof', n)) };
+  });
+}
+
+/** Problems with the pieces: required header fields, jobs and provides from the vocabularies, works-with ids that exist. */
+export function piecesProblems(pieces, { jobs = [], vocab = {}, ids = [] } = {}) {
+  const p = [];
+  const known = new Set([...ids, ...pieces.map((x) => `${PIECE_PREFIX}${x.name}`)]);
+  for (const x of pieces) {
+    const h = x.header;
+    const where = `piece ${x.file}`;
+    for (const k of PIECE_REQUIRED) if (!h[k] || (k === 'example' && !h.example.length)) p.push(`${where}: no "${k}" line`);
+    if (h.piece && h.piece !== x.name) p.push(`${where}: says "piece: ${h.piece}", but its file is ${x.file}`);
+    const [job, support] = parseJobLine(h.job);
+    for (const j of [job, ...support].filter(Boolean)) if (!jobs.includes(j)) p.push(`${where}: job "${j}" is not in the job vocabulary`);
+    p.push(...providesProblems(listOf(h.provides), vocab, where));
+    if (h.renderer && !RENDERERS.includes(h.renderer)) p.push(`${where}: renderer "${h.renderer}" is not one of ${RENDERERS.join(', ')}`);
+    for (const w of listOf(h['works with'])) if (!known.has(w)) p.push(`${where}: works with ${w}, which is in no catalog`);
+    if (!x.proof) p.push(`${where}: no proof scene at pieces/proof/${x.file}`);
+  }
+  return p;
+}
+/** "before-after; support: fail-then-fix, reveal-headline" -> ["before-after", ["fail-then-fix", "reveal-headline"]]. */
+export function parseJobLine(line) {
+  const m = String(line ?? '').match(/^\s*([a-z-]+)\s*(?:;\s*support:\s*(.*))?$/);
+  return m ? [m[1], listOf(m[2])] : [null, []];
+}
+/** The pieces a piece loads itself (PCS.need calls in its code). */
+const requiresOf = (text) => [...new Set([...text.matchAll(/PCS\.need\(\s*['"]([a-z0-9-]+)['"]\s*\)/g)].map((m) => m[1]))];
+
+/** One catalog entry for a piece: level recipe, kind piece, with its call instead of prose. */
+export function pieceEntry(x, still) {
+  const h = x.header;
+  const [job, support] = parseJobLine(h.job);
+  const record = {
+    id: `${PIECE_PREFIX}${x.name}`, revision: sha8(x.text), level: 'recipe', name: h.name, line: h.does, use_for: h['use it for'],
+    status: still ? 'proven' : 'unproven', kind: 'piece', job, support, mood: [], needs: listOf(h.needs),
+    duration: null, motion: null, difficulty: null, taught_by: 1, variants: [],
+    provides: listOf(h.provides).map(normProvides), cost: { renderer: h.renderer ?? 'advanced-3d' }, composes: listOf(h['works with']), shelf: 'shipped',
+    requires: requiresOf(x.text),
+    call: { load: x.name, signature: h.call, options: h.options.map(([name, text]) => ({ name, text })), returns: h.returns ?? null, example: h.example.join('\n'), notes: h.notes },
+    section: { document: `${PIECE_PREFIX}${x.name}`, heading: null },
+    still: still ?? null,
+  };
+  if (!record.still) record.no_still = 'no proof render yet: render pieces/proof/' + x.file;
+  return record;
 }
 
 // ---------- building ----------
@@ -250,9 +339,11 @@ export function publicJobs(content, examples) {
  * public `examples` (publicJobs); `stills` maps id -> JPEG bytes already made; `creators` are names no shipped file may
  * contain, checked with PRIVATE_NAMES.
  */
-export function buildArsenal({ catalog, jobs, examples, draftsDir, stills = {}, creators = [], fileLimit = FILE_LIMIT, levels = null, styles = [], styleDocs = {} }) {
+export function buildArsenal({ catalog, jobs, examples, draftsDir, stills = {}, creators = [], fileLimit = FILE_LIMIT, levels = null, styles = [], styleDocs = {}, pieces = [] }) {
+  if (pieces.length && !levels) throw new Error('refused: pieces need levels.json');
   if (levels) {
-    const bad = levelsProblems(levels, catalog, styles);
+    const bad = [...levelsProblems(levels, catalog, styles),
+      ...piecesProblems(pieces, { jobs: catalog.jobs, vocab: levels.provides ?? {}, ids: [...catalog.recipes.map((r) => r.id), ...styles.map((x) => `${STYLE_PREFIX}${x.id}`)] })];
     if (bad.length) throw new Error(`refused: ${bad.join('; ')}`);
   } else if (styles.length) throw new Error('refused: styles need levels.json');
   const jobsText = publicJobs(jobs, examples);
@@ -341,22 +432,35 @@ export function buildArsenal({ catalog, jobs, examples, draftsDir, stills = {}, 
     if (styleDocs[s.id] === undefined) throw new Error(`refused: no STYLE.md text for style ${s.id}`);
     return styleEntry(s, levels.styles[s.id], styleDocs[s.id], still);
   });
-  const entries = [...records, ...styleRecords];
+  const pieceRecords = pieces.map((x) => {
+    const pid = `${PIECE_PREFIX}${x.name}`;
+    let still = null;
+    if (stills[pid]) { still = { path: `arsenal/stills/${pid}.jpg`, sha256: sha(stills[pid]) }; shippedStills[pid] = stills[pid]; }
+    return pieceEntry(x, still);
+  });
+  // Pieces first: when a piece and a written recipe fit, the piece is what to build with.
+  const entries = [...pieceRecords, ...records, ...styleRecords];
   for (const e of entries) if (!e.still && !e.no_still) throw new Error(`refused: ${e.id} has no still and no reason for it`);
   // The catalog version: the recipes' as before when there are no styles, else over every entry.
   const version = styleRecords.length ? sha8(entries.map((e) => `${e.id}@${e.revision}`).sort().join('\n')) : catalog.version;
   files.set('catalog.json', `${JSON.stringify({ vocab: catalog.vocab, version, jobs: catalog.jobs, levels: LEVELS, provides: levels?.provides ?? {}, entries }, null, 1)}\n`);
   const documents = [
     { id: 'arsenal-index', title: 'Technique arsenal index: documents, vocabulary and counts', path: 'arsenal/index.json', kind: 'catalog' },
-    { id: 'arsenal-catalog', title: 'Library catalog: one record per direction, world and recipe, queried by ae_arsenal', path: 'arsenal/catalog.json', kind: 'catalog' },
+    { id: 'arsenal-catalog', title: 'Library catalog: one record per style, world, recipe and piece, queried by ae_arsenal', path: 'arsenal/catalog.json', kind: 'catalog' },
     { id: 'arsenal-jobs', title: `Job vocabulary ${catalog.vocab}: the jobs a beat asks for`, path: `arsenal/${jobsFile(jobs)}`, kind: 'catalog' },
     ...recipeDocs,
+    ...(pieces.length ? [{ id: 'pieces-core-jsx', title: 'Pieces: the shared helpers every piece uses (PCS core)', path: 'pieces/pcs-core.jsx', kind: 'code' }] : []),
+    ...pieces.flatMap((x) => [
+      { id: `${PIECE_PREFIX}${x.name}`, title: `Piece: ${x.header.name}`, path: `pieces/${x.file}`, kind: 'code' },
+      { id: `${PIECE_PREFIX}${x.name}-proof`, title: `Proof scene for the ${x.header.name} piece`, path: `pieces/proof/${x.file}`, kind: 'code' },
+    ]),
   ];
   const index = {
-    arsenal: 'The library at three levels: directions (how a whole piece holds together), worlds (a set a section lives in) and recipes (one technique for one beat), each with a still and what it provides. Look at a level as pictures with ae_arsenal browse, ask by what an entry provides or per beat by job with find, read any entry with get, list the jobs and the provides vocabulary with jobs.',
+    arsenal: 'The library at three levels: styles (a look a section can borrow: colour, type, light, material), worlds (a set a section lives in) and recipes (one technique for one beat). Among the recipes, pieces are runnable code: one file each, called by name. Every entry has a still and says what it provides. Look at a level as pictures with ae_arsenal browse; ask per beat by job, by what an entry provides, or in plain words, with find (pieces come first); read any entry with get (a piece answers with its call); list the jobs and the provides vocabulary with jobs.',
     tool: 'ae_arsenal', vocab: catalog.vocab, version, documents,
     counts: {
       recipes: records.length, proven: records.filter((r) => r.status === 'proven').length, stills: Object.keys(shippedStills).length,
+      ...(pieceRecords.length ? { pieces: pieceRecords.length } : {}),
       ...(styleRecords.length ? Object.fromEntries(LEVELS.map((l) => [`${l}s`, entries.filter((e) => e.level === l || e.also_level?.includes(l)).length])) : {}),
     },
   };
@@ -379,7 +483,7 @@ export function buildArsenal({ catalog, jobs, examples, draftsDir, stills = {}, 
 
 /** Writes the arsenal into outDir, which it owns: makes missing stills, keeps existing ones, removes what is stale. */
 export function writeArsenal({ catalog, jobs, examples, draftsDir, outDir, rendersRoot, makeStill = ffmpegStill, creators = [],
-  levels = null, styles = [], styleDocs = {}, styleProofs = null, makeStyleStill = ffmpegStyleStill }) {
+  levels = null, styles = [], styleDocs = {}, styleProofs = null, makeStyleStill = ffmpegStyleStill, pieces = [] }) {
   const stillsDir = path.join(outDir, 'stills');
   fs.mkdirSync(stillsDir, { recursive: true });
   const stills = {};
@@ -391,6 +495,16 @@ export function writeArsenal({ catalog, jobs, examples, draftsDir, outDir, rende
       try { makeStill(path.resolve(rendersRoot, from), to); } catch { missing.push(id); continue; }
     }
     stills[id] = fs.readFileSync(to);
+  }
+  // A piece's still: its proof render, quality/renders/pieces/<name>.png under the renders root.
+  for (const x of pieces) {
+    const pid = `${PIECE_PREFIX}${x.name}`;
+    const to = path.join(stillsDir, `${pid}.jpg`);
+    if (!fs.existsSync(to)) {
+      if (!rendersRoot) { missing.push(pid); continue; }
+      try { makeStill(path.join(rendersRoot, 'quality', 'renders', 'pieces', `${x.name}.png`), to); } catch { missing.push(pid); continue; }
+    }
+    stills[pid] = fs.readFileSync(to);
   }
   // A style's still: one frame of its proof movie (<styleProofs>/<id>/proof/proof.mp4) at the beat levels.json names.
   for (const st of styles) {
@@ -407,7 +521,7 @@ export function writeArsenal({ catalog, jobs, examples, draftsDir, outDir, rende
     }
     stills[sid] = fs.readFileSync(to);
   }
-  const built = buildArsenal({ catalog, jobs, examples, draftsDir, stills, creators, levels, styles, styleDocs });
+  const built = buildArsenal({ catalog, jobs, examples, draftsDir, stills, creators, levels, styles, styleDocs, pieces });
   for (const f of fs.readdirSync(stillsDir)) if (!built.stills[f.replace(/\.jpg$/, '')]) fs.rmSync(path.join(stillsDir, f));
   for (const f of fs.readdirSync(outDir)) if (f !== 'stills' && !built.files.has(f)) fs.rmSync(path.join(outDir, f), { recursive: true });
   for (const [f, text] of built.files) fs.writeFileSync(path.join(outDir, f), text);
@@ -446,7 +560,7 @@ export function galleryBlock(catalog) {
   if (!shown.length && !styled.length) return 'No proven technique has a still yet.';
   return [
     ...(styled.length ? [
-      'Directions and worlds in the library: the visual styles, each a frame of its own proof build. ae_arsenal browse shows them by level.',
+      'Styles and worlds in the library: the visual styles, each a frame of its own proof build. ae_arsenal browse shows them by level.',
       '',
       ...styled.map((r) => `![${r.name} (${[r.level, ...(r.also_level ?? [])].join(' and ')})](library/${r.still.path})`),
       '',
@@ -504,16 +618,17 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     const levels = fs.existsSync(levelsPath) ? JSON.parse(fs.readFileSync(levelsPath, 'utf8')) : null;
     const stylesDir = arg(argv, '--styles', path.join(ROOT, 'plugin', 'library', 'styles'));
     const { styles, styleDocs } = levels && fs.existsSync(path.join(stylesDir, 'index.json')) ? readStyles(stylesDir) : { styles: [], styleDocs: {} };
+    const pieces = levels ? readPieces(arg(argv, '--pieces', path.join(ROOT, 'plugin', 'library', 'pieces'))) : [];
     fs.mkdirSync(out, { recursive: true });
     const res = writeArsenal({ catalog, jobs, examples, draftsDir: drafts, outDir: out, rendersRoot: arg(argv, '--renders', ROOT), creators,
-      levels, styles, styleDocs, styleProofs: arg(argv, '--style-proofs', null) });
+      levels, styles, styleDocs, styleProofs: arg(argv, '--style-proofs', null), pieces });
     const readme = arg(argv, '--readme', path.join(ROOT, 'claude', 'src', 'README.md'));
     fs.writeFileSync(readme, withGallery(fs.readFileSync(readme, 'utf8'), galleryBlock(JSON.parse(res.files.get('catalog.json')))));
     if (!argv.includes('--no-manifest')) {
       const m = spawnSync(process.execPath, [path.join(ROOT, 'plugin', 'scripts', 'manifest.mjs')], { encoding: 'utf8' });
       if (m.status !== 0) throw new Error(`manifest: ${m.stderr}`);
     }
-    console.log(JSON.stringify({ vocab: catalog.vocab, version: res.index.version, recipes: catalog.recipes.length, styles: styles.length, stills: Object.keys(res.stills).length, missing: res.missing, out }));
+    console.log(JSON.stringify({ vocab: catalog.vocab, version: res.index.version, recipes: catalog.recipes.length, styles: styles.length, pieces: pieces.length, stills: Object.keys(res.stills).length, missing: res.missing, out }));
     if (res.missing.length) console.error(`no still for ${res.missing.join(', ')}: no proof render found; pass --renders <folder holding quality/renders>, or --style-proofs <folder of style packages with proof/proof.mp4> for a style`);
   } catch (e) { console.error(e.message); process.exit(e.usage ? 2 : 1); }
 }

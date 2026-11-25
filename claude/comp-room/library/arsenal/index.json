@@ -1,8 +1,8 @@
 {
- "arsenal": "The library at three levels: directions (how a whole piece holds together), worlds (a set a section lives in) and recipes (one technique for one beat), each with a still and what it provides. Look at a level as pictures with ae_arsenal browse, ask by what an entry provides or per beat by job with find, read any entry with get, list the jobs and the provides vocabulary with jobs.",
+ "arsenal": "The library at three levels: styles (a look a section can borrow: colour, type, light, material), worlds (a set a section lives in) and recipes (one technique for one beat). Among the recipes, pieces are runnable code: one file each, called by name. Every entry has a still and says what it provides. Look at a level as pictures with ae_arsenal browse; ask per beat by job, by what an entry provides, or in plain words, with find (pieces come first); read any entry with get (a piece answers with its call); list the jobs and the provides vocabulary with jobs.",
  "tool": "ae_arsenal",
  "vocab": "jobs-v1",
- "version": "c4945901",
+ "version": "a8e18e7d",
  "documents": [
   {
    "id": "arsenal-index",
@@ -12,7 +12,7 @@
   },
   {
    "id": "arsenal-catalog",
-   "title": "Library catalog: one record per direction, world and recipe, queried by ae_arsenal",
+   "title": "Library catalog: one record per style, world, recipe and piece, queried by ae_arsenal",
    "path": "arsenal/catalog.json",
    "kind": "catalog"
   },
@@ -57,13 +57,68 @@
    "title": "Arsenal recipes: build aids and unmatched recipes",
    "path": "arsenal/recipes-build-aid.md",
    "kind": "recipes"
+  },
+  {
+   "id": "pieces-core-jsx",
+   "title": "Pieces: the shared helpers every piece uses (PCS core)",
+   "path": "pieces/pcs-core.jsx",
+   "kind": "code"
+  },
+  {
+   "id": "piece-flip",
+   "title": "Piece: Flip an object over",
+   "path": "pieces/flip.jsx",
+   "kind": "code"
+  },
+  {
+   "id": "piece-flip-proof",
+   "title": "Proof scene for the Flip an object over piece",
+   "path": "pieces/proof/flip.jsx",
+   "kind": "code"
+  },
+  {
+   "id": "piece-plate",
+   "title": "Piece: Thick lit plate",
+   "path": "pieces/plate.jsx",
+   "kind": "code"
+  },
+  {
+   "id": "piece-plate-proof",
+   "title": "Proof scene for the Thick lit plate piece",
+   "path": "pieces/proof/plate.jsx",
+   "kind": "code"
+  },
+  {
+   "id": "piece-spot",
+   "title": "Piece: Spot light",
+   "path": "pieces/spot.jsx",
+   "kind": "code"
+  },
+  {
+   "id": "piece-spot-proof",
+   "title": "Proof scene for the Spot light piece",
+   "path": "pieces/proof/spot.jsx",
+   "kind": "code"
+  },
+  {
+   "id": "piece-stage",
+   "title": "Piece: Lit stage for a face card beat",
+   "path": "pieces/stage.jsx",
+   "kind": "code"
+  },
+  {
+   "id": "piece-stage-proof",
+   "title": "Proof scene for the Lit stage for a face card beat piece",
+   "path": "pieces/proof/stage.jsx",
+   "kind": "code"
   }
  ],
  "counts": {
-  "recipes": 101,
+  "recipes": 105,
   "proven": 85,
-  "stills": 106,
-  "directions": 31,
+  "stills": 110,
+  "pieces": 4,
+  "styles": 31,
   "worlds": 4
  }
 }

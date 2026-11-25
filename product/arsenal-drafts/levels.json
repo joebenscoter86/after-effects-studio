@@ -120,7 +120,8 @@
    "carousel",
    "chart",
    "character",
-   "limited"
+   "limited",
+   "flip"
   ]
  },
  "beats": [
@@ -705,7 +706,7 @@
  },
  "styles": {
   "art-deco": {
-   "level": "direction",
+   "level": "style",
    "provides": [
     "material: metal",
     "light: glow",
@@ -726,7 +727,7 @@
   "backrooms": {
    "level": "world",
    "also_level": [
-    "direction"
+    "style"
    ],
    "provides": [
     "environment: room",
@@ -747,7 +748,7 @@
    "composes": []
   },
   "blueprint": {
-   "level": "direction",
+   "level": "style",
    "provides": [
     "material: paper",
     "backdrop: grid",
@@ -765,7 +766,7 @@
    "composes": []
   },
   "crt-terminal": {
-   "level": "direction",
+   "level": "style",
    "provides": [
     "type: terminal",
     "finish: crt",
@@ -782,7 +783,7 @@
    "composes": []
   },
   "dark-keynote": {
-   "level": "direction",
+   "level": "style",
    "provides": [
     "environment: studio-dark",
     "environment: screen",
@@ -802,7 +803,7 @@
    "composes": []
   },
   "dataviz": {
-   "level": "direction",
+   "level": "style",
    "provides": [
     "material: paper",
     "motion: chart",
@@ -820,7 +821,7 @@
    "composes": []
   },
   "engraving": {
-   "level": "direction",
+   "level": "style",
    "provides": [
     "material: print",
     "material: paper",
@@ -838,7 +839,7 @@
    "composes": []
   },
   "game-show": {
-   "level": "direction",
+   "level": "style",
    "provides": [
     "material: flat-vector",
     "backdrop: pattern",
@@ -858,7 +859,7 @@
   "glass-product": {
    "level": "world",
    "also_level": [
-    "direction"
+    "style"
    ],
    "provides": [
     "material: glass",
@@ -882,7 +883,7 @@
    "composes": []
   },
   "halftone-dossier": {
-   "level": "direction",
+   "level": "style",
    "provides": [
     "material: print",
     "finish: halftone",
@@ -900,7 +901,7 @@
    "composes": []
   },
   "hologram-hud": {
-   "level": "direction",
+   "level": "style",
    "provides": [
     "material: wireframe",
     "environment: studio-dark",
@@ -919,7 +920,7 @@
    "composes": []
   },
   "iso-infographic": {
-   "level": "direction",
+   "level": "style",
    "provides": [
     "material: flat-vector",
     "camera: isometric",
@@ -937,7 +938,7 @@
    "composes": []
   },
   "living-screencast": {
-   "level": "direction",
+   "level": "style",
    "provides": [
     "environment: screen",
     "motion: cursor",
@@ -957,7 +958,7 @@
   "lowpoly-island": {
    "level": "world",
    "also_level": [
-    "direction"
+    "style"
    ],
    "provides": [
     "material: low-poly",
@@ -977,7 +978,7 @@
    "composes": []
   },
   "microgame": {
-   "level": "direction",
+   "level": "style",
    "provides": [
     "environment: stage",
     "material: flat-vector",
@@ -995,7 +996,7 @@
    "composes": []
   },
   "midcentury-toon": {
-   "level": "direction",
+   "level": "style",
    "provides": [
     "material: flat-vector",
     "motion: limited",
@@ -1013,7 +1014,7 @@
    "composes": []
   },
   "one-line": {
-   "level": "direction",
+   "level": "style",
    "provides": [
     "material: ink",
     "motion: draw-on",
@@ -1031,7 +1032,7 @@
    "composes": []
   },
   "paper-lantern": {
-   "level": "direction",
+   "level": "style",
    "provides": [
     "material: cut-paper",
     "light: practical",
@@ -1049,7 +1050,7 @@
    "composes": []
   },
   "pictogram-motion": {
-   "level": "direction",
+   "level": "style",
    "provides": [
     "material: flat-vector",
     "backdrop: pattern",
@@ -1067,7 +1068,7 @@
    "composes": []
   },
   "pixel-headline": {
-   "level": "direction",
+   "level": "style",
    "provides": [
     "type: reveal",
     "type: captions",
@@ -1081,7 +1082,7 @@
    "composes": []
   },
   "risograph": {
-   "level": "direction",
+   "level": "style",
    "provides": [
     "material: print",
     "finish: halftone",
@@ -1099,7 +1100,7 @@
    "composes": []
   },
   "rubber-hose": {
-   "level": "direction",
+   "level": "style",
    "provides": [
     "motion: character",
     "finish: film",
@@ -1116,7 +1117,7 @@
    "composes": []
   },
   "silent-film": {
-   "level": "direction",
+   "level": "style",
    "provides": [
     "finish: film",
     "environment: stage",
@@ -1134,7 +1135,7 @@
    "composes": []
   },
   "silkscreen-poster": {
-   "level": "direction",
+   "level": "style",
    "provides": [
     "material: print",
     "finish: misregistration",
@@ -1152,7 +1153,7 @@
    "composes": []
   },
   "spy-titles": {
-   "level": "direction",
+   "level": "style",
    "provides": [
     "material: cut-paper",
     "type: poster",
@@ -1170,7 +1171,7 @@
    "composes": []
   },
   "stained-glass": {
-   "level": "direction",
+   "level": "style",
    "provides": [
     "material: glass",
     "light: window",
@@ -1187,7 +1188,7 @@
    "composes": []
   },
   "swiss-motion": {
-   "level": "direction",
+   "level": "style",
    "provides": [
     "type: grid",
     "type: poster",
@@ -1207,7 +1208,7 @@
   "tilt-shift": {
    "level": "world",
    "also_level": [
-    "direction"
+    "style"
    ],
    "provides": [
     "camera: tilt-shift",
@@ -1226,7 +1227,7 @@
    "composes": []
   },
   "ukiyoe": {
-   "level": "direction",
+   "level": "style",
    "provides": [
     "material: print",
     "material: paper",
@@ -1243,7 +1244,7 @@
    "composes": []
   },
   "whiteboard": {
-   "level": "direction",
+   "level": "style",
    "provides": [
     "type: handwritten",
     "motion: draw-on",
@@ -1261,7 +1262,7 @@
    "composes": []
   },
   "woodcut": {
-   "level": "direction",
+   "level": "style",
    "provides": [
     "material: print",
     "type: engraved",

@@ -1,6 +1,6 @@
 {
  "vocab": "jobs-v1",
- "version": "c4945901",
+ "version": "a8e18e7d",
  "jobs": [
   "land-number",
   "count-things",
@@ -31,7 +31,7 @@
   "keep-it-alive"
  ],
  "levels": [
-  "direction",
+  "style",
   "world",
   "recipe"
  ],
@@ -155,10 +155,312 @@
    "carousel",
    "chart",
    "character",
-   "limited"
+   "limited",
+   "flip"
   ]
  },
  "entries": [
+  {
+   "id": "piece-flip",
+   "revision": "a37cb4a7",
+   "level": "recipe",
+   "name": "Flip an object over",
+   "line": "Turns an object over to its other side with a small overshoot, starting from wherever it is; call it again to turn it back.",
+   "use_for": "a question turning into its answer; a change of mind; the other side of a card; something that turns over",
+   "status": "proven",
+   "kind": "piece",
+   "job": "before-after",
+   "support": [
+    "fail-then-fix",
+    "reveal-headline"
+   ],
+   "mood": [],
+   "needs": [],
+   "duration": null,
+   "motion": null,
+   "difficulty": null,
+   "taught_by": 1,
+   "variants": [],
+   "provides": [
+    "motion: flip"
+   ],
+   "cost": {
+    "renderer": "advanced-3d"
+   },
+   "composes": [
+    "piece-plate",
+    "piece-stage"
+   ],
+   "shelf": "shipped",
+   "requires": [],
+   "call": {
+    "load": "flip",
+    "signature": "PCS.flip(layer, { t, dur, axis, dir })",
+    "options": [
+     {
+      "name": "t",
+      "text": "start time in seconds (required)"
+     },
+     {
+      "name": "dur",
+      "text": "length in seconds, default 0.42 (the overshoot peaks at 72 percent)"
+     },
+     {
+      "name": "axis",
+      "text": "'y' turns like a page (default); 'x' tips over like a tile"
+     },
+     {
+      "name": "dir",
+      "text": "1 or -1, which way it turns"
+     }
+    ],
+    "returns": "the layer",
+    "example": "var st = PCS.stage({ name: 'BEAT 3', duration: 5 });\nvar pill = PCS.plate(st.comp, { name: 'pill', w: 780, h: 160, round: 80, pos: [540, 300, 0] });\nPCS.flip(pill, { t: 1.2, axis: 'x' });\nPCS.flip(pill, { t: 3.0, axis: 'x' });   // and back: moves chain on one object",
+    "notes": [
+     "put what the back says on the back face before the flip, the right way up for the axis it turns on."
+    ]
+   },
+   "section": {
+    "document": "piece-flip",
+    "heading": null
+   },
+   "still": {
+    "path": "arsenal/stills/piece-flip.jpg",
+    "sha256": "df41cf913c610a92596d3c7783b145ba24cffe4e1de769eb30ea4d608f89a144"
+   }
+  },
+  {
+   "id": "piece-plate",
+   "revision": "77b1e0b2",
+   "level": "recipe",
+   "name": "Thick lit plate",
+   "line": "Makes one thick, bevelled slab that takes the light and casts a shadow: a card, a pill, a tile, a chip or a bar.",
+   "use_for": "anything that should look built rather than drawn; the object words and pictures sit on",
+   "status": "proven",
+   "kind": "piece",
+   "job": "add-depth",
+   "support": [
+    "light-the-hero",
+    "list-items"
+   ],
+   "mood": [],
+   "needs": [],
+   "duration": null,
+   "motion": null,
+   "difficulty": null,
+   "taught_by": 1,
+   "variants": [],
+   "provides": [
+    "material: gloss",
+    "depth: extrusion",
+    "depth: shadow"
+   ],
+   "cost": {
+    "renderer": "advanced-3d"
+   },
+   "composes": [
+    "piece-stage",
+    "piece-flip"
+   ],
+   "shelf": "shipped",
+   "requires": [],
+   "call": {
+    "load": "plate",
+    "signature": "PCS.plate(comp, { name, w, h, round, color, depth, bevel, pos, tilt })",
+    "options": [
+     {
+      "name": "round",
+      "text": "corner radius; h / 2 makes a pill"
+     },
+     {
+      "name": "color",
+      "text": "default the style's surface colour"
+     },
+     {
+      "name": "depth",
+      "text": "thickness, default the style's depth"
+     },
+     {
+      "name": "bevel",
+      "text": "edge bevel, 0 for none; default the style's bevel"
+     },
+     {
+      "name": "pos",
+      "text": "[x, y, z]"
+     },
+     {
+      "name": "tilt",
+      "text": "[x, y] resting angle in degrees; default the style's tilt, which shows the side wall and the bottom edge"
+     }
+    ],
+    "returns": "the plate layer (its front face at local z 0; the body runs back to z = depth)",
+    "example": "var st = PCS.stage({ name: 'BEAT 3', duration: 5 });\nvar pill = PCS.plate(st.comp, { name: 'pill', w: 780, h: 160, round: 80, pos: [540, 300, 0] });",
+    "notes": [
+     "two equal plates on screen means no hero; make one bigger, nearer or in the pool of light."
+    ]
+   },
+   "section": {
+    "document": "piece-plate",
+    "heading": null
+   },
+   "still": {
+    "path": "arsenal/stills/piece-plate.jpg",
+    "sha256": "2aa728b71975f6192872b8f71278cdb7b83513e546a4ffe6e509c0eb10e59390"
+   }
+  },
+  {
+   "id": "piece-spot",
+   "revision": "a8a357ea",
+   "level": "recipe",
+   "name": "Spot light",
+   "line": "Adds one spot light aimed at a point, coloured by the style, with soft shadows when asked.",
+   "use_for": "the key and fill of a stage; a pool of light that rises on the hero as it arrives (\"the light tells the story\")",
+   "status": "proven",
+   "kind": "piece",
+   "job": "light-the-hero",
+   "support": [
+    "add-depth"
+   ],
+   "mood": [],
+   "needs": [],
+   "duration": null,
+   "motion": null,
+   "difficulty": null,
+   "taught_by": 1,
+   "variants": [],
+   "provides": [
+    "light: key",
+    "light: fill"
+   ],
+   "cost": {
+    "renderer": "advanced-3d"
+   },
+   "composes": [
+    "piece-stage",
+    "piece-plate"
+   ],
+   "shelf": "shipped",
+   "requires": [],
+   "call": {
+    "load": "spot",
+    "signature": "PCS.spot(comp, { name, pos, aim, color, intensity, cone, shadow, darkness, diffusion })",
+    "options": [
+     {
+      "name": "pos",
+      "text": "[x, y, z] where the light sits"
+     },
+     {
+      "name": "aim",
+      "text": "[x, y, z] the point it points at"
+     },
+     {
+      "name": "color",
+      "text": "light colour; default the style's key colour"
+     },
+     {
+      "name": "intensity",
+      "text": "percent, default 80. Key it from 0 for a pool that rises on the hero"
+     },
+     {
+      "name": "cone",
+      "text": "cone angle in degrees, default 80 (feather 90)"
+     },
+     {
+      "name": "shadow",
+      "text": "true to cast shadows (darkness 60, diffusion 90 unless given)"
+     }
+    ],
+    "returns": "the light layer",
+    "example": "var st = PCS.stage({ name: 'BEAT 3', duration: 5 });\nvar pool = PCS.spot(st.comp, { name: 'pool', pos: [540, 300, -900], aim: [540, 900, 0], intensity: 0, cone: 60 });\nPCS.kf(pool.property('ADBE Light Options Group').property('ADBE Light Intensity'), [[2.6, 0], [3.6, 60]]);",
+    "notes": [
+     "never a point light near a glossy surface (it shows as a stray dot)."
+    ]
+   },
+   "section": {
+    "document": "piece-spot",
+    "heading": null
+   },
+   "still": {
+    "path": "arsenal/stills/piece-spot.jpg",
+    "sha256": "5a6254513b79cec580c4ac1e286b6ebe23827ce0d2b2c90d07a6458b02e8422a"
+   }
+  },
+  {
+   "id": "piece-stage",
+   "revision": "f00e8a2d",
+   "level": "recipe",
+   "name": "Lit stage for a face card beat",
+   "line": "Makes a vertical Advanced 3D comp with a dark ground, a backplate that catches light and shadow, a key with soft shadows, a fill, a slowly drifting camera and grain on the graphics only, all coloured by the style.",
+   "use_for": "every face card beat that puts lit 3D graphics above the speaker; graphics live in about y 220 to 1180",
+   "status": "proven",
+   "kind": "piece",
+   "job": "add-depth",
+   "support": [
+    "light-the-hero",
+    "establish-place"
+   ],
+   "mood": [],
+   "needs": [],
+   "duration": null,
+   "motion": null,
+   "difficulty": null,
+   "taught_by": 1,
+   "variants": [],
+   "provides": [
+    "light: key",
+    "light: fill",
+    "camera: push",
+    "finish: grain",
+    "depth: shadow"
+   ],
+   "cost": {
+    "renderer": "advanced-3d"
+   },
+   "composes": [
+    "piece-plate",
+    "piece-flip",
+    "piece-spot"
+   ],
+   "shelf": "shipped",
+   "requires": [
+    "spot"
+   ],
+   "call": {
+    "load": "stage",
+    "signature": "PCS.stage({ name, duration, env, stitch })",
+    "options": [
+     {
+      "name": "name",
+      "text": "the new comp's name"
+     },
+     {
+      "name": "duration",
+      "text": "seconds"
+     },
+     {
+      "name": "env",
+      "text": "path to an environment light map (.hdr); default assets/studio-strips.hdr beside the pieces when it is there, else no environment light"
+     },
+     {
+      "name": "stitch",
+      "text": "{ path, start } puts the speaker's clip in a rounded card at the bottom, starting at that time in the clip"
+     }
+    ],
+    "returns": "{ comp, backplate, key, fill, cam, grain, warnings }",
+    "example": "PCS.use('example-warm-paper');\nvar st = PCS.stage({ name: 'BEAT 3', duration: 5 });",
+    "notes": [
+     "2D layers (grain, the face card) stay on top; pieces seat new 3D layers under them by themselves."
+    ]
+   },
+   "section": {
+    "document": "piece-stage",
+    "heading": null
+   },
+   "still": {
+    "path": "arsenal/stills/piece-stage.jpg",
+    "sha256": "e9e948fd638e9a53ae9787aee5ce3fec06c9a710a3eed525e70008085a5f202f"
+   }
+  },
   {
    "id": "01-shadow-map-overlay",
    "revision": "73f75aaa",
@@ -4470,8 +4772,8 @@
   },
   {
    "id": "style-art-deco",
-   "revision": "dc4a7b88",
-   "level": "direction",
+   "revision": "0ac098f9",
+   "level": "style",
    "name": "Art Deco",
    "line": "A 1930s poster that moves: engraved gold line on warm lacquer black, built around one centre axis.",
    "good_for": "A premium reveal or a big announcement that should feel like an event",
@@ -4514,10 +4816,10 @@
   },
   {
    "id": "style-backrooms",
-   "revision": "0d7e5b96",
+   "revision": "50c9b0ae",
    "level": "world",
    "also_level": [
-    "direction"
+    "style"
    ],
    "name": "Liminal found footage",
    "line": "A camcorder tape recovered from an empty, endless office: one handheld first-person take through mustard wallpaper, humming ceiling panels and fog that goes dark where the lights have died, with a laser-printed notice from Management, a CRT on a cart that is somewhere else when the camera looks back, and one red alarm lamp.",
@@ -4563,8 +4865,8 @@
   },
   {
    "id": "style-blueprint",
-   "revision": "c05387ff",
-   "level": "direction",
+   "revision": "9eb02c1e",
+   "level": "style",
    "name": "Blueprint",
    "line": "Engineering drawings that draw themselves on a sheet of cyanotype paper: white line work on Prussian blue in drafting order, hand-lettered notes, a title block, and one red stamp for the verdict.",
    "good_for": "How something works, an architecture or system explained part by part",
@@ -4606,8 +4908,8 @@
   },
   {
    "id": "style-crt-terminal",
-   "revision": "3dd59d88",
-   "level": "direction",
+   "revision": "27034635",
+   "level": "style",
    "name": "CRT terminal",
    "line": "Every image is real glyphs on a monospace grid behind a monochrome phosphor CRT.",
    "good_for": "Anything about code, terminals or what the AI is really doing underneath",
@@ -4648,8 +4950,8 @@
   },
   {
    "id": "style-dark-keynote",
-   "revision": "fb42af65",
-   "level": "direction",
+   "revision": "69732396",
+   "level": "style",
    "name": "Dark keynote",
    "line": "A software launch film where the interface is the star: a near-black stage with a hairline grid and soft cool light, raised dark windows and cards, one luminous accent reserved for the one thing that matters, light sweeps that reveal, a giant number locking out of glyph noise, and captions as toast notifications.",
    "good_for": "A product or feature launch where the interface is the star",
@@ -4690,8 +4992,8 @@
   },
   {
    "id": "style-dataviz",
-   "revision": "f1286b33",
-   "level": "direction",
+   "revision": "bdd6b98d",
+   "level": "style",
    "name": "Data storytelling",
    "line": "A chart that tells the story: real numbers drawn mark by mark on cream paper by a red and blue pencil, handwritten notes pinned to the values, and every move a chart operation (a mark lands, an axis grows, the scale ratchets, the series morphs).",
    "good_for": "A real number or a before-and-after that carries the point",
@@ -4733,8 +5035,8 @@
   },
   {
    "id": "style-engraving",
-   "revision": "ad30e43d",
-   "level": "direction",
+   "revision": "d2f20fda",
+   "level": "style",
    "name": "Copperplate engraving",
    "line": "A copperplate engraving that cuts itself: every frame is a natural-history plate on cream laid paper, inside a pressed plate mark and a ruled border.",
    "good_for": "A deep dive or field guide that should feel scholarly",
@@ -4776,8 +5078,8 @@
   },
   {
    "id": "style-game-show",
-   "revision": "25977b6c",
-   "level": "direction",
+   "revision": "35013a19",
+   "level": "style",
    "name": "Game Show",
    "line": "A rhythm-game variety show in flat vector: toy mascots with thick ink outlines hop on a fixed beat over candy-coloured stripes, dots and sunbursts.",
    "good_for": "A list, a quiz or a countdown with high energy",
@@ -4819,10 +5121,10 @@
   },
   {
    "id": "style-glass-product",
-   "revision": "242db40c",
+   "revision": "30acd40d",
    "level": "world",
    "also_level": [
-    "direction"
+    "style"
    ],
    "name": "Glass product",
    "line": "A launch film for a fictional glass object: one hero of clear and frosted glass, metal and light floating in an infinite black studio, outlined by strip lights it never shows, with rainbow edges, light that travels inside it, caustic rings on a black gloss floor, and slow exploded views that snap shut on the beat.",
@@ -4871,8 +5173,8 @@
   },
   {
    "id": "style-halftone-dossier",
-   "revision": "1ce50e7a",
-   "level": "direction",
+   "revision": "ce7ca963",
+   "level": "style",
    "name": "Halftone dossier",
    "line": "A retro print case file: cream archive paper, overprinted halftone dots in a few flat inks, heavy serif headlines with misregistered shadows that pop in glyph by glyph, caption bars with a highlighted keyword, rubber stamps that slam with a shake and a flash, numbered exhibits pinned to a board, and a dot wipe between files.",
    "good_for": "Investigating something: case files, receipts, 'here is the evidence'",
@@ -4914,8 +5216,8 @@
   },
   {
    "id": "style-hologram-hud",
-   "revision": "3f2e23f8",
-   "level": "direction",
+   "revision": "258b0f06",
+   "level": "style",
    "name": "Hologram HUD",
    "line": "A sci-fi spec scan: the subject is a glowing line wireframe above a round projector pad on a near-black stage, grown by a rising scan plane and seen through a slowly orbiting camera.",
    "good_for": "Scanning or analysing something; breaking a thing into labelled parts",
@@ -4958,8 +5260,8 @@
   },
   {
    "id": "style-iso-infographic",
-   "revision": "203938c6",
-   "level": "direction",
+   "revision": "6f949e4b",
+   "level": "style",
    "name": "Isometric infographic",
    "line": "A system diagram that comes alive: a floating isometric diorama of flat three-tone blocks on a pale ground, thin ink label pins and route lines, numbers built from rows of identical icons, circular insets that open on a leader, and a camera that pans and zooms but never breaks the projection.",
    "good_for": "A workflow or system with several parts that connect",
@@ -4998,8 +5300,8 @@
   },
   {
    "id": "style-living-screencast",
-   "revision": "5adfee2e",
-   "level": "direction",
+   "revision": "342c4b21",
+   "level": "style",
    "name": "Living screencast",
    "line": "A product walkthrough that looks like a real screen recording: a redrawn, razor-sharp app window floating on wallpaper, a recording-software camera that pushes in to the cursor, and a chunky low-res pixel mascot that lives on the top edges of the UI and acts out what the software is doing.",
    "good_for": "Walking through a real app or tool on screen",
@@ -5041,10 +5343,10 @@
   },
   {
    "id": "style-lowpoly-island",
-   "revision": "0cf23a9c",
+   "revision": "7fe743a2",
    "level": "world",
    "also_level": [
-    "direction"
+    "style"
    ],
    "name": "Low-poly island",
    "line": "A tiny faceted world seen through an orthographic isometric lens: an island of flat-shaded hexagonal tiles, box houses with prism roofs and cone trees floating in a faceted pastel sea, with no horizon, only a sky gradient.",
@@ -5088,8 +5390,8 @@
   },
   {
    "id": "style-microgame",
-   "revision": "d5ca28af",
-   "level": "direction",
+   "revision": "8f8ec1b9",
+   "level": "style",
    "name": "Microgame frenzy",
    "line": "A rapid-fire party-game film: a loud toon game-show stage with a TV, a host, a lives board and a stage badge; each beat is a few-second microgame with one shouted command word, drawn in a completely different medium (crayon, pixel, Swiss type, amber terminal), and the film keeps getting faster.",
    "good_for": "Rapid-fire tips, one per beat, each in a different look",
@@ -5131,8 +5433,8 @@
   },
   {
    "id": "style-midcentury-toon",
-   "revision": "18aec575",
-   "level": "direction",
+   "revision": "3ba3c7f0",
+   "level": "style",
    "name": "Mid-century cartoon",
    "line": "A 1950s flat-colour, limited-animation follow-along film, like a classroom how-to or an appliance manual come to life.",
    "good_for": "A how-to or tutorial with a friendly presenter",
@@ -5174,8 +5476,8 @@
   },
   {
    "id": "style-one-line",
-   "revision": "44a041e1",
-   "level": "direction",
+   "revision": "fc17d45b",
+   "level": "style",
    "name": "One-line drawing",
    "line": "A single ink line that never leaves the paper: everything on screen is that one line being drawn, the camera follows the nib, scenes morph instead of cutting, and the film pulls back at the end to show it was all one picture.",
    "good_for": "One idea that connects everything; elegant and minimal",
@@ -5217,8 +5519,8 @@
   },
   {
    "id": "style-paper-lantern",
-   "revision": "f13d7bec",
-   "level": "direction",
+   "revision": "d666df44",
+   "level": "style",
    "name": "Paper-cut lightbox",
    "line": "A layered paper-cut shadow box lit from behind: every shot is a shallow box of flat cut card, back sheets bright and translucent, the front almost black, a warm light glowing through the paper and soft shadows falling from each sheet onto the next.",
    "good_for": "A warm, story-like moment told in layers of light",
@@ -5257,8 +5559,8 @@
   },
   {
    "id": "style-pictogram-motion",
-   "revision": "b3ecbe12",
-   "level": "direction",
+   "revision": "a6fdca3e",
+   "level": "style",
    "name": "Pictogram motion",
    "line": "A beat-locked flash-card film: a square grid of discs, half-discs and small patterned cells whose rows slide past each other, faceless geometric figures made of round-capped bars, and huge bold type that slides up out of masks, one hue per card.",
    "good_for": "A fast list of facts or steps on a strong beat",
@@ -5300,8 +5602,8 @@
   },
   {
    "id": "style-pixel-headline",
-   "revision": "d3fb073b",
-   "level": "direction",
+   "revision": "aad7ddfe",
+   "level": "style",
    "name": "Pixel headline",
    "line": "The speaker cut out on a clean ground, light or dark, with each spoken sentence set around them: a small lead-in falling into place word by word, one giant word in the accent colour that pops on the stressed syllable with a glow and a burst of pixel blocks, video cards popping in after it, a drawn line, and a tail line sliding in, while the camera eases out from the face.",
    "good_for": "A whole talking-head reel, built by a director agent from a script and a take, where one stressed word per sentence should hit hard and forty seconds must stay in one style",
@@ -5336,8 +5638,8 @@
   },
   {
    "id": "style-risograph",
-   "revision": "4770c0df",
-   "level": "direction",
+   "revision": "1b17c678",
+   "level": "style",
    "name": "Risograph print",
    "line": "Animation that looks printed on a stencil duplicator: two or three translucent spot inks (blue, fluorescent pink, yellow) overprinted on warm paper, every tone a halftone dot screen fixed to the paper, plates that land a few pixels off and kick on the accents, a paper-white knockout halo around figures and type, and plates that roll in or lift away as the story turns.",
    "good_for": "A zine-feeling explainer with indie, creative energy",
@@ -5379,8 +5681,8 @@
   },
   {
    "id": "style-rubber-hose",
-   "revision": "a23da80c",
-   "level": "direction",
+   "revision": "2511d664",
+   "level": "style",
    "name": "Rubber hose cartoon",
    "line": "A 1930s black-and-white hand-inked cartoon, projected from a worn print.",
    "good_for": "A comedic bit where an object comes alive",
@@ -5421,8 +5723,8 @@
   },
   {
    "id": "style-silent-film",
-   "revision": "c32f0ec9",
-   "level": "direction",
+   "revision": "0e0ecf2e",
+   "level": "style",
    "name": "Silent film",
    "line": "A 1920s silent picture as it looks projected: an inked, cross-hatched grey drawing on a flickering silver print that weaves, scratches and burns, set in a gate between velvet drapes above the footlights.",
    "good_for": "An old-way-versus-new-way contrast, played for laughs",
@@ -5464,8 +5766,8 @@
   },
   {
    "id": "style-silkscreen-poster",
-   "revision": "cd7ffab6",
-   "level": "direction",
+   "revision": "27514697",
+   "level": "style",
    "name": "Silkscreen poster",
    "line": "A WPA-style screen-print travel poster printed on camera: four to six opaque flat inks, one squeegee pull per beat, stepped colour bands instead of gradients, slight misregistration with paper slivers, a dark info band whose facts print last, a real frame separated into three inks, and a series of posters hung on a wood wall at the end.",
    "good_for": "A destination or a big promise sold like a travel poster",
@@ -5507,8 +5809,8 @@
   },
   {
    "id": "style-spy-titles",
-   "revision": "ec1a1cf4",
-   "level": "direction",
+   "revision": "554a8988",
+   "level": "style",
    "name": "Spy titles",
    "line": "A 1960s cut-paper title sequence: four flat inks on paper, scissor-cut letters that are the set, a hatted silhouette agent on twos, a giant circle, hard cuts on the beat and a title assembled from the pieces.",
    "good_for": "A secret, a hack or a mission; something with intrigue",
@@ -5550,8 +5852,8 @@
   },
   {
    "id": "style-stained-glass",
-   "revision": "e297636f",
-   "level": "direction",
+   "revision": "7bc76d5a",
+   "level": "style",
    "name": "Stained glass",
    "line": "A leaded glass window in a dark stone hall that is alive only where the sun touches it.",
    "good_for": "A big, reverent idea; something that feels like a revelation",
@@ -5592,8 +5894,8 @@
   },
   {
    "id": "style-swiss-motion",
-   "revision": "225fb944",
-   "level": "direction",
+   "revision": "85fb109f",
+   "level": "style",
    "name": "Swiss motion",
    "line": "International Typographic Style in motion: a column grid, one grotesque, black on paper with one signal red, every element wiping or snapping onto the grid on the beat.",
    "good_for": "A clean, confident statement; the design-forward default",
@@ -5635,10 +5937,10 @@
   },
   {
    "id": "style-tilt-shift",
-   "revision": "2c8c5d25",
+   "revision": "0869e4d3",
    "level": "world",
    "also_level": [
-    "direction"
+    "style"
    ],
    "name": "Tilt-shift miniature",
    "line": "A real-looking place filmed from high above through a tilted lens, so the whole world reads as a tabletop model.",
@@ -5682,8 +5984,8 @@
   },
   {
    "id": "style-ukiyoe",
-   "revision": "daf7f429",
-   "level": "direction",
+   "revision": "bc51b74f",
+   "level": "style",
    "name": "Ukiyo-e woodblock print",
    "line": "Edo woodblock prints brought to life on a handscroll.",
    "good_for": "A journey or a landscape of ideas, told scroll by scroll",
@@ -5724,8 +6026,8 @@
   },
   {
    "id": "style-whiteboard",
-   "revision": "023b884b",
-   "level": "direction",
+   "revision": "e7a8ed6b",
+   "level": "style",
    "name": "Whiteboard explainer",
    "line": "An explainer drawn live on one glossy dry-erase board: real single-line handwriting written stroke by stroke on the voice, floating markers with no hand, magnets that hold a print, and a camera that travels across the board instead of cutting.",
    "good_for": "Teaching a concept from scratch, explained as you'd draw it",
@@ -5767,8 +6069,8 @@
   },
   {
    "id": "style-woodcut",
-   "revision": "b1443515",
-   "level": "direction",
+   "revision": "912b8439",
+   "level": "style",
    "name": "Woodcut print",
    "line": "A relief print that carves itself: every frame is a black wood block on laid paper, and light exists only where a knife has cut it away.",
    "good_for": "A bold, serious statement with grit",

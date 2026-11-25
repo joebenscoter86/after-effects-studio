@@ -51396,15 +51396,15 @@ function planStrip(strip) {
 function sheetPathFor(abs, explicit) {
   if (explicit !== void 0) return path10.resolve(explicit).replace(/\\/g, "/");
   const ext = path10.extname(abs) || ".png";
-  const stem = abs.slice(0, abs.length - (path10.extname(abs).length || 0));
-  return `${stem}_sheet${ext}`;
+  const stem2 = abs.slice(0, abs.length - (path10.extname(abs).length || 0));
+  return `${stem2}_sheet${ext}`;
 }
 function framePaths(abs, count, multi, call = newCallId()) {
   if (!multi) return [abs];
   const ext = path10.extname(abs) || ".png";
-  const stem = abs.slice(0, abs.length - (path10.extname(abs).length || 0));
+  const stem2 = abs.slice(0, abs.length - (path10.extname(abs).length || 0));
   const out = [];
-  for (let i = 0; i < count; i++) out.push(`${stem}_${call}_${i}${ext}`);
+  for (let i = 0; i < count; i++) out.push(`${stem2}_${call}_${i}${ext}`);
   return out;
 }
 var newCallId = () => randomUUID4().slice(0, 8);
@@ -52360,7 +52360,7 @@ var since = (t) => performance.now() - t;
 var roundTally = (t) => Object.fromEntries(
   Object.entries(t).map(([k, v]) => [k, typeof v === "number" ? Math.round(v) : v])
 );
-async function renderChunked(io, base, frames, perFrameMs, outDir, stem, tally = renderTally(), firstCall = 0) {
+async function renderChunked(io, base, frames, perFrameMs, outDir, stem2, tally = renderTally(), firstCall = 0) {
   const size2 = Math.max(1, Math.min(32, Math.floor(SETTLE_MAX_MS / perFrameMs)));
   const out = [];
   for (let c = 0; c * size2 < frames.length; c++) {
@@ -52369,7 +52369,7 @@ async function renderChunked(io, base, frames, perFrameMs, outDir, stem, tally =
     const payload = await io.render({
       ...base,
       frames: chunk2,
-      outPath: path11.join(outDir, `${stem}-${firstCall + c}.png`),
+      outPath: path11.join(outDir, `${stem2}-${firstCall + c}.png`),
       settleTimeoutMs: Math.min(SETTLE_MAX_MS, Math.max(1, Math.round(perFrameMs * chunk2.length)))
     });
     tally.calls++;
@@ -67499,7 +67499,7 @@ var libraryTool = defineTool({
 
 // src/tools/arsenal.ts
 var LIBRARY = path30.resolve(PACKAGE_ROOT, "../library");
-var LEVELS2 = ["direction", "world", "recipe"];
+var LEVELS2 = ["style", "world", "recipe"];
 var ArsenalRefusal = class extends Error {
 };
 var MET_BY = {
@@ -67534,7 +67534,7 @@ function findTechniques(catalog, ask) {
   const exclude = new Set(ask.exclude ?? []);
   const limit = ask.limit ?? 5;
   const tier = (r) => r.job === ask.job ? 0 : r.support.includes(ask.job) ? 1 : [r.job, ...r.support].some((j) => j !== null && support.includes(j)) ? 2 : null;
-  const byJob = catalog.entries.filter((r) => r.kind === "technique" && !r.variant_of && tier(r) !== null && !exclude.has(r.id));
+  const byJob = catalog.entries.filter((r) => (r.kind === "technique" || r.kind === "piece") && !r.variant_of && tier(r) !== null && !exclude.has(r.id));
   const pass = (r, loose) => (loose.includes("status") || ask.constraints?.status === "any" || r.status === "proven") && (loose.includes("needs") || have === null || unmet(r.needs, have).length === 0);
   let relaxed = [];
   let hits = byJob.filter((r) => pass(r, relaxed));
@@ -67544,7 +67544,7 @@ function findTechniques(catalog, ask) {
     hits = byJob.filter((r) => pass(r, relaxed));
   }
   const overlap = (r) => lower(r.mood).filter((m) => mood.includes(m));
-  const ranked = hits.map((r) => ({ r, key: [tier(r), r.status === "proven" ? 0 : 1, -r.taught_by, -overlap(r).length, distance(r.duration, ask.duration)] })).sort((a, b) => {
+  const ranked = hits.map((r) => ({ r, key: [r.kind === "piece" ? 0 : 1, tier(r), r.status === "proven" ? 0 : 1, -r.taught_by, -overlap(r).length, distance(r.duration, ask.duration)] })).sort((a, b) => {
     for (let i = 0; i < a.key.length; i++) if (a.key[i] !== b.key[i]) return a.key[i] - b.key[i];
     return 0;
   }).slice(0, limit);
@@ -67555,6 +67555,7 @@ function findTechniques(catalog, ask) {
     const needs = !r.needs.length ? "needs nothing" : missing.length ? `needs ${missing.join(", ")}, not on hand` : have === null ? `needs ${r.needs.join(", ")}` : `needs met: ${r.needs.join(", ")}`;
     const m = overlap(r);
     return [
+      r.kind === "piece" ? "piece: runnable code, get returns its call" : null,
       job,
       needs,
       m.length ? `mood: ${m.join(", ")}` : mood.length ? "no mood overlap" : null,
@@ -67577,7 +67578,8 @@ function findTechniques(catalog, ask) {
       still: r.still?.path ?? null,
       section: r.section,
       fit: fit(r),
-      ...r.variants?.length ? { variants: r.variants } : {}
+      ...r.variants?.length ? { variants: r.variants } : {},
+      ...r.kind === "piece" && r.call ? { kind: "piece", call: r.call.signature } : {}
     }))
   };
   if (relaxed.length && out.results.length) out.relaxed = relaxed;
@@ -67609,28 +67611,57 @@ function matched(e, asked) {
   return asked.filter(([k, w]) => own2.some(([ok, ow]) => ok === k && (w === null || ow === w))).map(showProvides);
 }
 var levelText = (e) => [e.level, ...(e.also_level ?? []).map((l) => `also ${l}`)].join(", ");
+var STOP = new Set("a an the this that these those it its something anything thing things some any one i me my we our you your need needs want wants make makes made get gets can could will would should like into onto to of for and or but with on in at by is are be was were been from as so then than which what when where who how do does please just more very".split(" "));
+function stem(word) {
+  let w = word.toLowerCase().replace(/[^a-z0-9]/g, "");
+  if (w.length > 4 && w.endsWith("ies")) w = `${w.slice(0, -3)}y`;
+  else if (w.length > 4 && w.endsWith("ing")) w = w.slice(0, -3);
+  else if (w.length > 3 && w.endsWith("ed")) w = w.slice(0, -2);
+  else if (w.length > 3 && w.endsWith("s") && !w.endsWith("ss")) w = w.slice(0, -1);
+  if (w.length > 3 && w.at(-1) === w.at(-2) && !/[aeiouls]/.test(w.at(-1))) w = w.slice(0, -1);
+  if (w.length > 3 && w.endsWith("e")) w = w.slice(0, -1);
+  return w;
+}
+var stems = (text) => text.split(/[^A-Za-z0-9]+/).filter(Boolean).map(stem);
+function queryWords2(query) {
+  return [...new Set(query.split(/[^A-Za-z0-9]+/).filter((w) => w && !STOP.has(w.toLowerCase())).map(stem).filter((w) => w.length > 1))];
+}
+function wordsMatched(e, words) {
+  if (!words.length) return [];
+  const own2 = new Set(stems([e.id, e.name, e.line, e.use_for ?? "", e.job ?? "", ...e.support, ...e.provides].join(" ")));
+  return words.filter((w) => own2.has(w));
+}
 function findByProvides(catalog, ask) {
   const level = checkLevel(ask.level);
   const asked = askedProvides(catalog, ask.provides);
-  if (!level && !asked.length) throw new ArsenalRefusal("refused: find needs a job, a level or provides");
+  const words = ask.query === void 0 ? [] : queryWords2(ask.query);
+  if (ask.query !== void 0 && !words.length) throw new ArsenalRefusal(`refused: query "${ask.query}" has no words to look for once common words are dropped; say what the beat does, e.g. "turns over" or "glass floor"`);
+  if (!level && !asked.length && !words.length) throw new ArsenalRefusal("refused: find needs a job, a level, provides or a query");
   const exclude = new Set(ask.exclude ?? []);
   const limit = ask.limit ?? 5;
-  const pool = catalog.entries.filter((e) => !e.variant_of && !exclude.has(e.id) && (!level || atLevel(e, level)) && (!ask.shelf || e.shelf === ask.shelf) && (!asked.length || matched(e, asked).length > 0));
+  let pool = catalog.entries.filter((e) => !e.variant_of && !exclude.has(e.id) && (!level || atLevel(e, level)) && (!ask.shelf || e.shelf === ask.shelf) && (!asked.length || matched(e, asked).length > 0));
   let relaxed = [];
+  if (words.length) {
+    const best = Math.max(0, ...pool.map((e) => wordsMatched(e, words).length));
+    pool = best ? pool.filter((e) => wordsMatched(e, words).length === best) : [];
+    if (best && best < words.length) relaxed = ["words"];
+  }
   let hits = pool.filter((e) => ask.status === "any" || e.status === "proven");
   if (!hits.length && pool.length) {
-    relaxed = ["status"];
+    relaxed = [...relaxed, "status"];
     hits = pool;
   }
-  const ranked = hits.map((e, i) => ({ e, key: [-matched(e, asked).length, e.still ? 0 : 1, i] })).sort((a, b) => {
+  const ranked = hits.map((e, i) => ({ e, key: [words.length && e.kind === "piece" ? 0 : 1, -matched(e, asked).length, e.still ? 0 : 1, i] })).sort((a, b) => {
     for (let i = 0; i < a.key.length; i++) if (a.key[i] !== b.key[i]) return a.key[i] - b.key[i];
     return 0;
   }).slice(0, limit);
   const out = {
     vocab: catalog.vocab,
     version: catalog.version,
+    ...words.length ? { words } : {},
     results: ranked.map(({ e }) => {
       const m = matched(e, asked);
+      const w = wordsMatched(e, words);
       return {
         id: e.id,
         revision: e.revision,
@@ -67645,8 +67676,11 @@ function findByProvides(catalog, ask) {
         cost: e.cost,
         still: e.still?.path ?? null,
         section: e.section,
+        ...e.kind === "piece" && e.call ? { use_for: e.use_for, call: e.call.signature } : {},
         fit: [
+          e.kind === "piece" ? "piece: runnable code, get returns its call" : null,
           levelText(e),
+          w.length ? `words: ${w.join(", ")} of ${words.join(", ")}` : null,
           m.length ? `provides ${m.join(", ")}` : null,
           e.status === "proven" ? "proven" : "unproven, needs a test build first",
           e.still ? null : `no still: ${e.no_still ?? "none shipped"}`
@@ -67683,6 +67717,7 @@ function browseCatalog(catalog, ask = {}) {
     name: e.name,
     level: e.level,
     ...e.also_level?.length ? { also_level: e.also_level } : {},
+    ...e.kind === "piece" ? { kind: "piece" } : {},
     provides: e.provides,
     status: e.status,
     ...e.still ? {} : { no_still: e.no_still ?? "none shipped" }
@@ -67715,11 +67750,39 @@ function listJobs(root = LIBRARY) {
     provides: catalog.provides ?? {}
   };
 }
+function pieceReply(r, warning, catalog, root = LIBRARY) {
+  const call = r.call;
+  if (!call) throw new Error(`the arsenal is inconsistent: piece ${r.id} has no call`);
+  readLibraryEntry(r.section.document, root);
+  const dir = path30.join(realpathSync3(root), "pieces");
+  const others = catalog.entries.filter((e) => e.kind === "piece" && e.call && e.id !== r.id && call.example.includes(`PCS.${e.call.load}(`)).map((e) => e.call.load);
+  const load = `$.evalFile(File(${JSON.stringify(path30.join(dir, "pcs-core.jsx"))})); ${[...others, call.load].map((n) => `PCS.need('${n}');`).join(" ")}`;
+  const version3 = catalog.version;
+  return [
+    `ae_arsenal piece ${r.id}@${r.revision} (${r.status}; recipe level, runnable code; renderer ${r.cost.renderer}; catalog ${version3}; file library/pieces/${call.load}.jsx, readable with ae_library ${r.section.document})`,
+    warning,
+    `${r.name}: ${r.line}`,
+    r.use_for ? `use it for: ${r.use_for}` : null,
+    `jobs: ${[r.job, ...r.support].filter(Boolean).join(", ")}; provides: ${r.provides.join("; ") || "nothing listed"}; needs: ${r.needs.length ? r.needs.join(", ") : "nothing"}`,
+    "",
+    "load (in eval.run with rollback: false; then pick the look with PCS.use(a style name or a style object) before calling):",
+    `  ${load}`,
+    `call: ${call.signature}`,
+    ...call.options.length ? ["options:", ...call.options.map((o) => `  ${o.name}: ${o.text}`)] : [],
+    call.returns ? `returns: ${call.returns}` : null,
+    "example:",
+    ...call.example.split("\n").map((l) => `  ${l}`),
+    `works with: ${r.composes.length ? r.composes.join(", ") : "nothing recorded yet"}`,
+    ...r.requires?.length ? [`loads itself: ${r.requires.join(", ")}`] : [],
+    ...call.notes.map((n) => `note: ${n}`)
+  ].filter((l) => l !== null).join("\n");
+}
 function recipeReply(id, revision, root = LIBRARY) {
   const catalog = loadCatalog(root);
   const r = catalog.entries.find((x) => x.id === id);
   if (!r) throw new ArsenalRefusal(`refused: unknown id "${id}"; ae_arsenal browse and find return ids`);
-  const warning = revision !== void 0 && revision !== r.revision ? `WARNING: pinned revision ${revision}; the shipped revision is ${r.revision}. The ${r.kind === "style" ? "entry" : "recipe"} changed since it was pinned: this is the shipped text, not the pinned one. Check it still fits the beat.` : null;
+  const warning = revision !== void 0 && revision !== r.revision ? `WARNING: pinned revision ${revision}; the shipped revision is ${r.revision}. The ${r.kind === "style" ? "entry" : r.kind === "piece" ? "piece" : "recipe"} changed since it was pinned: this is the shipped ${r.kind === "piece" ? "call" : "text"}, not the pinned one. Check it still fits the beat.` : null;
+  if (r.kind === "piece") return pieceReply(r, warning, catalog, root);
   if (r.kind === "style") {
     const head2 = `ae_arsenal ${r.level} ${r.id}@${r.revision} (${levelText(r)}; ${r.status}; shelf ${r.shelf}; catalog ${catalog.version}; its document is library document ${r.section.document}, also readable with ae_library)`;
     const facts = [
@@ -67757,9 +67820,10 @@ function stillContent(r, root = LIBRARY, label) {
 }
 var providesArg = external_exports.union([external_exports.string(), external_exports.array(external_exports.string())]).optional().describe('browse and find: what an entry must provide, "key" or "key: word" (e.g. "material: glass", "floor"), one or a list; action jobs lists the vocabulary');
 var askShape = {
-  action: external_exports.enum(["browse", "find", "get", "jobs"]).describe("browse: a level as labelled stills, a page at a time; find: a shortlist by job for one beat, or by level and/or provides across levels; get: any entry by id; jobs: the job and provides vocabularies"),
-  level: external_exports.enum(LEVELS2).optional().describe("browse and find: direction (how a whole piece holds together), world (a set a section lives in) or recipe (one technique for one beat); browse without it shows every level, directions first"),
+  action: external_exports.enum(["browse", "find", "get", "jobs"]).describe("browse: a level as labelled stills, a page at a time; find: a shortlist by job for one beat, or by level, provides and/or plain words across levels; get: any entry by id (a piece answers with its call); jobs: the job and provides vocabularies"),
+  level: external_exports.enum(LEVELS2).optional().describe("browse and find: style (a look a section can borrow: colour, type, light, material), world (a set a section lives in) or recipe (one technique for one beat; pieces are recipes you run); browse without it shows every level, styles first"),
   provides: providesArg,
+  query: external_exports.string().optional().describe('find: what the beat needs in plain words (e.g. "something that turns over"); returns the entries that carry the most of its words, pieces first'),
   shelf: external_exports.enum(["shipped", "user"]).optional().describe("browse and find: only entries from this shelf"),
   page: external_exports.number().int().positive().optional().describe("browse: which page, from 1"),
   page_size: external_exports.number().int().positive().max(BROWSE_PAGE_MAX).optional().describe(`browse: tiles per page, default ${BROWSE_PAGE}`),
@@ -67785,11 +67849,11 @@ var askShape = {
 var listOf = (p) => p === void 0 ? void 0 : Array.isArray(p) ? p : [p];
 var arsenalTool = defineTool({
   name: "ae_arsenal",
-  title: "Library: directions, worlds and recipes",
+  title: "Library: styles, worlds, recipes and pieces",
   group: "document",
   effect: "read",
   blockedInReadOnly: false,
-  description: `The library at three levels, each entry with a still from our own proof build and what it provides: directions (how a whole piece holds together), worlds (a set a section lives in: floor, light, environment, materials) and recipes (one technique for one beat). The visual styles are directions and worlds here. action browse shows a level as labelled stills, a page at a time (level, provides, shelf, page, page_size); start a brief there. action find with job returns a ranked shortlist of recipes for one beat, exactly as before (job, and optionally support, duration, mood, assets, constraints.status, exclude, limit; proven only unless constraints.status is any; relaxed names any filter loosened when nothing passed; never another job; a candidate taught in other ways lists their ids as variants). action find with level and/or provides (e.g. "material: glass", "floor: gloss-dark") returns entries across levels that provide it. An unknown job, level or provides word is refused with the valid ones: pick one, never invent one. action jobs lists the job and provides vocabularies. action get takes any id (and the pinned revision) and returns the recipe, or a direction's or world's document, with its still. Offline; no After Effects needed.`,
+  description: 'The library at three levels, each entry with a still from our own proof build and what it provides: styles (a look a section can borrow: colour, type, light, material), worlds (a set a section lives in: floor, light, environment, materials) and recipes (one technique for one beat). Among the recipes, pieces are runnable code: one file each, called by name, built and lit (thickness, light, shadow, overshoot) but carrying no look of their own. action browse shows a level as labelled stills, a page at a time (level, provides, shelf, page, page_size); start a brief there. action find with job returns a ranked shortlist for one beat, pieces first, then written recipes (job, and optionally support, duration, mood, assets, constraints.status, exclude, limit; proven only unless constraints.status is any; relaxed names any filter loosened when nothing passed; never another job; a candidate taught in other ways lists their ids as variants). action find with query (plain words, e.g. "something that turns over"), level and/or provides (e.g. "material: glass", "floor: gloss-dark") returns entries across levels, pieces first when the words fit one. An unknown job, level or provides word is refused with the valid ones: pick one, never invent one. action jobs lists the job and provides vocabularies. action get takes any id (and the pinned revision) with its still: a piece answers with its call (the load line, signature, options, returns and a short example) to run in eval.run; a recipe with its text; a style or world with its document. Offline; no After Effects needed.',
   inputShape: askShape,
   handler: async (args) => {
     try {
@@ -67803,21 +67867,21 @@ var arsenalTool = defineTool({
       }
       if (args.action === "browse") {
         const page = browseCatalog(catalog, { level: args.level, provides: listOf(args.provides), shelf: args.shelf, page: args.page, page_size: args.page_size, include_unpictured: args.include_unpictured });
-        const label = (t) => `Tile ${t.n}: ${t.id} \xB7 ${t.name} \xB7 ${[t.level, ...(t.also_level ?? []).map((l) => `also ${l}`)].join(", ")} \xB7 provides ${t.provides.length ? t.provides.join(", ") : "nothing listed"}${t.status === "proven" ? "" : " \xB7 unproven"}`;
+        const label = (t) => `Tile ${t.n}: ${t.id} \xB7 ${t.name} \xB7 ${[t.level, ...(t.also_level ?? []).map((l) => `also ${l}`)].join(", ")}${t.kind === "piece" ? " \xB7 piece (runnable; get returns its call)" : ""} \xB7 provides ${t.provides.length ? t.provides.join(", ") : "nothing listed"}${t.status === "proven" ? "" : " \xB7 unproven"}`;
         const images2 = page.tiles.flatMap((t) => byId.get(t.id).still ? stillContent(byId.get(t.id), LIBRARY, label(t)) : [{ type: "text", text: `${label(t)} \xB7 no still: ${t.no_still}` }]);
         const next = page.page < page.pages ? ` Next: page ${page.page + 1}.` : "";
-        const head = `ae_arsenal browse: ${page.level === "all" ? "every level, directions first" : `level ${page.level}`}${page.provides ? `, providing ${page.provides.join(" or ")}` : ""}; page ${page.page} of ${page.pages}, tiles ${page.tiles.length ? `${page.tiles[0].n} to ${page.tiles.at(-1).n}` : "none"} of ${page.total}${page.hidden_without_still ? `; ${page.hidden_without_still} without a still hidden (include_unpictured lists them)` : ""}.${next} Read one with get.`;
+        const head = `ae_arsenal browse: ${page.level === "all" ? "every level, styles first" : `level ${page.level}`}${page.provides ? `, providing ${page.provides.join(" or ")}` : ""}; page ${page.page} of ${page.pages}, tiles ${page.tiles.length ? `${page.tiles[0].n} to ${page.tiles.at(-1).n}` : "none"} of ${page.total}${page.hidden_without_still ? `; ${page.hidden_without_still} without a still hidden (include_unpictured lists them)` : ""}.${next} Read one with get.`;
         return { content: [{ type: "text", text: `${head}
 ${JSON.stringify({ ok: true, ...page }, null, 2)}` }, ...images2], isError: false };
       }
       if (!args.job) {
-        if (args.level === void 0 && args.provides === void 0) return errorResult("INVALID_ARGS", "find needs job (a job id from ae_arsenal action jobs), or level and/or provides", { hint: "call ae_arsenal with action jobs for the valid job ids and provides words" });
-        const answer2 = findByProvides(catalog, { level: args.level, provides: listOf(args.provides), shelf: args.shelf, status: args.constraints?.status, exclude: args.exclude, limit: args.limit });
+        if (args.level === void 0 && args.provides === void 0 && args.query === void 0) return errorResult("INVALID_ARGS", "find needs job (a job id from ae_arsenal action jobs), or a query in plain words, level and/or provides", { hint: "call ae_arsenal with action jobs for the valid job ids and provides words" });
+        const answer2 = findByProvides(catalog, { level: args.level, provides: listOf(args.provides), query: args.query, shelf: args.shelf, status: args.constraints?.status, exclude: args.exclude, limit: args.limit });
         const images2 = answer2.results.flatMap((c) => stillContent(byId.get(c.id)));
         return { content: [{ type: "text", text: JSON.stringify({ ok: true, ...answer2 }, null, 2) }, ...images2], isError: false };
       }
-      if (args.level !== void 0 || args.provides !== void 0 || args.shelf !== void 0) {
-        return errorResult("INVALID_ARGS", "find asks by job for one beat, or by level and provides across levels, not both: drop job, or drop level, provides and shelf");
+      if (args.level !== void 0 || args.provides !== void 0 || args.shelf !== void 0 || args.query !== void 0) {
+        return errorResult("INVALID_ARGS", "find asks by job for one beat, or by query, level and provides across levels, not both: drop job, or drop query, level, provides and shelf");
       }
       const answer = findTechniques(catalog, {
         vocab: args.vocab ?? catalog.vocab,

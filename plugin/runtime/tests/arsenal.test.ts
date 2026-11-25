@@ -8,7 +8,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
-import { arsenalTool, browseCatalog, findByProvides, findTechniques, listJobs, loadCatalog, parseProvides, recipeReply, type ArsenalCatalog, type ArsenalRecipe, type BeatAsk } from "../src/tools/arsenal.js";
+import { arsenalTool, browseCatalog, findByProvides, findTechniques, listJobs, loadCatalog, parseProvides, queryWords, recipeReply, stem, type ArsenalCatalog, type ArsenalRecipe, type BeatAsk } from "../src/tools/arsenal.js";
+import { existsSync } from "node:fs";
 
 const LIB = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "library");
 const JOBS = ["before-after", "point-at-detail", "light-the-hero", "finish-the-look", "add-depth", "hand-over"];
@@ -189,10 +190,10 @@ describe("the shipped arsenal", () => {
     expect(() => findTechniques(loadCatalog(LIB), { vocab: "jobs-v1", job: "make-it-pop" })).toThrow(/unknown job "make-it-pop".*land-number/);
   });
 
-  it("every proven technique and style with a still has its JPEG in the package, and no other entry has one", () => {
+  it("every proven technique, piece and style with a still has its JPEG in the package, and no other entry has one", () => {
     const cat = loadCatalog(LIB);
     for (const r of cat.entries) {
-      if (r.still) expect(r.status === "proven" && (r.kind === "technique" || r.kind === "style"), r.id).toBe(true);
+      if (r.still) expect(r.status === "proven" && (r.kind === "technique" || r.kind === "piece" || r.kind === "style"), r.id).toBe(true);
       if (r.still) expect(readFileSync(path.join(LIB, r.still.path)).subarray(0, 2).toString("hex"), r.id).toBe("ffd8");
     }
     expect(cat.entries.filter((r) => r.still).length).toBeGreaterThan(0);
@@ -326,15 +327,15 @@ describe("being found", () => {
 describe("across levels: the rules", () => {
   const VOCAB = { material: ["glass", "paper"], floor: ["gloss-dark"], depth: [] as string[] };
   const style = (i: number, slug: string, o: Partial<ArsenalRecipe> = {}) => rec(i, slug, {
-    id: `style-${slug}`, kind: "style", level: "direction", job: null, status: "proven", still: { path: `arsenal/stills/style-${slug}.jpg`, sha256: "x" }, ...o,
+    id: `style-${slug}`, kind: "style", level: "style", job: null, status: "proven", still: { path: `arsenal/stills/style-${slug}.jpg`, sha256: "x" }, ...o,
   });
   const catalog = (): ArsenalCatalog => ({
-    vocab: "jobs-v1", version: "abcdef12", jobs: JOBS, levels: ["direction", "world", "recipe"], provides: VOCAB,
+    vocab: "jobs-v1", version: "abcdef12", jobs: JOBS, levels: ["style", "world", "recipe"], provides: VOCAB,
     entries: [
       rec(1, "glassrecipe", { status: "proven", provides: ["material: glass", "depth"], still: { path: "a.jpg", sha256: "x" } }),
       rec(2, "paper", { status: "proven", provides: ["material: paper"], still: { path: "b.jpg", sha256: "x" } }),
       rec(3, "aid", { status: "proven", kind: "build-aid", job: null, provides: ["depth"], no_still: "build aid" }),
-      style(4, "glassworld", { level: "world", also_level: ["direction"], provides: ["material: glass", "floor: gloss-dark"] }),
+      style(4, "glassworld", { level: "world", also_level: ["style"], provides: ["material: glass", "floor: gloss-dark"] }),
       style(5, "poster", { provides: ["material: paper"] }),
       style(6, "nostill", { provides: ["material: glass"], still: null, no_still: "no proof movie" }),
     ],
@@ -349,21 +350,21 @@ describe("across levels: the rules", () => {
   it("find by provides crosses levels: the glass world and the glass recipe together, best match first", () => {
     const out = findByProvides(catalog(), { provides: ["material: glass", "floor: gloss-dark"] });
     expect(out.results.map((r) => r.id)).toEqual(["style-glassworld", "01-glassrecipe", "style-nostill"]);
-    expect(out.results[0].fit).toMatch(/world, also direction; provides material: glass, floor: gloss-dark; proven/);
+    expect(out.results[0].fit).toMatch(/world, also style; provides material: glass, floor: gloss-dark; proven/);
     expect(out.results[2].fit).toMatch(/no still: no proof movie/);
   });
 
   it("a bare key matches any word under it; level narrows; also_level counts", () => {
     expect(findByProvides(catalog(), { provides: ["material"], limit: 10 }).results.map((r) => r.id)).toEqual(["01-glassrecipe", "02-paper", "style-glassworld", "style-poster", "style-nostill"]);
     expect(findByProvides(catalog(), { level: "world" }).results.map((r) => r.id)).toEqual(["style-glassworld"]);
-    expect(findByProvides(catalog(), { level: "direction", provides: ["material: glass"] }).results.map((r) => r.id)).toEqual(["style-glassworld", "style-nostill"]);
+    expect(findByProvides(catalog(), { level: "style", provides: ["material: glass"] }).results.map((r) => r.id)).toEqual(["style-glassworld", "style-nostill"]);
   });
 
   it("refuses an unknown level, provides key or word, naming the valid ones, and an empty ask", () => {
-    expect(() => findByProvides(catalog(), { level: "scene" })).toThrow(/unknown level "scene"; valid levels: direction, world, recipe/);
+    expect(() => findByProvides(catalog(), { level: "scene" })).toThrow(/unknown level "scene"; valid levels: style, world, recipe/);
     expect(() => findByProvides(catalog(), { provides: ["sparkle"] })).toThrow(/unknown provides key "sparkle"; valid keys: material, floor, depth/);
     expect(() => findByProvides(catalog(), { provides: ["material: wood"] })).toThrow(/unknown material word "wood"; valid material words: glass, paper/);
-    expect(() => findByProvides(catalog(), {})).toThrow(/needs a job, a level or provides/);
+    expect(() => findByProvides(catalog(), {})).toThrow(/needs a job, a level, provides or a query/);
   });
 
   it("a job query never returns a style, whatever it provides", () => {
@@ -372,16 +373,16 @@ describe("across levels: the rules", () => {
   });
 
   it("browse shows a level in catalog order, hides entries with no still unless asked, and counts them", () => {
-    const page = browseCatalog(catalog(), { level: "direction" });
+    const page = browseCatalog(catalog(), { level: "style" });
     expect(page.tiles.map((t) => t.id)).toEqual(["style-glassworld", "style-poster"]);
     expect(page.hidden_without_still).toBe(1);
-    expect(page.tiles[0]).toMatchObject({ n: 1, name: "Name glassworld", level: "world", also_level: ["direction"], provides: ["material: glass", "floor: gloss-dark"] });
-    const all = browseCatalog(catalog(), { level: "direction", include_unpictured: true });
+    expect(page.tiles[0]).toMatchObject({ n: 1, name: "Name glassworld", level: "world", also_level: ["style"], provides: ["material: glass", "floor: gloss-dark"] });
+    const all = browseCatalog(catalog(), { level: "style", include_unpictured: true });
     expect(all.tiles.map((t) => t.id)).toEqual(["style-glassworld", "style-poster", "style-nostill"]);
     expect(all.tiles[2].no_still).toBe("no proof movie");
   });
 
-  it("browse with no level shows every level, directions first, each entry once; provides filters", () => {
+  it("browse with no level shows every level, styles first, each entry once; provides filters", () => {
     expect(browseCatalog(catalog()).tiles.map((t) => t.id)).toEqual(["style-glassworld", "style-poster", "01-glassrecipe", "02-paper"]);
     expect(browseCatalog(catalog(), { provides: ["material: paper"] }).tiles.map((t) => t.id)).toEqual(["style-poster", "02-paper"]);
   });
@@ -400,9 +401,9 @@ describe("the shipped catalog at three levels", () => {
 
   it("every entry has a level, provides from the vocabulary, cost, composes, shelf, and a still or the reason it has none", () => {
     const c = cat();
-    expect(c.levels).toEqual(["direction", "world", "recipe"]);
+    expect(c.levels).toEqual(["style", "world", "recipe"]);
     for (const e of c.entries) {
-      expect(["direction", "world", "recipe"], e.id).toContain(e.level);
+      expect(["style", "world", "recipe"], e.id).toContain(e.level);
       expect(e.shelf, e.id).toBe("shipped");
       expect(Array.isArray(e.composes), e.id).toBe(true);
       expect(["classic", "advanced-3d", "blender"], e.id).toContain(e.cost.renderer);
@@ -416,7 +417,7 @@ describe("the shipped catalog at three levels", () => {
     }
   });
 
-  it("every recipe is level recipe; every visual style is a direction or a world, readable through ae_library", () => {
+  it("every recipe is level recipe; every visual style is a style or a world, readable through ae_library", () => {
     const c = cat();
     const manifest = JSON.parse(readFileSync(path.join(LIB, "manifest.json"), "utf8")) as { documents: Array<{ id: string }> };
     const styles = JSON.parse(readFileSync(path.join(LIB, "styles", "index.json"), "utf8")) as { styles: Array<{ id: string }> };
@@ -424,7 +425,7 @@ describe("the shipped catalog at three levels", () => {
     const styleEntries = c.entries.filter((x) => x.kind === "style");
     expect(styleEntries.map((e) => e.id).sort()).toEqual(styles.styles.map((s) => `style-${s.id}`).sort());
     for (const e of styleEntries) {
-      expect(["direction", "world"], e.id).toContain(e.level);
+      expect(["style", "world"], e.id).toContain(e.level);
       expect(manifest.documents.some((d) => d.id === e.section.document), e.id).toBe(true);
     }
   });
@@ -465,7 +466,7 @@ describe("ae_arsenal across levels", () => {
     expect(r.structuredContent).toBeUndefined();
     const t = text(r);
     expect(t).toMatch(/^ae_arsenal browse: level world; page 1 of 1/);
-    expect(t).toMatch(/Tile \d+: style-glass-product · Glass product · world, also direction · provides material: glass/);
+    expect(t).toMatch(/Tile \d+: style-glass-product · Glass product · world, also style · provides material: glass/);
     const kinds = r.content.map((c) => c.type);
     const firstImage = kinds.indexOf("image");
     expect(firstImage).toBeGreaterThan(1);
@@ -501,7 +502,7 @@ describe("ae_arsenal across levels", () => {
     const r = await call({ action: "get", id: "style-glass-product" });
     expect(r.isError).toBe(false);
     const t = text(r);
-    expect(t.split("\n")[0]).toMatch(/^ae_arsenal world style-glass-product@[0-9a-f]{8} \(world, also direction; proven; shelf shipped;/);
+    expect(t.split("\n")[0]).toMatch(/^ae_arsenal world style-glass-product@[0-9a-f]{8} \(world, also style; proven; shelf shipped;/);
     expect(t).toMatch(/^provides: material: glass; /m);
     expect(t).toMatch(/^cost: renderer blender, /m);
     expect(t).toMatch(/Glass product/);
@@ -520,7 +521,147 @@ describe("ae_arsenal across levels", () => {
 
   it("jobs also lists the levels and the provides vocabulary", async () => {
     const out = JSON.parse(text(await call({ action: "jobs" })));
-    expect(out.levels).toEqual(["direction", "world", "recipe"]);
+    expect(out.levels).toEqual(["style", "world", "recipe"]);
     expect(out.provides.material).toContain("glass");
+  });
+});
+
+// ---------- pieces: runnable recipes, found first, answered with their call ----------
+
+describe("pieces: the rules", () => {
+  const CALL = { load: "flip", signature: "PCS.flip(layer, { t })", options: [{ name: "t", text: "start time" }], returns: "the layer", example: "PCS.flip(p, { t: 1 });", notes: [] };
+  const piece = (i: number, slug: string, o: Partial<ArsenalRecipe> = {}) => rec(i, slug, {
+    id: `piece-${slug}`, kind: "piece", status: "proven", duration: null, motion: null, still: { path: `arsenal/stills/piece-${slug}.jpg`, sha256: "x" },
+    use_for: "something that turns over", call: { ...CALL, load: slug }, ...o,
+  });
+  const catalog = (): ArsenalCatalog => ({
+    vocab: "jobs-v1", version: "abcdef12", jobs: JOBS, levels: ["style", "world", "recipe"], provides: { motion: ["flip"] },
+    entries: [
+      rec(1, "turnover", { status: "proven", line: "A card turns over to show its back.", taught_by: 3 }),
+      rec(2, "wipe", { status: "proven", line: "A wipe from left to right." }),
+      piece(3, "flip", { name: "Flip an object over", line: "Turns an object over to its other side.", provides: ["motion: flip"], support: ["hand-over"] }),
+      piece(4, "spot", { name: "Spot light", line: "Lights one object.", job: "light-the-hero", use_for: "the one thing to look at" }),
+    ],
+  });
+
+  it("a job find lists the piece first, ahead of a proven written recipe taught three times, and names its call", () => {
+    const out = findTechniques(catalog(), ask());
+    expect(out.results.map((r) => r.id)).toEqual(["piece-flip", "01-turnover", "02-wipe"]);
+    expect(out.results[0]).toMatchObject({ kind: "piece", call: "PCS.flip(layer, { t })" });
+    expect(out.results[0].fit).toMatch(/^piece: runnable code, get returns its call; primary job before-after/);
+    expect(out.results[1]).not.toHaveProperty("kind");
+    // a piece that only supports the asked job still comes before a recipe whose primary job it is
+    expect(findTechniques(catalog(), ask({ job: "hand-over" })).results.map((r) => r.id)).toEqual(["piece-flip"]);
+  });
+
+  it("plain words drop the common ones and are cut to their stems", () => {
+    expect(queryWords("something that turns over")).toEqual(["turn", "over"]);
+    expect(["flips", "flipping", "flipped"].map(stem)).toEqual(["flip", "flip", "flip"]);
+    expect(["turns", "turning", "turned"].map(stem)).toEqual(["turn", "turn", "turn"]);
+    expect([stem("glass"), stem("pieces"), stem("piece")]).toEqual(["glass", "piec", "piec"]);
+  });
+
+  it("a query keeps the entries carrying the most of its words, pieces first", () => {
+    const out = findByProvides(catalog(), { query: "something that turns over" });
+    expect(out.words).toEqual(["turn", "over"]);
+    expect(out.results.map((r) => r.id)).toEqual(["piece-flip", "01-turnover"]);
+    expect(out.results[0]).toMatchObject({ kind: "piece", call: "PCS.flip(layer, { t })", use_for: "something that turns over" });
+    expect(out.results[0].fit).toMatch(/words: turn, over of turn, over/);
+    expect(out.relaxed).toBeUndefined();
+  });
+
+  it("when no entry carries every word, the best partial matches come back and relaxed says so", () => {
+    const out = findByProvides(catalog(), { query: "wipe the floor clean" });
+    expect(out.results.map((r) => r.id)).toEqual(["02-wipe"]);
+    expect(out.relaxed).toEqual(["words"]);
+    expect(findByProvides(catalog(), { query: "zebra" }).results).toEqual([]);
+  });
+
+  it("a query made only of common words is refused", () => {
+    expect(() => findByProvides(catalog(), { query: "something that" })).toThrow(/no words to look for/);
+  });
+});
+
+describe("pieces in the shipped catalog", () => {
+  const cat = () => loadCatalog(LIB);
+  const pieces = () => cat().entries.filter((e) => e.kind === "piece");
+
+  it("every piece is a proven recipe with a still, a call, readable files, and known partners", () => {
+    const c = cat();
+    const manifest = JSON.parse(readFileSync(path.join(LIB, "manifest.json"), "utf8")) as { documents: Array<{ id: string; path: string }> };
+    expect(pieces().length).toBeGreaterThan(0);
+    expect(manifest.documents.some((d) => d.id === "pieces-core-jsx" && d.path === "pieces/pcs-core.jsx")).toBe(true);
+    for (const p of pieces()) {
+      expect(p.level, p.id).toBe("recipe");
+      expect(p.status, p.id).toBe("proven");
+      expect(p.still, p.id).not.toBeNull();
+      expect(p.call!.signature, p.id).toMatch(/^PCS\.\w+\(/);
+      expect(existsSync(path.join(LIB, "pieces", `${p.call!.load}.jsx`)), p.id).toBe(true);
+      expect(manifest.documents.some((d) => d.id === p.section.document), p.id).toBe(true);
+      expect(manifest.documents.some((d) => d.id === `${p.id}-proof`), p.id).toBe(true);
+      for (const other of p.composes) expect(c.entries.some((e) => e.id === other), `${p.id} works with ${other}`).toBe(true);
+      for (const r of p.requires ?? []) expect(existsSync(path.join(LIB, "pieces", `${r}.jsx`)), `${p.id} loads ${r}`).toBe(true);
+    }
+  });
+
+  it("pieces come first in the catalog, so a browse of recipes shows them first", () => {
+    const c = cat();
+    const firstOther = c.entries.findIndex((e) => e.kind !== "piece");
+    expect(c.entries.slice(firstOther).some((e) => e.kind === "piece")).toBe(false);
+    expect(browseCatalog(c, { level: "recipe" }).tiles[0].id).toMatch(/^piece-/);
+  });
+
+  it("acceptance: \"something that turns over\" returns the flip piece first, with its picture and its call", () => {
+    const out = findByProvides(cat(), { query: "something that turns over" });
+    expect(out.results[0]).toMatchObject({ id: "piece-flip", kind: "piece" });
+    expect(out.results[0].still).toBe("arsenal/stills/piece-flip.jpg");
+    expect(out.results[0].call).toMatch(/^PCS\.flip\(layer/);
+  });
+
+  it("a job find for before-after lists the flip piece first", () => {
+    const c = cat();
+    expect(findTechniques(c, { vocab: c.vocab, job: "before-after" }).results[0].id).toBe("piece-flip");
+  });
+});
+
+describe("ae_arsenal with pieces", () => {
+  const call = (args: Record<string, unknown>) => arsenalTool.handler(args as never, {} as never);
+  const text = (r: { content: Array<{ type: string; text?: string }> }) => r.content.filter((c) => c.type === "text").map((c) => c.text).join("\n");
+
+  it("find with a query returns the flip piece first, with its still", async () => {
+    const r = await call({ action: "find", query: "something that turns over" });
+    expect(r.isError).toBe(false);
+    const answer = JSON.parse(text(r).split("\nStill of ")[0]);
+    expect(answer.results[0].id).toBe("piece-flip");
+    const kinds = r.content.map((c) => c.type);
+    expect(kinds[1]).toBe("text");
+    expect((r.content[1] as { text: string }).text).toMatch(/^Still of piece-flip/);
+    expect(kinds[2]).toBe("image");
+    const both = await call({ action: "find", job: "before-after", query: "turns over" });
+    expect(both.isError).toBe(true);
+    expect(text(both)).toMatch(/not both/);
+  });
+
+  it("get for a piece returns how to call it, not prose: the load line with this install's path, the call, options, an example", async () => {
+    const r = await call({ action: "get", id: "piece-flip" });
+    expect(r.isError).toBe(false);
+    const t = text(r);
+    expect(t.split("\n")[0]).toMatch(/^ae_arsenal piece piece-flip@[0-9a-f]{8} \(proven; recipe level, runnable code;/);
+    // the example calls the stage and the plate too, so the load line loads them
+    const load = /\$\.evalFile\(File\("([^"]+)"\)\); PCS\.need\('plate'\); PCS\.need\('stage'\); PCS\.need\('flip'\);$/m.exec(t);
+    expect(load).not.toBeNull();
+    expect(path.isAbsolute(load![1]) && existsSync(load![1])).toBe(true);
+    expect(t).toMatch(/^call: PCS\.flip\(layer, \{ t, dur, axis, dir \}\)$/m);
+    expect(t).toMatch(/^options:\n  t: start time/m);
+    expect(t).toMatch(/^example:\n  var st = PCS\.stage\(/m);
+    expect(t).toMatch(/^works with: piece-plate, piece-stage$/m);
+    expect(r.content.some((c) => c.type === "image")).toBe(true);
+    const pinned = await call({ action: "get", id: "piece-flip", revision: "00000000" });
+    expect(text(pinned)).toMatch(/WARNING: pinned revision 00000000.*The piece changed since it was pinned: this is the shipped call/);
+  });
+
+  it("browse labels a piece as runnable", async () => {
+    const t = text(await call({ action: "browse", level: "recipe" }));
+    expect(t).toMatch(/Tile 1: piece-\w+ · [^·]+ · recipe · piece \(runnable; get returns its call\) · provides/);
   });
 });
