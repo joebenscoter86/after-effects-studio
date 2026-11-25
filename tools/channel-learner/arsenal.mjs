@@ -171,9 +171,10 @@ const sha8 = (text) => createHash('sha256').update(text).digest('hex').slice(0, 
 const firstSentence = (text) => (String(text).match(/^.*?\.(?=\s|$)/) ?? [text])[0];
 
 /** One catalog entry for a visual style: its ae_library document, its level and what it provides. */
-export function styleEntry(s, l, styleDoc, still) {
+export function styleEntry(s, l, styleDoc, still, block = null) {
   const record = {
     id: `${STYLE_PREFIX}${s.id}`, level: l.level, ...(l.also_level?.length ? { also_level: l.also_level } : {}),
+    ...(block ? { block } : {}),
     name: s.title, line: firstSentence(s.summary), good_for: s.goodFor,
     status: s.contentStatus === 'proven' || s.pluginProof?.technical === 'passed' ? 'proven' : 'unproven',
     kind: 'style', job: null, support: [], mood: [], needs: s.needs ?? [], duration: null, motion: null, difficulty: null, taught_by: 1, variants: [],
@@ -276,6 +277,90 @@ export function pieceEntry(x, still) {
   return record;
 }
 
+// ---------- styles as data: pieces/styles/<id>.json ----------
+// A style block is the small set of values the pieces read (PCS.use): ground, surface, ink, accent, light, grain, font,
+// thickness, material. Roles: "house" (the default, exactly one), "example" (proves the pieces carry no look; never the
+// house) and "look" (an existing visual style written as a block; its catalog entry stays the style's own and gains
+// `block`). House and examples are catalog entries of their own, style-<id>, with a still of the style proof scene
+// (pieces/proof/styles.jsx) rendered at quality/renders/pieces/styles/<id>.png.
+
+export const STYLE_DEFAULT = 'house';
+export const STYLE_ROLES = ['house', 'example', 'look'];
+const BLOCK_COLOURS = ['ground', 'backplate', 'surface', 'ink', 'type', 'accent', 'onAccent', 'quiet', 'keyColor', 'fillColor'];
+const BLOCK_NUMBERS = ['keyIntensity', 'fillIntensity', 'envIntensity', 'grain', 'depth', 'bevel'];
+const BLOCK_STRINGS = ['font', 'weight'];
+export const BLOCK_KEYS = [...BLOCK_COLOURS, ...BLOCK_NUMBERS, ...BLOCK_STRINGS, 'tilt', 'material'];
+const MATERIAL_KEYS = ['specular', 'shininess', 'metal'];
+
+/** The style blocks in pieces/styles/: { id, file, text, block }. */
+export function readStyleBlocks(piecesDir) {
+  const dir = piecesDir ? path.join(piecesDir, 'styles') : null;
+  if (!dir || !fs.existsSync(dir)) return [];
+  return fs.readdirSync(dir).filter((n) => n.endsWith('.json')).sort().map((n) => {
+    const text = fs.readFileSync(path.join(dir, n), 'utf8');
+    let block;
+    try { block = JSON.parse(text); } catch (e) { throw new Error(`refused: pieces/styles/${n} is not JSON: ${e.message}`); }
+    return { id: n.replace(/\.json$/, ''), file: n, text, block };
+  });
+}
+
+const isColour = (v) => Array.isArray(v) && v.length === 3 && v.every((x) => typeof x === 'number' && x >= 0 && x <= 1);
+const isNumber = (v) => typeof v === 'number' && Number.isFinite(v) && v >= 0;
+
+/** Problems with the style blocks: shape, roles, one house default, provides from the vocabulary, borrowed looks that exist. */
+export function styleBlockProblems(blocks, { vocab = {}, styleIds = [] } = {}) {
+  const p = [];
+  const known = new Set(styleIds);
+  const defaults = blocks.filter((x) => x.block.default === true);
+  if (blocks.length && (defaults.length !== 1 || defaults[0].id !== STYLE_DEFAULT || defaults[0].block.role !== 'house')) {
+    p.push(`style blocks: exactly one default, "${STYLE_DEFAULT}" with role house (found ${defaults.map((x) => x.id).join(', ') || 'none'})`);
+  }
+  for (const x of blocks) {
+    const b = x.block; const where = `style block ${x.file}`;
+    if (b.id !== x.id) p.push(`${where}: says id "${b.id}", but its file is ${x.file}`);
+    if (!/^[a-z0-9-]+$/.test(x.id)) p.push(`${where}: id is not lower-case words joined by hyphens`);
+    for (const k of ['title', 'line', 'source']) if (!b[k]) p.push(`${where}: no "${k}"`);
+    if (!STYLE_ROLES.includes(b.role)) p.push(`${where}: role "${b.role}" is not one of ${STYLE_ROLES.join(', ')}`);
+    if (b.role === 'example' && !x.id.startsWith('example-')) p.push(`${where}: an example's id starts with "example-"`);
+    if (b.role === 'look') {
+      if (!b.borrowed_from || !known.has(b.borrowed_from)) p.push(`${where}: a look names the style it is borrowed from (borrowed_from), and ${b.borrowed_from ?? 'nothing'} is no style`);
+    } else {
+      if (b.borrowed_from) p.push(`${where}: only a look is borrowed from a style`);
+      if (known.has(`${STYLE_PREFIX}${x.id}`)) p.push(`${where}: style-${x.id} is already a visual style; a block for it is a look`);
+    }
+    p.push(...providesProblems(b.provides ?? [], vocab, where));
+    if (b.role !== 'look' && !(b.provides ?? []).length) p.push(`${where}: no provides`);
+    const v = b.values ?? {};
+    for (const k of BLOCK_KEYS) if (!(k in v)) p.push(`${where}: no value "${k}"`);
+    for (const k of Object.keys(v)) if (!BLOCK_KEYS.includes(k)) p.push(`${where}: unknown value "${k}"; values: ${BLOCK_KEYS.join(', ')}`);
+    for (const k of BLOCK_COLOURS) if (k in v && !isColour(v[k])) p.push(`${where}: ${k} is not [r, g, b] from 0 to 1`);
+    for (const k of BLOCK_NUMBERS) if (k in v && !isNumber(v[k])) p.push(`${where}: ${k} is not a number of 0 or more`);
+    for (const k of BLOCK_STRINGS) if (k in v && !(typeof v[k] === 'string' && v[k].trim())) p.push(`${where}: ${k} is not a name`);
+    if ('tilt' in v && !(Array.isArray(v.tilt) && v.tilt.length === 2 && v.tilt.every((n) => typeof n === 'number'))) p.push(`${where}: tilt is not [x, y] degrees`);
+    if ('material' in v && v.material !== null && !(typeof v.material === 'object' && Object.entries(v.material).every(([k, n]) => MATERIAL_KEYS.includes(k) && isNumber(n)))) {
+      p.push(`${where}: material is null or { ${MATERIAL_KEYS.join(', ')} } numbers`);
+    }
+    for (const k of b.chosen ?? []) if (!BLOCK_KEYS.includes(k)) p.push(`${where}: chosen names "${k}", which is no value`);
+  }
+  return p;
+}
+
+/** The catalog entry for a house or example style block: level style, with its block id and the pieces its proof uses. */
+export function styleBlockEntry(x, still, composes = []) {
+  const b = x.block;
+  const record = {
+    id: `${STYLE_PREFIX}${x.id}`, revision: sha8(x.text), level: 'style', name: b.title, line: b.line, role: b.role,
+    ...(b.default ? { default: true } : {}), block: x.id,
+    status: still ? 'proven' : 'unproven', kind: 'style', job: null, support: [], mood: [], needs: [], duration: null, motion: null, difficulty: null, taught_by: 1, variants: [],
+    provides: (b.provides ?? []).map(normProvides), cost: { renderer: 'advanced-3d' }, composes, shelf: 'shipped',
+    ...(b.open?.length ? { open: b.open } : {}),
+    section: { document: `pieces-style-${x.id}`, heading: null },
+    still: still ?? null,
+  };
+  if (!record.still) record.no_still = 'no proof render yet: render pieces/proof/styles.jsx with this style';
+  return record;
+}
+
 // ---------- building ----------
 
 function sectionsOf(text) {
@@ -339,11 +424,18 @@ export function publicJobs(content, examples) {
  * public `examples` (publicJobs); `stills` maps id -> JPEG bytes already made; `creators` are names no shipped file may
  * contain, checked with PRIVATE_NAMES.
  */
-export function buildArsenal({ catalog, jobs, examples, draftsDir, stills = {}, creators = [], fileLimit = FILE_LIMIT, levels = null, styles = [], styleDocs = {}, pieces = [] }) {
-  if (pieces.length && !levels) throw new Error('refused: pieces need levels.json');
+export function buildArsenal({ catalog, jobs, examples, draftsDir, stills = {}, creators = [], fileLimit = FILE_LIMIT, levels = null, styles = [], styleDocs = {}, pieces = [],
+  styleBlocks = [], stylesProof = null }) {
+  if ((pieces.length || styleBlocks.length) && !levels) throw new Error('refused: pieces and style blocks need levels.json');
   if (levels) {
+    const styleIds = styles.map((x) => `${STYLE_PREFIX}${x.id}`);
     const bad = [...levelsProblems(levels, catalog, styles),
-      ...piecesProblems(pieces, { jobs: catalog.jobs, vocab: levels.provides ?? {}, ids: [...catalog.recipes.map((r) => r.id), ...styles.map((x) => `${STYLE_PREFIX}${x.id}`)] })];
+      ...piecesProblems(pieces, { jobs: catalog.jobs, vocab: levels.provides ?? {}, ids: [...catalog.recipes.map((r) => r.id), ...styleIds] }),
+      ...styleBlockProblems(styleBlocks, { vocab: levels.provides ?? {}, styleIds })];
+    // Piece code and style blocks ship as they are: the same name guard as the generated files.
+    for (const [f, text] of [...pieces.map((x) => [`pieces/${x.file}`, x.text]), ...styleBlocks.map((x) => [`pieces/styles/${x.file}`, x.text])]) {
+      for (const c of PRIVATE_NAMES) if (new RegExp(`\\b${c}\\b`, 'i').test(text)) bad.push(`${f} names a private name: ${c}`);
+    }
     if (bad.length) throw new Error(`refused: ${bad.join('; ')}`);
   } else if (styles.length) throw new Error('refused: styles need levels.json');
   const jobsText = publicJobs(jobs, examples);
@@ -430,7 +522,8 @@ export function buildArsenal({ catalog, jobs, examples, draftsDir, stills = {}, 
       shippedStills[sid] = stills[sid];
     }
     if (styleDocs[s.id] === undefined) throw new Error(`refused: no STYLE.md text for style ${s.id}`);
-    return styleEntry(s, levels.styles[s.id], styleDocs[s.id], still);
+    const look = styleBlocks.find((x) => x.block.role === 'look' && x.block.borrowed_from === `${STYLE_PREFIX}${s.id}`);
+    return styleEntry(s, levels.styles[s.id], styleDocs[s.id], still, look?.id ?? null);
   });
   const pieceRecords = pieces.map((x) => {
     const pid = `${PIECE_PREFIX}${x.name}`;
@@ -438,8 +531,18 @@ export function buildArsenal({ catalog, jobs, examples, draftsDir, stills = {}, 
     if (stills[pid]) { still = { path: `arsenal/stills/${pid}.jpg`, sha256: sha(stills[pid]) }; shippedStills[pid] = stills[pid]; }
     return pieceEntry(x, still);
   });
-  // Pieces first: when a piece and a written recipe fit, the piece is what to build with.
-  const entries = [...pieceRecords, ...records, ...styleRecords];
+  // The house and example styles, house first. Their proof scene's pieces are what they were proven with.
+  const proofPieces = stylesProof ? requiresOf(stylesProof).filter((n) => pieces.some((x) => x.name === n)).map((n) => `${PIECE_PREFIX}${n}`) : [];
+  const blockRecords = styleBlocks.filter((x) => x.block.role !== 'look')
+    .sort((a, b) => (a.block.default ? 0 : 1) - (b.block.default ? 0 : 1) || a.id.localeCompare(b.id))
+    .map((x) => {
+      const sid = `${STYLE_PREFIX}${x.id}`;
+      let still = null;
+      if (stills[sid]) { still = { path: `arsenal/stills/${sid}.jpg`, sha256: sha(stills[sid]) }; shippedStills[sid] = stills[sid]; }
+      return styleBlockEntry(x, still, proofPieces);
+    });
+  // Pieces first: when a piece and a written recipe fit, the piece is what to build with. Then the house style.
+  const entries = [...pieceRecords, ...records, ...blockRecords, ...styleRecords];
   for (const e of entries) if (!e.still && !e.no_still) throw new Error(`refused: ${e.id} has no still and no reason for it`);
   // The catalog version: the recipes' as before when there are no styles, else over every entry.
   const version = styleRecords.length ? sha8(entries.map((e) => `${e.id}@${e.revision}`).sort().join('\n')) : catalog.version;
@@ -450,6 +553,8 @@ export function buildArsenal({ catalog, jobs, examples, draftsDir, stills = {}, 
     { id: 'arsenal-jobs', title: `Job vocabulary ${catalog.vocab}: the jobs a beat asks for`, path: `arsenal/${jobsFile(jobs)}`, kind: 'catalog' },
     ...recipeDocs,
     ...(pieces.length ? [{ id: 'pieces-core-jsx', title: 'Pieces: the shared helpers every piece uses (PCS core)', path: 'pieces/pcs-core.jsx', kind: 'code' }] : []),
+    ...styleBlocks.map((x) => ({ id: `pieces-style-${x.id}`, title: `Style block: ${x.block.title} (PCS.use('${x.id}'))`, path: `pieces/styles/${x.file}`, kind: 'style' })),
+    ...(stylesProof ? [{ id: 'pieces-styles-proof', title: 'Proof scene for a style: the same pieces under any style', path: 'pieces/proof/styles.jsx', kind: 'code' }] : []),
     ...pieces.flatMap((x) => [
       { id: `${PIECE_PREFIX}${x.name}`, title: `Piece: ${x.header.name}`, path: `pieces/${x.file}`, kind: 'code' },
       { id: `${PIECE_PREFIX}${x.name}-proof`, title: `Proof scene for the ${x.header.name} piece`, path: `pieces/proof/${x.file}`, kind: 'code' },
@@ -461,6 +566,7 @@ export function buildArsenal({ catalog, jobs, examples, draftsDir, stills = {}, 
     counts: {
       recipes: records.length, proven: records.filter((r) => r.status === 'proven').length, stills: Object.keys(shippedStills).length,
       ...(pieceRecords.length ? { pieces: pieceRecords.length } : {}),
+      ...(styleBlocks.length ? { style_blocks: styleBlocks.length } : {}),
       ...(styleRecords.length ? Object.fromEntries(LEVELS.map((l) => [`${l}s`, entries.filter((e) => e.level === l || e.also_level?.includes(l)).length])) : {}),
     },
   };
@@ -483,7 +589,7 @@ export function buildArsenal({ catalog, jobs, examples, draftsDir, stills = {}, 
 
 /** Writes the arsenal into outDir, which it owns: makes missing stills, keeps existing ones, removes what is stale. */
 export function writeArsenal({ catalog, jobs, examples, draftsDir, outDir, rendersRoot, makeStill = ffmpegStill, creators = [],
-  levels = null, styles = [], styleDocs = {}, styleProofs = null, makeStyleStill = ffmpegStyleStill, pieces = [] }) {
+  levels = null, styles = [], styleDocs = {}, styleProofs = null, makeStyleStill = ffmpegStyleStill, pieces = [], styleBlocks = [], stylesProof = null }) {
   const stillsDir = path.join(outDir, 'stills');
   fs.mkdirSync(stillsDir, { recursive: true });
   const stills = {};
@@ -506,6 +612,16 @@ export function writeArsenal({ catalog, jobs, examples, draftsDir, outDir, rende
     }
     stills[pid] = fs.readFileSync(to);
   }
+  // A house or example style's still: the style proof scene, quality/renders/pieces/styles/<id>.png under the renders root.
+  for (const x of styleBlocks.filter((y) => y.block.role !== 'look')) {
+    const sid = `${STYLE_PREFIX}${x.id}`;
+    const to = path.join(stillsDir, `${sid}.jpg`);
+    if (!fs.existsSync(to)) {
+      if (!rendersRoot) { missing.push(sid); continue; }
+      try { makeStill(path.join(rendersRoot, 'quality', 'renders', 'pieces', 'styles', `${x.id}.png`), to); } catch { missing.push(sid); continue; }
+    }
+    stills[sid] = fs.readFileSync(to);
+  }
   // A style's still: one frame of its proof movie (<styleProofs>/<id>/proof/proof.mp4) at the beat levels.json names.
   for (const st of styles) {
     const l = levels?.styles?.[st.id];
@@ -521,7 +637,7 @@ export function writeArsenal({ catalog, jobs, examples, draftsDir, outDir, rende
     }
     stills[sid] = fs.readFileSync(to);
   }
-  const built = buildArsenal({ catalog, jobs, examples, draftsDir, stills, creators, levels, styles, styleDocs, pieces });
+  const built = buildArsenal({ catalog, jobs, examples, draftsDir, stills, creators, levels, styles, styleDocs, pieces, styleBlocks, stylesProof });
   for (const f of fs.readdirSync(stillsDir)) if (!built.stills[f.replace(/\.jpg$/, '')]) fs.rmSync(path.join(stillsDir, f));
   for (const f of fs.readdirSync(outDir)) if (f !== 'stills' && !built.files.has(f)) fs.rmSync(path.join(outDir, f), { recursive: true });
   for (const [f, text] of built.files) fs.writeFileSync(path.join(outDir, f), text);
@@ -618,17 +734,21 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     const levels = fs.existsSync(levelsPath) ? JSON.parse(fs.readFileSync(levelsPath, 'utf8')) : null;
     const stylesDir = arg(argv, '--styles', path.join(ROOT, 'plugin', 'library', 'styles'));
     const { styles, styleDocs } = levels && fs.existsSync(path.join(stylesDir, 'index.json')) ? readStyles(stylesDir) : { styles: [], styleDocs: {} };
-    const pieces = levels ? readPieces(arg(argv, '--pieces', path.join(ROOT, 'plugin', 'library', 'pieces'))) : [];
+    const piecesDir = arg(argv, '--pieces', path.join(ROOT, 'plugin', 'library', 'pieces'));
+    const pieces = levels ? readPieces(piecesDir) : [];
+    const styleBlocks = levels ? readStyleBlocks(piecesDir) : [];
+    const stylesProofFile = path.join(piecesDir, 'proof', 'styles.jsx');
+    const stylesProof = levels && fs.existsSync(stylesProofFile) ? fs.readFileSync(stylesProofFile, 'utf8') : null;
     fs.mkdirSync(out, { recursive: true });
     const res = writeArsenal({ catalog, jobs, examples, draftsDir: drafts, outDir: out, rendersRoot: arg(argv, '--renders', ROOT), creators,
-      levels, styles, styleDocs, styleProofs: arg(argv, '--style-proofs', null), pieces });
+      levels, styles, styleDocs, styleProofs: arg(argv, '--style-proofs', null), pieces, styleBlocks, stylesProof });
     const readme = arg(argv, '--readme', path.join(ROOT, 'claude', 'src', 'README.md'));
     fs.writeFileSync(readme, withGallery(fs.readFileSync(readme, 'utf8'), galleryBlock(JSON.parse(res.files.get('catalog.json')))));
     if (!argv.includes('--no-manifest')) {
       const m = spawnSync(process.execPath, [path.join(ROOT, 'plugin', 'scripts', 'manifest.mjs')], { encoding: 'utf8' });
       if (m.status !== 0) throw new Error(`manifest: ${m.stderr}`);
     }
-    console.log(JSON.stringify({ vocab: catalog.vocab, version: res.index.version, recipes: catalog.recipes.length, styles: styles.length, pieces: pieces.length, stills: Object.keys(res.stills).length, missing: res.missing, out }));
+    console.log(JSON.stringify({ vocab: catalog.vocab, version: res.index.version, recipes: catalog.recipes.length, styles: styles.length, pieces: pieces.length, style_blocks: styleBlocks.length, stills: Object.keys(res.stills).length, missing: res.missing, out }));
     if (res.missing.length) console.error(`no still for ${res.missing.join(', ')}: no proof render found; pass --renders <folder holding quality/renders>, or --style-proofs <folder of style packages with proof/proof.mp4> for a style`);
   } catch (e) { console.error(e.message); process.exit(e.usage ? 2 : 1); }
 }

@@ -2,14 +2,14 @@
 // (PCS_PROOF.frame) shows one still flat, one mid-turn and one turned to its back.
 // Run in one eval.run (rollback: false):
 //   $.evalFile(File('<library>/pieces/pcs-core.jsx')); $.evalFile(File('<library>/pieces/proof/flip.jsx'));
-//   return PCS_PROOF('example-warm-paper');
+//   return PCS_PROOF('house');
 // Makes one new comp named 'CR PIECE PROOF flip <style>' (an earlier one of the same name is replaced); touches nothing else.
 function PCS_PROOF(styleName) {
   PCS.warnings = [];
-  PCS.use(styleName || 'example-warm-paper');
+  PCS.use(styleName || 'house');
   PCS.need('stage'); PCS.need('plate'); PCS.need('flip');
-  var name = 'CR PIECE PROOF flip ' + (styleName || 'example-warm-paper');
-  var old = PCS.findItem(name); if (old) { old.remove(); }
+  var name = 'CR PIECE PROOF flip ' + (styleName || 'house');
+  var old = PCS.findItem(name); if (old) { PCS.removeComp(old); }
   var st = PCS.stage({ name: name, duration: 3 }); var comp = st.comp; var S = PCS.S;
   var words = [['Question', 'Answer'], ['Before', 'After'], ['Guess', 'Proof']];
   var starts = [1.8, 1.24, 0.6];   // at 1.4 s: the top one not yet turned, the middle one mid-turn, the bottom one turned

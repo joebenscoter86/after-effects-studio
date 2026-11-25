@@ -1,0 +1,83 @@
+{
+ "id": "example-night-glass",
+ "title": "Example: night glass",
+ "role": "example",
+ "line": "An example, not a house look: thin blue-slate plates with a metallic sheen under cool light, one mint accent.",
+ "provides": [
+  "environment: studio-dark",
+  "light: key",
+  "material: gloss",
+  "depth: extrusion",
+  "finish: grain"
+ ],
+ "source": "Written for the 2026-11-24 pieces experiment to prove the pieces carry no look of their own.",
+ "values": {
+  "ground": [
+   0.02,
+   0.03,
+   0.05
+  ],
+  "backplate": [
+   0.05,
+   0.08,
+   0.13
+  ],
+  "surface": [
+   0.16,
+   0.22,
+   0.34
+  ],
+  "ink": [
+   0.93,
+   0.96,
+   1.0
+  ],
+  "type": [
+   0.93,
+   0.96,
+   1.0
+  ],
+  "accent": [
+   0.38,
+   0.86,
+   0.72
+  ],
+  "onAccent": [
+   0.03,
+   0.08,
+   0.1
+  ],
+  "quiet": [
+   0.1,
+   0.14,
+   0.22
+  ],
+  "keyColor": [
+   0.8,
+   0.9,
+   1.0
+  ],
+  "fillColor": [
+   0.62,
+   0.74,
+   1.0
+  ],
+  "keyIntensity": 150,
+  "fillIntensity": 80,
+  "envIntensity": 60,
+  "grain": 2,
+  "font": "Jost",
+  "weight": "Medium",
+  "depth": 26,
+  "bevel": 5,
+  "tilt": [
+   3,
+   -6
+  ],
+  "material": {
+   "specular": 70,
+   "shininess": 60,
+   "metal": 40
+  }
+ }
+}

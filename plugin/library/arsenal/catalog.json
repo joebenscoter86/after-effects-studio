@@ -1,6 +1,6 @@
 {
  "vocab": "jobs-v1",
- "version": "a8e18e7d",
+ "version": "74913d3f",
  "jobs": [
   "land-number",
   "count-things",
@@ -226,7 +226,7 @@
    },
    "still": {
     "path": "arsenal/stills/piece-flip.jpg",
-    "sha256": "df41cf913c610a92596d3c7783b145ba24cffe4e1de769eb30ea4d608f89a144"
+    "sha256": "5f673fd4750dea6ac746a6be266e2d5bf2a75abf0fa44875fe6bf8a9f45bdb63"
    }
   },
   {
@@ -305,7 +305,7 @@
    },
    "still": {
     "path": "arsenal/stills/piece-plate.jpg",
-    "sha256": "2aa728b71975f6192872b8f71278cdb7b83513e546a4ffe6e509c0eb10e59390"
+    "sha256": "1add09cfa261c8d3985c4c043cccd30ea78f2630ae082e65c01e11366e22215b"
    }
   },
   {
@@ -382,7 +382,7 @@
    },
    "still": {
     "path": "arsenal/stills/piece-spot.jpg",
-    "sha256": "5a6254513b79cec580c4ac1e286b6ebe23827ce0d2b2c90d07a6458b02e8422a"
+    "sha256": "d58cd2978513cde239556e215a9b36e30ff06a9c1fbaf34623acbbbbcb0cf9bb"
    }
   },
   {
@@ -458,7 +458,7 @@
    },
    "still": {
     "path": "arsenal/stills/piece-stage.jpg",
-    "sha256": "e9e948fd638e9a53ae9787aee5ce3fec06c9a710a3eed525e70008085a5f202f"
+    "sha256": "d759b7e1a651f1297cf2e68605ad7da377f62eaeec41fe041e451b021607bf96"
    }
   },
   {
@@ -4771,6 +4771,146 @@
    }
   },
   {
+   "id": "style-house",
+   "revision": "f7672160",
+   "level": "style",
+   "name": "House: graphite",
+   "line": "The house look: dark graphite objects a shade above a near-black ground, cream type, one vermilion, Jost SemiBold, no grain.",
+   "role": "house",
+   "default": true,
+   "block": "house",
+   "status": "proven",
+   "kind": "style",
+   "job": null,
+   "support": [],
+   "mood": [],
+   "needs": [],
+   "duration": null,
+   "motion": null,
+   "difficulty": null,
+   "taught_by": 1,
+   "variants": [],
+   "provides": [
+    "environment: studio-dark",
+    "light: key",
+    "light: fill",
+    "depth: extrusion",
+    "depth: shadow"
+   ],
+   "cost": {
+    "renderer": "advanced-3d"
+   },
+   "composes": [
+    "piece-stage",
+    "piece-plate",
+    "piece-spot",
+    "piece-flip"
+   ],
+   "shelf": "shipped",
+   "open": [
+    "the quiet grid ground",
+    "the house face card with its cream rim"
+   ],
+   "section": {
+    "document": "pieces-style-house",
+    "heading": null
+   },
+   "still": {
+    "path": "arsenal/stills/style-house.jpg",
+    "sha256": "522a7f3ff6c2ac28f2c8f8b0ce0aacdd536db7bfc299aea208eb6ad90285ac2f"
+   }
+  },
+  {
+   "id": "style-example-night-glass",
+   "revision": "85ba824e",
+   "level": "style",
+   "name": "Example: night glass",
+   "line": "An example, not a house look: thin blue-slate plates with a metallic sheen under cool light, one mint accent.",
+   "role": "example",
+   "block": "example-night-glass",
+   "status": "proven",
+   "kind": "style",
+   "job": null,
+   "support": [],
+   "mood": [],
+   "needs": [],
+   "duration": null,
+   "motion": null,
+   "difficulty": null,
+   "taught_by": 1,
+   "variants": [],
+   "provides": [
+    "environment: studio-dark",
+    "light: key",
+    "material: gloss",
+    "depth: extrusion",
+    "finish: grain"
+   ],
+   "cost": {
+    "renderer": "advanced-3d"
+   },
+   "composes": [
+    "piece-stage",
+    "piece-plate",
+    "piece-spot",
+    "piece-flip"
+   ],
+   "shelf": "shipped",
+   "section": {
+    "document": "pieces-style-example-night-glass",
+    "heading": null
+   },
+   "still": {
+    "path": "arsenal/stills/style-example-night-glass.jpg",
+    "sha256": "a625a6e664acf7e2e93e1a5dc849fdc9388cb94dfd6469900a2d36caa6fda2e5"
+   }
+  },
+  {
+   "id": "style-example-warm-paper",
+   "revision": "86044516",
+   "level": "style",
+   "name": "Example: warm paper",
+   "line": "An example, not a house look: cream plates under a warm key on a deep blue-black ground, one red-orange accent, light grain.",
+   "role": "example",
+   "block": "example-warm-paper",
+   "status": "proven",
+   "kind": "style",
+   "job": null,
+   "support": [],
+   "mood": [],
+   "needs": [],
+   "duration": null,
+   "motion": null,
+   "difficulty": null,
+   "taught_by": 1,
+   "variants": [],
+   "provides": [
+    "environment: studio-dark",
+    "light: key",
+    "depth: extrusion",
+    "depth: shadow",
+    "finish: grain"
+   ],
+   "cost": {
+    "renderer": "advanced-3d"
+   },
+   "composes": [
+    "piece-stage",
+    "piece-plate",
+    "piece-spot",
+    "piece-flip"
+   ],
+   "shelf": "shipped",
+   "section": {
+    "document": "pieces-style-example-warm-paper",
+    "heading": null
+   },
+   "still": {
+    "path": "arsenal/stills/style-example-warm-paper.jpg",
+    "sha256": "1ad5f3dd1c1e47d0b77b76186f896c3538529f5140acbc90915080ac06d68aba"
+   }
+  },
+  {
    "id": "style-art-deco",
    "revision": "0ac098f9",
    "level": "style",
@@ -4950,8 +5090,9 @@
   },
   {
    "id": "style-dark-keynote",
-   "revision": "69732396",
+   "revision": "3ecfe054",
    "level": "style",
+   "block": "dark-keynote",
    "name": "Dark keynote",
    "line": "A software launch film where the interface is the star: a near-black stage with a hairline grid and soft cool light, raised dark windows and cards, one luminous accent reserved for the one thing that matters, light sweeps that reveal, a giant number locking out of glyph noise, and captions as toast notifications.",
    "good_for": "A product or feature launch where the interface is the star",
@@ -5121,11 +5262,12 @@
   },
   {
    "id": "style-glass-product",
-   "revision": "30acd40d",
+   "revision": "55832374",
    "level": "world",
    "also_level": [
     "style"
    ],
+   "block": "glass-product",
    "name": "Glass product",
    "line": "A launch film for a fictional glass object: one hero of clear and frosted glass, metal and light floating in an infinite black studio, outlined by strip lights it never shows, with rainbow edges, light that travels inside it, caustic rings on a black gloss floor, and slow exploded views that snap shut on the beat.",
    "good_for": "A hero product reveal that should feel like a premium product launch",

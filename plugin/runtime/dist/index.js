@@ -67718,6 +67718,8 @@ function browseCatalog(catalog, ask = {}) {
     level: e.level,
     ...e.also_level?.length ? { also_level: e.also_level } : {},
     ...e.kind === "piece" ? { kind: "piece" } : {},
+    ...e.role ? { role: e.role } : {},
+    ...e.block ? { block: e.block } : {},
     provides: e.provides,
     status: e.status,
     ...e.still ? {} : { no_still: e.no_still ?? "none shipped" }
@@ -67765,7 +67767,7 @@ function pieceReply(r, warning, catalog, root = LIBRARY) {
     r.use_for ? `use it for: ${r.use_for}` : null,
     `jobs: ${[r.job, ...r.support].filter(Boolean).join(", ")}; provides: ${r.provides.join("; ") || "nothing listed"}; needs: ${r.needs.length ? r.needs.join(", ") : "nothing"}`,
     "",
-    "load (in eval.run with rollback: false; then pick the look with PCS.use(a style name or a style object) before calling):",
+    "load (in eval.run with rollback: false; the house style is on until PCS.use picks another, by style block name or a style object):",
     `  ${load}`,
     `call: ${call.signature}`,
     ...call.options.length ? ["options:", ...call.options.map((o) => `  ${o.name}: ${o.text}`)] : [],
@@ -67784,15 +67786,22 @@ function recipeReply(id, revision, root = LIBRARY) {
   const warning = revision !== void 0 && revision !== r.revision ? `WARNING: pinned revision ${revision}; the shipped revision is ${r.revision}. The ${r.kind === "style" ? "entry" : r.kind === "piece" ? "piece" : "recipe"} changed since it was pinned: this is the shipped ${r.kind === "piece" ? "call" : "text"}, not the pinned one. Check it still fits the beat.` : null;
   if (r.kind === "piece") return pieceReply(r, warning, catalog, root);
   if (r.kind === "style") {
-    const head2 = `ae_arsenal ${r.level} ${r.id}@${r.revision} (${levelText(r)}; ${r.status}; shelf ${r.shelf}; catalog ${catalog.version}; its document is library document ${r.section.document}, also readable with ae_library)`;
+    const head2 = `ae_arsenal ${r.level} ${r.id}@${r.revision} (${levelText(r)}${r.role ? `; ${r.role === "house" ? "the house style" : "an example, not a house look"}` : ""}; ${r.status}; shelf ${r.shelf}; catalog ${catalog.version}; its document is library document ${r.section.document}, also readable with ae_library)`;
+    const blockDoc = r.block ? `pieces-style-${r.block}` : null;
+    const pieces = r.block ? [
+      `in pieces: PCS.use('${r.block}') after loading pieces/pcs-core.jsx${r.default ? " (the default: pieces use it when no style is picked)" : ""}; the values are in library document ${blockDoc}`,
+      ...(r.open ?? []).map((o) => `not in it yet: ${o}`)
+    ] : [];
     const facts = [
+      ...pieces,
       `provides: ${r.provides.join("; ")}`,
       `needs: ${r.needs.length ? r.needs.join(", ") : "nothing"}`,
       `cost: renderer ${r.cost.renderer}${r.cost.seconds_per_frame !== void 0 ? `, ${r.cost.seconds_per_frame} s per frame (${r.cost.measured ?? "measured"})` : ""}`,
       `composes: ${r.composes.length ? r.composes.join(", ") : "none recorded yet"}`,
       ...r.good_for ? [`good for: ${r.good_for}`] : []
     ];
-    return [head2, warning, ...facts, "", libraryDocumentReply(r.section.document, void 0, root)].filter((l) => l !== null).join("\n");
+    const block = blockDoc && blockDoc !== r.section.document ? ["", `style block for pieces (${blockDoc}):`, readLibraryEntry(blockDoc, root).content.trimEnd()] : [];
+    return [head2, warning, ...facts, "", libraryDocumentReply(r.section.document, void 0, root), ...block].filter((l) => l !== null).join("\n");
   }
   const { content } = readLibraryEntry(r.section.document, root);
   const section = content.split(/^(?=## )/m).find((s) => s.startsWith(`## ${r.section.heading ?? ""}
@@ -67867,7 +67876,7 @@ var arsenalTool = defineTool({
       }
       if (args.action === "browse") {
         const page = browseCatalog(catalog, { level: args.level, provides: listOf(args.provides), shelf: args.shelf, page: args.page, page_size: args.page_size, include_unpictured: args.include_unpictured });
-        const label = (t) => `Tile ${t.n}: ${t.id} \xB7 ${t.name} \xB7 ${[t.level, ...(t.also_level ?? []).map((l) => `also ${l}`)].join(", ")}${t.kind === "piece" ? " \xB7 piece (runnable; get returns its call)" : ""} \xB7 provides ${t.provides.length ? t.provides.join(", ") : "nothing listed"}${t.status === "proven" ? "" : " \xB7 unproven"}`;
+        const label = (t) => `Tile ${t.n}: ${t.id} \xB7 ${t.name} \xB7 ${[t.level, ...(t.also_level ?? []).map((l) => `also ${l}`)].join(", ")}${t.kind === "piece" ? " \xB7 piece (runnable; get returns its call)" : ""}${t.role === "house" ? " \xB7 the house style, the default for pieces" : t.role === "example" ? " \xB7 an example style, not a house look" : ""}${t.block ? ` \xB7 pieces: PCS.use('${t.block}')` : ""} \xB7 provides ${t.provides.length ? t.provides.join(", ") : "nothing listed"}${t.status === "proven" ? "" : " \xB7 unproven"}`;
         const images2 = page.tiles.flatMap((t) => byId.get(t.id).still ? stillContent(byId.get(t.id), LIBRARY, label(t)) : [{ type: "text", text: `${label(t)} \xB7 no still: ${t.no_still}` }]);
         const next = page.page < page.pages ? ` Next: page ${page.page + 1}.` : "";
         const head = `ae_arsenal browse: ${page.level === "all" ? "every level, styles first" : `level ${page.level}`}${page.provides ? `, providing ${page.provides.join(" or ")}` : ""}; page ${page.page} of ${page.pages}, tiles ${page.tiles.length ? `${page.tiles[0].n} to ${page.tiles.at(-1).n}` : "none"} of ${page.total}${page.hidden_without_still ? `; ${page.hidden_without_still} without a still hidden (include_unpictured lists them)` : ""}.${next} Read one with get.`;

@@ -1,12 +1,12 @@
 // Proof scene for the plate piece: a card, a pill, a tile and a thin bar on the stage, so thickness, bevel,
 // side wall and shadow read at four sizes. Frame: PCS_PROOF.frame.
-// Run: $.evalFile(File('<library>/pieces/pcs-core.jsx')); $.evalFile(File('<library>/pieces/proof/plate.jsx')); return PCS_PROOF('example-warm-paper');
+// Run: $.evalFile(File('<library>/pieces/pcs-core.jsx')); $.evalFile(File('<library>/pieces/proof/plate.jsx')); return PCS_PROOF('house');
 // Makes one new comp named 'CR PIECE PROOF plate <style>' (an earlier one of the same name is replaced); touches nothing else.
 function PCS_PROOF(styleName) {
-  PCS.warnings = []; PCS.use(styleName || 'example-warm-paper');
+  PCS.warnings = []; PCS.use(styleName || 'house');
   PCS.need('stage'); PCS.need('plate');
-  var name = 'CR PIECE PROOF plate ' + (styleName || 'example-warm-paper');
-  var old = PCS.findItem(name); if (old) { old.remove(); }
+  var name = 'CR PIECE PROOF plate ' + (styleName || 'house');
+  var old = PCS.findItem(name); if (old) { PCS.removeComp(old); }
   var st = PCS.stage({ name: name, duration: 2 }); var c = st.comp; var S = PCS.S;
   PCS.plate(c, { name: 'pill', w: 760, h: 160, round: 80, pos: [540, 330, 0] });
   PCS.plate(c, { name: 'card', w: 560, h: 380, round: 34, pos: [430, 720, 0] });

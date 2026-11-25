@@ -1,0 +1,87 @@
+{
+ "id": "house",
+ "title": "House: graphite",
+ "role": "house",
+ "default": true,
+ "line": "The house look: dark graphite objects a shade above a near-black ground, cream type, one vermilion, Jost SemiBold, no grain.",
+ "provides": [
+  "environment: studio-dark",
+  "light: key",
+  "light: fill",
+  "depth: extrusion",
+  "depth: shadow"
+ ],
+ "source": "Picked on 2026-11-24 (\"A, graphite\") from three options rendered on the face card. Colours from the house STYLE.md section 1: near-black #101012, cream #F2EEE4, one vermilion #FF5F3E; Jost SemiBold. Objects are graphite (0.20, 0.20, 0.225); a slightly warm key with a cool fill; light specular on the plates.",
+ "open": [
+  "the quiet grid ground",
+  "the house face card with its cream rim"
+ ],
+ "values": {
+  "ground": [
+   0.063,
+   0.063,
+   0.071
+  ],
+  "backplate": [
+   0.085,
+   0.085,
+   0.1
+  ],
+  "surface": [
+   0.2,
+   0.2,
+   0.225
+  ],
+  "ink": [
+   0.949,
+   0.933,
+   0.894
+  ],
+  "type": [
+   0.949,
+   0.933,
+   0.894
+  ],
+  "accent": [
+   1,
+   0.373,
+   0.243
+  ],
+  "onAccent": [
+   0.949,
+   0.933,
+   0.894
+  ],
+  "quiet": [
+   0.34,
+   0.35,
+   0.4
+  ],
+  "keyColor": [
+   1,
+   0.95,
+   0.88
+  ],
+  "fillColor": [
+   0.92,
+   0.94,
+   1
+  ],
+  "keyIntensity": 170,
+  "fillIntensity": 80,
+  "envIntensity": 60,
+  "grain": 0,
+  "font": "Jost",
+  "weight": "SemiBold",
+  "depth": 36,
+  "bevel": 4,
+  "tilt": [
+   4,
+   -8
+  ],
+  "material": {
+   "specular": 60,
+   "shininess": 40
+  }
+ }
+}

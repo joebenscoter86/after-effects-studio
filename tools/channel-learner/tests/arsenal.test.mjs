@@ -7,7 +7,7 @@ import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { buildCatalog } from '../catalog.mjs';
-import { scrubRecipe, buildArsenal, writeArsenal, galleryBlock, withGallery, creatorsOf, publicJobs, publicStatus, JOBS_REWORDING, PRIVATE_NAMES, levelsProblems, readStyles, parseProvides, parsePieceHeader, parseJobLine, readPieces, piecesProblems } from '../arsenal.mjs';
+import { scrubRecipe, buildArsenal, writeArsenal, galleryBlock, withGallery, creatorsOf, publicJobs, publicStatus, JOBS_REWORDING, PRIVATE_NAMES, levelsProblems, readStyles, parseProvides, parsePieceHeader, parseJobLine, readPieces, piecesProblems, readStyleBlocks, styleBlockProblems, BLOCK_KEYS } from '../arsenal.mjs';
 
 const CLI = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'arsenal.mjs');
 const ACCEPTED = 'status: proven (accepted by the owner 2026-11-14: rebuilt and compared)';
@@ -722,4 +722,76 @@ test('pieces: the shipped folder reads clean, each with a proof scene, and the c
   assert.deepEqual(piecesProblems(pieces, { jobs: jobs.jobs, vocab: levels.provides, ids: jobs.entries.map((e) => e.id) }), []);
   const flip = pieces.find((x) => x.name === 'flip');
   assert.match(`${flip.header['use it for']} ${flip.header.does}`, /turns/);
+});
+
+// ---------- styles as data: pieces/styles/<id>.json ----------
+
+const VALUES = { ground: [0.06, 0.06, 0.07], backplate: [0.08, 0.08, 0.1], surface: [0.2, 0.2, 0.22], ink: [0.95, 0.93, 0.89], type: [0.95, 0.93, 0.89],
+  accent: [1, 0.37, 0.24], onAccent: [0.95, 0.93, 0.89], quiet: [0.34, 0.35, 0.4], keyColor: [1, 0.95, 0.88], fillColor: [0.92, 0.94, 1],
+  keyIntensity: 170, fillIntensity: 80, envIntensity: 60, grain: 0, font: 'Jost', weight: 'SemiBold', depth: 36, bevel: 4, tilt: [4, -8], material: { specular: 60 } };
+const blockOf = (id, o = {}) => {
+  const block = { id, title: `T ${id}`, role: id === 'house' ? 'house' : id.startsWith('example-') ? 'example' : 'look', line: 'A line.', source: 'Somewhere.',
+    provides: ['depth: extrusion'], values: VALUES, ...(id === 'house' ? { default: true } : {}), ...o };
+  const text = `${JSON.stringify(block, null, 1)}\n`;
+  return { id, file: `${id}.json`, text, block };
+};
+const BLOCK_VOCAB = { ...PIECE_VOCAB, depth: ['extrusion'] };
+
+test('style blocks: house, an example and a borrowed look read clean', () => {
+  const blocks = [blockOf('house'), blockOf('example-a'), blockOf('glassy', { borrowed_from: 'style-glassy', provides: [] })];
+  assert.deepEqual(styleBlockProblems(blocks, { vocab: BLOCK_VOCAB, styleIds: ['style-glassy'] }), []);
+  assert.equal(BLOCK_KEYS.length, Object.keys(VALUES).length);
+});
+
+test('style blocks: the build refuses no house default, two defaults, a bad value, an unknown key and a look borrowed from nothing', () => {
+  const probs = (blocks) => styleBlockProblems(blocks, { vocab: BLOCK_VOCAB, styleIds: ['style-glassy'] }).join('; ');
+  assert.match(probs([blockOf('example-a')]), /exactly one default, "house" with role house \(found none\)/);
+  assert.match(probs([blockOf('house'), blockOf('example-a', { default: true })]), /exactly one default.*found house, example-a/);
+  assert.match(probs([blockOf('house', { values: { ...VALUES, accent: [255, 95, 62] } })]), /accent is not \[r, g, b\] from 0 to 1/);
+  assert.match(probs([blockOf('house', { values: { ...VALUES, accentt: [1, 0, 0] } })]), /unknown value "accentt"/);
+  const { grain, ...noGrain } = VALUES;
+  assert.match(probs([blockOf('house', { values: noGrain })]), /no value "grain"/);
+  assert.match(probs([blockOf('house'), blockOf('ghost', { borrowed_from: 'style-ghost' })]), /style-ghost is no style/);
+  assert.match(probs([blockOf('house'), blockOf('glassy', { role: 'example' })]), /an example's id starts with "example-"/);
+  assert.match(probs([blockOf('house', { provides: ['material: wood'] })]), /wood/);
+});
+
+test('style blocks: house and examples become style entries, house first; a look adds block to its style; the name guard covers block text', () => {
+  const { dir, catalog } = fixture([{ slug: 'p', status: 'proven' }], { '01-p': 'x.png' });
+  const jpg = Buffer.from('jpeg');
+  try {
+    const build = (blocks, extra = {}) => buildArsenal({ catalog, jobs: JOBS, examples: EXAMPLES, draftsDir: dir, creators: [],
+      stills: { '01-p': jpg, 'style-house': jpg, 'style-glassy': jpg }, levels: { ...levelsFor(catalog), provides: BLOCK_VOCAB },
+      styles: [STYLE], styleDocs: { glassy: '# Glassy\n\nText.\n' }, pieces: [pieceOf('flip', PIECE_TEXT), pieceOf('plate', PLATE_TEXT)], styleBlocks: blocks,
+      stylesProof: "PCS.need('stage'); PCS.need('plate'); PCS.need('flip');", ...extra });
+    const built = build([blockOf('example-a'), blockOf('house'), blockOf('glassy', { borrowed_from: 'style-glassy', provides: [] })]);
+    const cat = JSON.parse(built.files.get('catalog.json'));
+    const styleIds = cat.entries.filter((e) => e.kind === 'style').map((e) => e.id);
+    assert.deepEqual(styleIds, ['style-house', 'style-example-a', 'style-glassy']);
+    const house = cat.entries.find((e) => e.id === 'style-house');
+    assert.equal(house.default, true);
+    assert.equal(house.role, 'house');
+    assert.equal(house.block, 'house');
+    assert.equal(house.still.path, 'arsenal/stills/style-house.jpg');
+    assert.deepEqual(house.composes, ['piece-plate', 'piece-flip']); // only the pieces that exist
+    assert.equal(house.section.document, 'pieces-style-house');
+    const example = cat.entries.find((e) => e.id === 'style-example-a');
+    assert.equal(example.still, null);
+    assert.match(example.no_still, /pieces\/proof\/styles\.jsx/);
+    assert.equal(cat.entries.find((e) => e.id === 'style-glassy').block, 'glassy');
+    const index = JSON.parse(built.files.get('index.json'));
+    for (const id of ['pieces-style-house', 'pieces-style-glassy', 'pieces-styles-proof']) assert.ok(index.documents.some((d) => d.id === id), id);
+    assert.throws(() => build([blockOf('house', { line: "Joe's look." })]), /pieces\/styles\/house\.json names a private name: Joe/);
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('style blocks: the shipped folder reads clean, house is the default, and the examples are labelled', () => {
+  const dir = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..', 'plugin', 'library', 'pieces');
+  const blocks = readStyleBlocks(dir);
+  const cat = JSON.parse(fs.readFileSync(path.join(dir, '..', 'arsenal', 'catalog.json'), 'utf8'));
+  const levels = JSON.parse(fs.readFileSync(path.join(dir, '..', '..', '..', 'product', 'arsenal-drafts', 'levels.json'), 'utf8'));
+  const styleIds = cat.entries.filter((e) => e.kind === 'style' && !e.role).map((e) => e.id);
+  assert.deepEqual(styleBlockProblems(blocks, { vocab: levels.provides, styleIds }), []);
+  assert.deepEqual(blocks.filter((x) => x.block.default).map((x) => x.id), ['house']);
+  for (const x of blocks.filter((y) => y.block.role === 'example')) assert.match(x.block.title, /^Example: /, x.id);
 });

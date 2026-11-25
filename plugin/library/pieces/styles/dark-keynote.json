@@ -1,0 +1,92 @@
+{
+ "id": "dark-keynote",
+ "title": "Dark keynote (for pieces)",
+ "role": "look",
+ "borrowed_from": "style-dark-keynote",
+ "line": "The dark keynote look for pieces: thin cool-grey panels on a near-black stage, cool neutral type, one lime accent.",
+ "provides": [
+  "environment: studio-dark",
+  "light: key",
+  "depth: extrusion"
+ ],
+ "source": "Colours and font from the dark-keynote style's own code (keynote.jsx PALETTE) and fonts: stage #06080C, lift #141923, s3 #1D222C, text #EDEFF3, accent #B7F34A, label #5C6370; Inter Tight SemiBold. Its STYLE.md: soft cool light, every grey slightly blue, one accent.",
+ "chosen": [
+  "keyColor",
+  "fillColor",
+  "keyIntensity",
+  "fillIntensity",
+  "envIntensity",
+  "depth",
+  "bevel",
+  "tilt",
+  "material"
+ ],
+ "values": {
+  "ground": [
+   0.024,
+   0.031,
+   0.047
+  ],
+  "backplate": [
+   0.078,
+   0.098,
+   0.137
+  ],
+  "surface": [
+   0.114,
+   0.133,
+   0.173
+  ],
+  "ink": [
+   0.929,
+   0.937,
+   0.953
+  ],
+  "type": [
+   0.929,
+   0.937,
+   0.953
+  ],
+  "accent": [
+   0.718,
+   0.953,
+   0.29
+  ],
+  "onAccent": [
+   0.024,
+   0.031,
+   0.047
+  ],
+  "quiet": [
+   0.361,
+   0.388,
+   0.439
+  ],
+  "keyColor": [
+   0.88,
+   0.92,
+   1
+  ],
+  "fillColor": [
+   0.76,
+   0.82,
+   1
+  ],
+  "keyIntensity": 150,
+  "fillIntensity": 70,
+  "envIntensity": 50,
+  "grain": 0,
+  "font": "Inter Tight",
+  "weight": "SemiBold",
+  "depth": 20,
+  "bevel": 3,
+  "tilt": [
+   3,
+   -6
+  ],
+  "material": {
+   "specular": 40,
+   "shininess": 50
+  }
+ }
+}

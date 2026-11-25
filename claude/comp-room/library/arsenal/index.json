@@ -2,7 +2,7 @@
  "arsenal": "The library at three levels: styles (a look a section can borrow: colour, type, light, material), worlds (a set a section lives in) and recipes (one technique for one beat). Among the recipes, pieces are runnable code: one file each, called by name. Every entry has a still and says what it provides. Look at a level as pictures with ae_arsenal browse; ask per beat by job, by what an entry provides, or in plain words, with find (pieces come first); read any entry with get (a piece answers with its call); list the jobs and the provides vocabulary with jobs.",
  "tool": "ae_arsenal",
  "vocab": "jobs-v1",
- "version": "a8e18e7d",
+ "version": "74913d3f",
  "documents": [
   {
    "id": "arsenal-index",
@@ -65,6 +65,42 @@
    "kind": "code"
   },
   {
+   "id": "pieces-style-dark-keynote",
+   "title": "Style block: Dark keynote (for pieces) (PCS.use('dark-keynote'))",
+   "path": "pieces/styles/dark-keynote.json",
+   "kind": "style"
+  },
+  {
+   "id": "pieces-style-example-night-glass",
+   "title": "Style block: Example: night glass (PCS.use('example-night-glass'))",
+   "path": "pieces/styles/example-night-glass.json",
+   "kind": "style"
+  },
+  {
+   "id": "pieces-style-example-warm-paper",
+   "title": "Style block: Example: warm paper (PCS.use('example-warm-paper'))",
+   "path": "pieces/styles/example-warm-paper.json",
+   "kind": "style"
+  },
+  {
+   "id": "pieces-style-glass-product",
+   "title": "Style block: Glass product (for pieces) (PCS.use('glass-product'))",
+   "path": "pieces/styles/glass-product.json",
+   "kind": "style"
+  },
+  {
+   "id": "pieces-style-house",
+   "title": "Style block: House: graphite (PCS.use('house'))",
+   "path": "pieces/styles/house.json",
+   "kind": "style"
+  },
+  {
+   "id": "pieces-styles-proof",
+   "title": "Proof scene for a style: the same pieces under any style",
+   "path": "pieces/proof/styles.jsx",
+   "kind": "code"
+  },
+  {
    "id": "piece-flip",
    "title": "Piece: Flip an object over",
    "path": "pieces/flip.jsx",
@@ -116,9 +152,10 @@
  "counts": {
   "recipes": 105,
   "proven": 85,
-  "stills": 110,
+  "stills": 113,
   "pieces": 4,
-  "styles": 31,
+  "style_blocks": 5,
+  "styles": 34,
   "worlds": 4
  }
 }

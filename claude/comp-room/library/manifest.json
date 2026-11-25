@@ -748,14 +748,14 @@
       "title": "Technique arsenal index: documents, vocabulary and counts",
       "path": "arsenal/index.json",
       "kind": "catalog",
-      "sha256": "f079cd26ada7e6505239cbf01f185e55b8348ba80fd55bfbfb4bde5d86a8853d"
+      "sha256": "942684517427e8a71b074437f646f468d67bc3663cfa217a3f8beb0fa1c69cfb"
     },
     {
       "id": "arsenal-catalog",
       "title": "Library catalog: one record per style, world, recipe and piece, queried by ae_arsenal",
       "path": "arsenal/catalog.json",
       "kind": "catalog",
-      "sha256": "52ff6407ed2801595cb81f1598b6e41319aeba5b43536772202d85cc4d3f668c"
+      "sha256": "3081cb1ffed05a405f0671adb5534d122934a4537743d358fc3412f990f595aa"
     },
     {
       "id": "arsenal-jobs",
@@ -811,7 +811,49 @@
       "title": "Pieces: the shared helpers every piece uses (PCS core)",
       "path": "pieces/pcs-core.jsx",
       "kind": "code",
-      "sha256": "4781676cc3ec0845e91899885bc00cb10e845c9214590d7098d584ab4525f35f"
+      "sha256": "3fe5f0e9c75ac2c0d2268c26a878c60799f3d24858322af4c42055a25486227d"
+    },
+    {
+      "id": "pieces-style-dark-keynote",
+      "title": "Style block: Dark keynote (for pieces) (PCS.use('dark-keynote'))",
+      "path": "pieces/styles/dark-keynote.json",
+      "kind": "style",
+      "sha256": "08fae4ef65aea59df0ec9c25a4a0955923bef135cf699556a92c2c68912a2e47"
+    },
+    {
+      "id": "pieces-style-example-night-glass",
+      "title": "Style block: Example: night glass (PCS.use('example-night-glass'))",
+      "path": "pieces/styles/example-night-glass.json",
+      "kind": "style",
+      "sha256": "85ba824eb5921e1c0521c7e5e3c67c23cd9f612b341fd449fd7301c9505f8761"
+    },
+    {
+      "id": "pieces-style-example-warm-paper",
+      "title": "Style block: Example: warm paper (PCS.use('example-warm-paper'))",
+      "path": "pieces/styles/example-warm-paper.json",
+      "kind": "style",
+      "sha256": "86044516b0ad4b0f535401d4cac23d1e0f7bf0e2a36148802430710b20246f6f"
+    },
+    {
+      "id": "pieces-style-glass-product",
+      "title": "Style block: Glass product (for pieces) (PCS.use('glass-product'))",
+      "path": "pieces/styles/glass-product.json",
+      "kind": "style",
+      "sha256": "d615a382bd46b5d7188c55227b059ed33b667a594236285b1e719a43689bcc7a"
+    },
+    {
+      "id": "pieces-style-house",
+      "title": "Style block: House: graphite (PCS.use('house'))",
+      "path": "pieces/styles/house.json",
+      "kind": "style",
+      "sha256": "f76721607d63161e4122050a9bd1e3c2515e600769e91b80f297fa445e86e536"
+    },
+    {
+      "id": "pieces-styles-proof",
+      "title": "Proof scene for a style: the same pieces under any style",
+      "path": "pieces/proof/styles.jsx",
+      "kind": "code",
+      "sha256": "db9aba03cfd8d24b364dc34652133ca88c60682fe66e1c7fbfe81389b6b0f276"
     },
     {
       "id": "piece-flip",
@@ -825,7 +867,7 @@
       "title": "Proof scene for the Flip an object over piece",
       "path": "pieces/proof/flip.jsx",
       "kind": "code",
-      "sha256": "00747bc893bfd6a0be450708208e9e087747db6bcbb74b3fecb67043c2969fc9"
+      "sha256": "5a634c0f1eed636e359dd15e0c649d962b8be1fdd001ae66c869355702c96778"
     },
     {
       "id": "piece-plate",
@@ -839,7 +881,7 @@
       "title": "Proof scene for the Thick lit plate piece",
       "path": "pieces/proof/plate.jsx",
       "kind": "code",
-      "sha256": "d47404c22d532ed14de02007969c930e07cb0460b17e86e185d783c1b0c92be3"
+      "sha256": "3515fd60290302cfb5e141273c84c23ef07c4b79fa2b2df572926eb2212da0c1"
     },
     {
       "id": "piece-spot",
@@ -853,7 +895,7 @@
       "title": "Proof scene for the Spot light piece",
       "path": "pieces/proof/spot.jsx",
       "kind": "code",
-      "sha256": "3e5e8404444daeac35dbe7c399fc249d3faf47759ec4c09d572f686309dbcd80"
+      "sha256": "9513cb22db65fcd4ce61b297d64ad9235ded08b2d1d62bf3eee0020947c4f4ec"
     },
     {
       "id": "piece-stage",
@@ -867,7 +909,7 @@
       "title": "Proof scene for the Lit stage for a face card beat piece",
       "path": "pieces/proof/stage.jsx",
       "kind": "code",
-      "sha256": "21a328345675dcb4fd8a72ef24df7681bf69cccc5569ba053688809573f5bc33"
+      "sha256": "5b17f647c4b6036c0a5d8791254bb6ae3bffcc369e70a41a3e84e20698e6869a"
     }
   ]
 }

@@ -422,7 +422,8 @@ describe("the shipped catalog at three levels", () => {
     const manifest = JSON.parse(readFileSync(path.join(LIB, "manifest.json"), "utf8")) as { documents: Array<{ id: string }> };
     const styles = JSON.parse(readFileSync(path.join(LIB, "styles", "index.json"), "utf8")) as { styles: Array<{ id: string }> };
     for (const e of c.entries.filter((x) => x.kind !== "style")) expect(e.level, e.id).toBe("recipe");
-    const styleEntries = c.entries.filter((x) => x.kind === "style");
+    // the visual styles; the house and example style blocks are style entries of their own (role), tested below
+    const styleEntries = c.entries.filter((x) => x.kind === "style" && !x.role);
     expect(styleEntries.map((e) => e.id).sort()).toEqual(styles.styles.map((s) => `style-${s.id}`).sort());
     for (const e of styleEntries) {
       expect(["style", "world"], e.id).toContain(e.level);
@@ -466,7 +467,7 @@ describe("ae_arsenal across levels", () => {
     expect(r.structuredContent).toBeUndefined();
     const t = text(r);
     expect(t).toMatch(/^ae_arsenal browse: level world; page 1 of 1/);
-    expect(t).toMatch(/Tile \d+: style-glass-product · Glass product · world, also style · provides material: glass/);
+    expect(t).toMatch(/Tile \d+: style-glass-product · Glass product · world, also style · pieces: PCS\.use\('glass-product'\) · provides material: glass/);
     const kinds = r.content.map((c) => c.type);
     const firstImage = kinds.indexOf("image");
     expect(firstImage).toBeGreaterThan(1);
@@ -663,5 +664,80 @@ describe("ae_arsenal with pieces", () => {
   it("browse labels a piece as runnable", async () => {
     const t = text(await call({ action: "browse", level: "recipe" }));
     expect(t).toMatch(/Tile 1: piece-\w+ · [^·]+ · recipe · piece \(runnable; get returns its call\) · provides/);
+  });
+});
+
+// ---------- styles as data: the house style, examples and borrowed looks ----------
+
+describe("style blocks in the shipped catalog", () => {
+  const cat = () => loadCatalog(LIB);
+  const call = (args: Record<string, unknown>) => arsenalTool.handler(args as never, {} as never);
+  const text = (r: { content: Array<{ type: string; text?: string }> }) => r.content.filter((c) => c.type === "text").map((c) => c.text).join("\n");
+  const block = (id: string) => JSON.parse(readFileSync(path.join(LIB, "pieces", "styles", `${id}.json`), "utf8"));
+
+  it("the house style is the one default, first among the styles, with its still and the pieces its proof uses", () => {
+    const c = cat();
+    const defaults = c.entries.filter((e) => e.default);
+    expect(defaults.map((e) => e.id)).toEqual(["style-house"]);
+    const house = defaults[0];
+    expect(house).toMatchObject({ level: "style", kind: "style", role: "house", block: "house", status: "proven" });
+    expect(house.still).not.toBeNull();
+    expect(house.composes).toEqual(expect.arrayContaining(["piece-stage", "piece-plate", "piece-spot", "piece-flip"]));
+    expect(house.open).toEqual(["the quiet grid ground", "the house face card with its cream rim"]);
+    expect(browseCatalog(c, { level: "style" }).tiles[0].id).toBe("style-house");
+  });
+
+  it("the house values are the picked graphite: near-black ground, graphite objects, cream type, one vermilion, Jost SemiBold, no grain", () => {
+    const v = block("house").values;
+    expect(v.ground).toEqual([0.063, 0.063, 0.071]);
+    expect(v.surface).toEqual([0.2, 0.2, 0.225]);
+    expect(v.type).toEqual([0.949, 0.933, 0.894]);
+    expect(v.accent).toEqual([1, 0.373, 0.243]);
+    expect([v.font, v.weight, v.grain]).toEqual(["Jost", "SemiBold", 0]);
+  });
+
+  it("the examples are labelled as examples, never the house; the borrowed looks sit on their own style entries", () => {
+    const c = cat();
+    for (const id of ["style-example-warm-paper", "style-example-night-glass"]) {
+      const e = c.entries.find((x) => x.id === id)!;
+      expect(e, id).toMatchObject({ role: "example", block: id.replace("style-", "") });
+      expect(e.default, id).toBeUndefined();
+      expect(e.name, id).toMatch(/^Example: /);
+    }
+    for (const id of ["dark-keynote", "glass-product"]) {
+      expect(c.entries.find((x) => x.id === `style-${id}`)!.block).toBe(id);
+      expect(block(id)).toMatchObject({ role: "look", borrowed_from: `style-${id}` });
+    }
+  });
+
+  it("every style block the catalog names is readable through the library, and pcs-core defaults to house", () => {
+    const manifest = JSON.parse(readFileSync(path.join(LIB, "manifest.json"), "utf8")) as { documents: Array<{ id: string }> };
+    for (const e of cat().entries.filter((x) => x.block)) expect(manifest.documents.some((d) => d.id === `pieces-style-${e.block}`), e.id).toBe(true);
+    const core = readFileSync(path.join(LIB, "pieces", "pcs-core.jsx"), "utf8");
+    expect(core).toMatch(/PCS\.STYLE_DEFAULT = 'house';/);
+    expect(core).not.toMatch(/'example-warm-paper': \{/); // the values live in styles/*.json, not in the code
+  });
+
+  it("get on the house style says how to use it in pieces, that it is the default, what is still open, with its values and still", async () => {
+    const r = await call({ action: "get", id: "style-house" });
+    expect(r.isError).toBe(false);
+    const t = text(r);
+    expect(t.split("\n")[0]).toMatch(/^ae_arsenal style style-house@[0-9a-f]{8} \(style; the house style; proven;/);
+    expect(t).toMatch(/^in pieces: PCS\.use\('house'\) after loading pieces\/pcs-core\.jsx \(the default: pieces use it when no style is picked\)/m);
+    expect(t).toMatch(/^not in it yet: the quiet grid ground$/m);
+    expect(t).toMatch(/"surface": \[/);
+    expect(r.content.some((c) => c.type === "image")).toBe(true);
+  });
+
+  it("get on a borrowed look adds its block after the look's own document", async () => {
+    const t = text(await call({ action: "get", id: "style-dark-keynote" }));
+    expect(t).toMatch(/^in pieces: PCS\.use\('dark-keynote'\)/m);
+    expect(t).toMatch(/style block for pieces \(pieces-style-dark-keynote\):\n\{/);
+  });
+
+  it("browse labels the house and example styles", async () => {
+    const t = text(await call({ action: "browse", level: "style" }));
+    expect(t).toMatch(/Tile 1: style-house · House: graphite · style · the house style, the default for pieces · pieces: PCS\.use\('house'\)/);
+    expect(t).toMatch(/style-example-night-glass · Example: night glass · style · an example style, not a house look/);
   });
 });

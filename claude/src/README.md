@@ -85,6 +85,9 @@ The library also holds a catalog of technique recipes filed by the job a beat ne
 <!-- arsenal-stills:start -->
 Styles and worlds in the library: the visual styles, each a frame of its own proof build. ae_arsenal browse shows them by level.
 
+![House: graphite (style)](library/arsenal/stills/style-house.jpg)
+![Example: night glass (style)](library/arsenal/stills/style-example-night-glass.jpg)
+![Example: warm paper (style)](library/arsenal/stills/style-example-warm-paper.jpg)
 ![Art Deco (style)](library/arsenal/stills/style-art-deco.jpg)
 ![Liminal found footage (world and style)](library/arsenal/stills/style-backrooms.jpg)
 ![Blueprint (style)](library/arsenal/stills/style-blueprint.jpg)

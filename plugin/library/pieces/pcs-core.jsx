@@ -1,5 +1,6 @@
 // PCS core: what every piece uses. Load it once, then ask for the pieces you need:
 //   $.evalFile(File('<library>/pieces/pcs-core.jsx')); PCS.need('stage'); PCS.need('flip');
+// The house style is on from the start; PCS.use('<style id>') picks another.
 // ES3, run through Comp Room eval.run with rollback: false.
 //
 // A piece makes ONE object or ONE move and returns its layer(s). Pieces hold what makes a graphic look built and lit
@@ -13,8 +14,10 @@ if (typeof PCS === 'undefined') { PCS = {}; }
 PCS.dir = (new File($.fileName)).parent.fsName;
 PCS.MG = 'ADBE Material Options Group';
 PCS.GEO = 'ADBE Extrsn Options Group';
-PCS.warnings = PCS.warnings || [];
-PCS.loaded = PCS.loaded || {};
+// After Effects keeps script globals between runs: each load of this file starts clean, so a changed piece or style
+// file is read again and no style carries over from an earlier run.
+PCS.warnings = [];
+PCS.loaded = {};
 
 // Loads a piece's file once per call of eval.run. Pieces that rely on other pieces call this themselves.
 PCS.need = function (name) {
@@ -26,31 +29,36 @@ PCS.need = function (name) {
 };
 
 // ---- style ---------------------------------------------------------------
-// A style is plain data the brief picks or writes; no piece hard-codes a colour.
-// The two below are EXAMPLES that prove the pieces carry no look of their own. Neither is a house look.
-// (Build stage 2 turns styles into catalog entries; this block is the mechanism they use.)
-PCS.styles = PCS.styles || {
-  'example-warm-paper': {
-    ground: [0.045, 0.05, 0.07], backplate: [0.10, 0.115, 0.17],
-    surface: [0.96, 0.93, 0.87], ink: [0.10, 0.11, 0.15], type: [0.96, 0.93, 0.87],
-    accent: [0.90, 0.27, 0.17], onAccent: [0.96, 0.93, 0.87], quiet: [0.30, 0.36, 0.52],
-    keyColor: [1, 0.86, 0.68], fillColor: [1, 0.88, 0.72], keyIntensity: 125, fillIntensity: 65, envIntensity: 40,
-    grain: 3.5, font: 'Jost', weight: 'SemiBold', depth: 40, bevel: 3, tilt: [4, -8], material: null
-  },
-  'example-night-glass': {
-    ground: [0.02, 0.03, 0.05], backplate: [0.05, 0.08, 0.13],
-    surface: [0.16, 0.22, 0.34], ink: [0.93, 0.96, 1.0], type: [0.93, 0.96, 1.0],
-    accent: [0.38, 0.86, 0.72], onAccent: [0.03, 0.08, 0.10], quiet: [0.10, 0.14, 0.22],
-    keyColor: [0.80, 0.90, 1.0], fillColor: [0.62, 0.74, 1.0], keyIntensity: 150, fillIntensity: 80, envIntensity: 60,
-    grain: 2, font: 'Jost', weight: 'Medium', depth: 26, bevel: 5, tilt: [3, -6],
-    material: { specular: 70, shininess: 60, metal: 40 }
+// A style is a small block of plain values the brief picks; no piece hard-codes a colour. Each one is a file in
+// styles/<id>.json beside this file, read once here: its "values" are what the pieces use (ground, surface, ink, accent,
+// light, grain, font, thickness, material). ae_arsenal browse and find list them as styles; get shows one.
+//   house                 the house look, and the default when no style is picked.
+//   example-*             examples that prove the pieces carry no look of their own. Not a house look.
+//   <look id>             an existing Comp Room look written as a block, so a brief can borrow it for a section.
+PCS.STYLE_DEFAULT = 'house';
+PCS.readStyles = function () {
+  var out = {}; var dir = new Folder(PCS.dir + '/styles');
+  var files = dir.exists ? dir.getFiles('*.json') : [];
+  for (var i = 0; i < files.length; i++) {
+    var f = files[i]; f.encoding = 'UTF-8';
+    if (!f.open('r')) { continue; }
+    var text = f.read(); f.close();
+    // ExtendScript has no JSON object; these are our own shipped data files.
+    var block = eval('(' + text + ')');
+    out[block.id] = block.values;
   }
+  if (!out[PCS.STYLE_DEFAULT]) { throw new Error('No ' + PCS.STYLE_DEFAULT + ' style in ' + dir.fsName); }
+  return out;
 };
-PCS.S = PCS.S || PCS.styles['example-warm-paper'];
-// PCS.use('example-warm-paper'), or PCS.use({ ...a style object }): missing keys fall back to the first example.
+PCS.styles = PCS.readStyles();
+PCS.S = PCS.styles[PCS.STYLE_DEFAULT];
+// PCS.use('house'), PCS.use('example-night-glass'), or PCS.use({ ...a style object }): keys it leaves out come from the house style.
 PCS.use = function (s) {
-  var base = PCS.styles['example-warm-paper']; var src = (typeof s === 'string') ? PCS.styles[s] : s; var out = {}; var k;
-  if (!src) { throw new Error('Unknown style "' + s + '"'); }
+  var base = PCS.styles[PCS.STYLE_DEFAULT]; var src = (typeof s === 'string') ? PCS.styles[s] : s; var out = {}; var k;
+  if (!src) {
+    var names = []; for (k in PCS.styles) { if (PCS.styles.hasOwnProperty(k)) { names.push(k); } }
+    throw new Error('Unknown style "' + s + '"; styles: ' + names.join(', '));
+  }
   for (k in base) { if (base.hasOwnProperty(k)) { out[k] = base[k]; } }
   for (k in src) { if (src.hasOwnProperty(k)) { out[k] = src[k]; } }
   PCS.S = out; return out;
@@ -87,6 +95,16 @@ PCS.zero = function (L) {
 PCS.findItem = function (name) {
   for (var i = 1; i <= app.project.numItems; i++) { if (app.project.item(i).name === name) { return app.project.item(i); } }
   return null;
+};
+// Removes a comp and the solids only it used (a stage's backplate and grain), so re-running a scene leaves nothing behind.
+PCS.removeComp = function (comp) {
+  var solids = [];
+  for (var i = 1; i <= comp.numLayers; i++) {
+    var src = comp.layer(i).source;
+    if (src && src instanceof FootageItem && src.mainSource instanceof SolidSource) { solids.push(src); }
+  }
+  comp.remove();
+  for (var j = 0; j < solids.length; j++) { try { if (solids[j].usedIn.length === 0) { solids[j].remove(); } } catch (e) {} }
 };
 PCS.importOnce = function (path) {
   var f = new File(path);
