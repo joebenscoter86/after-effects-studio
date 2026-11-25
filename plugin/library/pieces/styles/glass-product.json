@@ -51,7 +51,7 @@
   "accent": [
    0.42,
    0.78,
-   1.0
+   1
   ],
   "onAccent": [
    0,
@@ -71,7 +71,7 @@
   "fillColor": [
    0.859,
    0.918,
-   1.0
+   1
   ],
   "keyIntensity": 160,
   "fillIntensity": 60,
@@ -89,6 +89,10 @@
    "specular": 55,
    "shininess": 70,
    "metal": 10
-  }
+  },
+  "fillReach": 0,
+  "litCap": 0,
+  "rowDepth": 6,
+  "rowBevel": 0
  }
 }

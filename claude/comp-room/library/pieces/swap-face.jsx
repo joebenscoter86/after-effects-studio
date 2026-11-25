@@ -14,5 +14,5 @@
 // ---
 PCS.swapFace = function (oldLayer, newLayer, t) {
   PCS.cutAt(PCS.TG(oldLayer).property('ADBE Opacity'), t, 0);
-  var p = PCS.TG(newLayer).property('ADBE Opacity'); PCS.cutAt(p, 0, 0); PCS.cutAt(p, t, 100);
+  PCS.showFrom(PCS.TG(newLayer).property('ADBE Opacity'), t);
 };

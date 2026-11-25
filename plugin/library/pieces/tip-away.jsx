@@ -1,8 +1,8 @@
 // piece: tip-away
 // name: Tip an object away into the dark
-// does: An object tips backward and falls away behind the backplate, then is hidden with what sits on it.
-// use it for: dismissing what is finished as the next thing arrives; a wrong answer leaving; clearing the frame without a fade
-// job: hand-over; support: fail-then-fix, before-after
+// does: An object tips backward and falls away behind the backplate, then is hidden with what sits on it; type on it goes once it has tipped half way, so it is never seen squashed.
+// use it for: dismissing what is finished as the next thing arrives; a wrong or hollow answer leaving (flag a problem with it); a line of words leaving; clearing the frame without a fade
+// job: hand-over; support: fail-then-fix, before-after, flag-a-problem
 // provides: motion: swing
 // works with: piece-hide, piece-type3d, piece-plate
 // call: PCS.tipAway(plate, { t, dur, down, back })
@@ -24,6 +24,11 @@ PCS.tipAway = function (plate, o) {
   var down = (o.down === undefined) ? 200 : o.down; var back = (o.back === undefined) ? 800 : o.back;
   PCS.kfFrom(rx, [[o.t, a], [o.t + d, a - 100]]);
   PCS.kfFrom(pos, [[o.t, p], [o.t + d * 0.35, [p[0], p[1] - 20, p[2] + back * 0.1]], [o.t + d, [p[0], p[1] + down, p[2] + back]]]);
+  // What sits on it (a line's words, a card's labels) goes once it has tipped 50 degrees: thin type foreshortens badly.
+  var cut = o.t + d;
+  for (var f = 1; f <= 30; f++) { var tf = o.t + d * f / 30; if (Math.abs(rx.valueAtTime(tf, false) - a) >= 50) { cut = tf; break; } }
+  var ch = PCS.children(plate);
+  for (var i = 0; i < ch.length; i++) { try { PCS.cutAt(PCS.TG(ch[i]).property('ADBE Opacity'), cut, 0); } catch (e) {} }
   PCS.hideAfter(plate, o.t + d);
   return plate;
 };

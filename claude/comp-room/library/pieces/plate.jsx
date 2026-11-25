@@ -1,7 +1,7 @@
 // piece: plate
 // name: Thick lit plate
 // does: Makes one thick, bevelled slab that takes the light and casts a shadow: a card, a pill, a tile, a chip or a bar.
-// use it for: anything that should look built rather than drawn; the object words and pictures sit on
+// use it for: anything that should look built rather than drawn; the object words and pictures sit on (a card, a document, a receipt, a tile, a pill)
 // job: add-depth; support: light-the-hero, list-items
 // provides: material: gloss; depth: extrusion; depth: shadow
 // works with: piece-stage, piece-flip
@@ -26,7 +26,7 @@ PCS.plate = function (comp, o) {
   var r = c.addProperty('ADBE Vector Shape - Rect');
   r.property('ADBE Vector Rect Size').setValue([o.w, o.h]);
   r.property('ADBE Vector Rect Roundness').setValue(o.round || 0);
-  c.addProperty('ADBE Vector Graphic - Fill').property('ADBE Vector Fill Color').setValue(o.color || S.surface);
+  c.addProperty('ADBE Vector Graphic - Fill').property('ADBE Vector Fill Color').setValue(PCS.lit(o.color || S.surface));
   L.threeDLayer = true;
   var depth = (o.depth === undefined) ? S.depth : o.depth;
   var bevel = (o.bevel === undefined) ? S.bevel : o.bevel;
@@ -38,6 +38,7 @@ PCS.plate = function (comp, o) {
   var tilt = o.tilt || S.tilt;
   PCS.TG(L).property('ADBE Rotate X').setValue(tilt[0]);
   PCS.TG(L).property('ADBE Rotate Y').setValue(tilt[1]);
-  L.comment = 'depth=' + depth + ' bevel=' + bevel + ' w=' + o.w + ' h=' + o.h + ' round=' + (o.round || 0);
+  var named = o.color || S.surface; var hi = Math.max(named[0], named[1], named[2]);
+  L.comment = 'depth=' + depth + ' bevel=' + bevel + ' w=' + o.w + ' h=' + o.h + ' round=' + (o.round || 0) + ' hi=' + Math.round(hi * 1000) / 1000;
   return PCS.seat(comp, L);
 };

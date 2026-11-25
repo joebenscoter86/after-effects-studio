@@ -74,6 +74,10 @@
    4,
    -8
   ],
-  "material": null
+  "material": null,
+  "fillReach": 0,
+  "litCap": 0,
+  "rowDepth": 6,
+  "rowBevel": 0
  }
 }

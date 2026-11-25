@@ -70,3 +70,51 @@ test('pieces: every proof scene says how its still is made (one frame, a band of
     assert.match(t, /frame: [\d.]+|frames: \[[\d., ]+\], (band: \[\d+, \d+\]|across: true)/, f);
   }
 });
+
+// The fixes from the independent rebuild of the test beat (2026-11-24), each proved by render; these keep them in.
+const piece = (n) => fs.readFileSync(path.join(PIECES, `${n}.jsx`), 'utf8');
+
+test('spot: a pool on an object follows it, goes out with it, and stops before the wall behind it', () => {
+  const t = piece('spot');
+  assert.match(t, /\.expression = at \+ ' \+ ' \+ v3\(follow\.off\)/, 'the light position follows the object by expression');
+  assert.match(t, /L\.active \? value \* L\.transform\.opacity \/ 100 : 0/, 'off while the object is hidden or out of its time');
+  assert.match(t, /'ADBE Light Falloff Type', 2\)/, 'in front, the light falls off just past the object');
+  assert.match(t, /var names = \['key', 'fill'\]/, 'dimKey dips the stage key and fill together');
+  assert.match(t, /PCS\.num\(layer, 'hi'/, "the pool's strength follows the named colour's brightest channel");
+  assert.match(piece('hide'), /layer instanceof LightLayer\) \{ layer\.outPoint = t;/, 'hideAfter ends a light');
+});
+
+test('moves: land-on finishes a running flip, stand-up hinges on its bottom edge, tip-away hides type before it squashes', () => {
+  assert.match(piece('land-on'), /r\.keyValue\(r\.numKeys\) : cur;\s+\/\/ where a running flip was going/);
+  assert.match(piece('land-on'), /still moves after the landing ends/);
+  const su = piece('stand-up');
+  assert.match(su, /\/\/ option hinge: 'bottom' \(default\)/);
+  assert.match(su, /PCS\.hold\(A, \[\[0, local\], \[until, a\]\]\)/, 'the hinge returns to the middle once it has settled');
+  assert.match(piece('tip-away'), />= 50\) \{ cut = tf; break; \}/);
+  assert.match(piece('swap-face'), /PCS\.showFrom\(/, 'the new face stays hidden until the swap even after a stand-up revealed it');
+});
+
+test('words: placed by pos or under an object, centred on what is shown, and the holder stays free to move', () => {
+  const t = piece('words');
+  for (const o of ['pos', 'under', 'centre']) assert.match(t, new RegExp(`// option ${o}:`), o);
+  assert.match(t, /; below: space between/);
+  assert.match(t, /C\.parent = H;/, 'the centring is on an inner null, not the holder');
+  assert.doesNotMatch(t, /PCS\.kf\(PCS\.TG\(H\)/, "the holder's own position is never keyed");
+});
+
+test('styles: the house tune is recoverable as house-previous, and the other styles keep their old look', () => {
+  const read = (n) => JSON.parse(fs.readFileSync(path.join(PIECES, 'styles', `${n}.json`), 'utf8'));
+  const h = read('house');
+  assert.deepEqual(h.previous.values, { fillIntensity: 80, depth: 36, bevel: 4, fillReach: 0, litCap: 0, rowDepth: 6, rowBevel: 0, quiet: [0.34, 0.35, 0.4] });
+  assert.deepEqual([h.values.ground, h.values.surface, h.values.ink, h.values.accent], [[0.063, 0.063, 0.071], [0.2, 0.2, 0.225], [0.949, 0.933, 0.894], [1, 0.373, 0.243]], "the house's four colours stay");
+  for (const n of ['dark-keynote', 'example-night-glass', 'example-warm-paper', 'glass-product']) {
+    const v = read(n).values;
+    assert.deepEqual([v.fillReach, v.litCap, v.rowDepth, v.rowBevel], [0, 0, 6, 0], `${n} keeps the old behaviour`);
+  }
+  assert.match(piece('pcs-core'), /out\[block\.id \+ '-previous'\] = pv;/);
+});
+
+test('catalog: the stage carries the placing know-how a cold builder needs', () => {
+  const t = piece('stage');
+  for (const re of [/y 220 to 1180/, /no more than about a fifth of it empty/, /one hero per picture/, /set positions by render/, /type on a plate is flat/, /keeps a held picture alive/]) assert.match(t, re);
+});

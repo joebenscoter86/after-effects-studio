@@ -748,14 +748,14 @@
       "title": "Technique arsenal index: documents, vocabulary and counts",
       "path": "arsenal/index.json",
       "kind": "catalog",
-      "sha256": "eebb80341b1eda775ffc0bfaa990d2a2d67ae33193ea5a97a31ca2f660159204"
+      "sha256": "9d198d6856ab803a60593a673bb3f188b629234e35687a68d61673b87a1a054c"
     },
     {
       "id": "arsenal-catalog",
       "title": "Library catalog: one record per style, world, recipe and piece, queried by ae_arsenal",
       "path": "arsenal/catalog.json",
       "kind": "catalog",
-      "sha256": "b1eb53d4b25b725ecb8b9c13debd548a5d3c0fe19725b7383aec8697a7f463b9"
+      "sha256": "c13a42e6805b9d5d878ab4e2bf3cfd541207783c8e4a84209c9530570eb7f542"
     },
     {
       "id": "arsenal-jobs",
@@ -811,42 +811,42 @@
       "title": "Pieces: the shared helpers every piece uses (PCS core)",
       "path": "pieces/pcs-core.jsx",
       "kind": "code",
-      "sha256": "0f525ca68499647553e1fd228ba45dd088c48b8e9eabfa1d58a1cc88c8b1c8e8"
+      "sha256": "61df5a64e90b146f82aa627bf10a7a2e10281a3633eb242f5c32fcfa12253f5d"
     },
     {
       "id": "pieces-style-dark-keynote",
       "title": "Style block: Dark keynote (for pieces) (PCS.use('dark-keynote'))",
       "path": "pieces/styles/dark-keynote.json",
       "kind": "style",
-      "sha256": "08fae4ef65aea59df0ec9c25a4a0955923bef135cf699556a92c2c68912a2e47"
+      "sha256": "6ac52a92feb3b02c04177fcb158648868ec4469c4e1d8234da6c0551c1f84d7c"
     },
     {
       "id": "pieces-style-example-night-glass",
       "title": "Style block: Example: night glass (PCS.use('example-night-glass'))",
       "path": "pieces/styles/example-night-glass.json",
       "kind": "style",
-      "sha256": "85ba824eb5921e1c0521c7e5e3c67c23cd9f612b341fd449fd7301c9505f8761"
+      "sha256": "22d4d276b2131bc1ca2acbe0926d2f87f696b4ab970f7ab152ee22e4dd620f09"
     },
     {
       "id": "pieces-style-example-warm-paper",
       "title": "Style block: Example: warm paper (PCS.use('example-warm-paper'))",
       "path": "pieces/styles/example-warm-paper.json",
       "kind": "style",
-      "sha256": "86044516b0ad4b0f535401d4cac23d1e0f7bf0e2a36148802430710b20246f6f"
+      "sha256": "145db954f6be5b169fc7229ba3cc56989a9423e6cc66885ee0261fb5acabd69e"
     },
     {
       "id": "pieces-style-glass-product",
       "title": "Style block: Glass product (for pieces) (PCS.use('glass-product'))",
       "path": "pieces/styles/glass-product.json",
       "kind": "style",
-      "sha256": "d615a382bd46b5d7188c55227b059ed33b667a594236285b1e719a43689bcc7a"
+      "sha256": "47ea0087ba11d8bdb503c422dac67f7c56c49fb6e8c5f82e0c77796ff8ba25da"
     },
     {
       "id": "pieces-style-house",
       "title": "Style block: House: graphite (PCS.use('house'))",
       "path": "pieces/styles/house.json",
       "kind": "style",
-      "sha256": "f76721607d63161e4122050a9bd1e3c2515e600769e91b80f297fa445e86e536"
+      "sha256": "5d59c227699fbcfe8f520bce3d13b15a7b3feb922a99d9b71ca841666862c4c0"
     },
     {
       "id": "pieces-styles-proof",
@@ -860,7 +860,7 @@
       "title": "Piece: Flip an object over",
       "path": "pieces/flip.jsx",
       "kind": "code",
-      "sha256": "a37cb4a700c737074bd6d6ee217cc2a7452c2cc6dd20822c755d2417da6d0d6a"
+      "sha256": "f912d95fbfcb03a455841294c0bc7212c6f57a1f72f212a7c42d70f159f29017"
     },
     {
       "id": "piece-flip-proof",
@@ -888,7 +888,7 @@
       "title": "Piece: Show or hide an object with what sits on it",
       "path": "pieces/hide.jsx",
       "kind": "code",
-      "sha256": "5037210d4c412526f43327b77a088133d7b3d9c4aea702e88e133e11892c3788"
+      "sha256": "e78f215bf9169ec24b9f14c953a93b736cfe9c0eb34a43e1a59dfc18161cb9d3"
     },
     {
       "id": "piece-hide-proof",
@@ -916,7 +916,7 @@
       "title": "Piece: Carry an object onto another",
       "path": "pieces/land-on.jsx",
       "kind": "code",
-      "sha256": "6db8b6f14f4258a0e071855a3ed042a4f688342387f4f8379dc15274718b6eba"
+      "sha256": "626652b3a3296917a01294f4215400121f38ac15e9ffa6fe9dcb033e4a5b11ae"
     },
     {
       "id": "piece-land-on-proof",
@@ -958,7 +958,7 @@
       "title": "Piece: Thick lit plate",
       "path": "pieces/plate.jsx",
       "kind": "code",
-      "sha256": "0b6bb09a6280256a31a96f0fe58c6b400ee00493b798fbce08549962cc4a0aa5"
+      "sha256": "dbcb480a5daef2defc4256d44e03f9e96601ef2ebb75d86676920f7c3d333b59"
     },
     {
       "id": "piece-plate-proof",
@@ -986,7 +986,7 @@
       "title": "Piece: Raised rows of content on a card",
       "path": "pieces/rows.jsx",
       "kind": "code",
-      "sha256": "6206dff8ceecf751771a312d90f23c521bcff837448169164f8ef415e9fdc22d"
+      "sha256": "4a43e68476a0b04e58437a55b95f7c044d141400f70136ea91168e5eecc1b07e"
     },
     {
       "id": "piece-rows-proof",
@@ -1000,7 +1000,7 @@
       "title": "Piece: Spot light, or a pool of light on the hero",
       "path": "pieces/spot.jsx",
       "kind": "code",
-      "sha256": "b47cb2c29ab17f30a3fadc18bb733325ece5baa34e007d4813d73f4f676d2704"
+      "sha256": "bf6061d17c50cdb6f18baa0e88542bfae86e5de91a70711ffa9efbd7066bc8c8"
     },
     {
       "id": "piece-spot-proof",
@@ -1014,7 +1014,7 @@
       "title": "Piece: Lit stage for a face card beat",
       "path": "pieces/stage.jsx",
       "kind": "code",
-      "sha256": "f00e8a2d611013cd25002a3511692e71758e8fae2c36351e3840d8e64529b8fd"
+      "sha256": "b316edeb94eb9ddead09f5e577cec0c9066aff996de7aaef23d43433f3af4859"
     },
     {
       "id": "piece-stage-proof",
@@ -1028,7 +1028,7 @@
       "title": "Piece: Stand an object up",
       "path": "pieces/stand-up.jsx",
       "kind": "code",
-      "sha256": "f3c0bdba0257c94ced234419a39237c69097385d18752073b85880d2c45a00d8"
+      "sha256": "e3ea8aba57a9fa59c6eb46f9251ffee609ead0b6200ee4c958c36bd59b435aa6"
     },
     {
       "id": "piece-stand-up-proof",
@@ -1042,7 +1042,7 @@
       "title": "Piece: Change what a face says while it is turned away",
       "path": "pieces/swap-face.jsx",
       "kind": "code",
-      "sha256": "b9e21a621a037fa39fada97fd0a3e08fe288e1c2b5eb3e2940186b18e57f05c2"
+      "sha256": "baebbaf4972183d112b43d0e351f4b4b1d4f71d0d497a043977df9631da19faf"
     },
     {
       "id": "piece-swap-face-proof",
@@ -1070,7 +1070,7 @@
       "title": "Piece: Tip an object away into the dark",
       "path": "pieces/tip-away.jsx",
       "kind": "code",
-      "sha256": "e25a56bb3ba80ce131d47f610f3f10df1875dd40a0148a766a0acab51c2898e5"
+      "sha256": "0b8b2e3dcceea5619e764388e779a50930cbe62d376b152145b4d135a9665e0b"
     },
     {
       "id": "piece-tip-away-proof",
@@ -1084,7 +1084,7 @@
       "title": "Piece: One object with a different colour each side",
       "path": "pieces/two-sided.jsx",
       "kind": "code",
-      "sha256": "16fa6c9d0a40aca9e32547025936d355f3caf0a175442d8d81bc232f5449acc2"
+      "sha256": "764e923ddc1447d8f286a04b647c48a2849e54030d0264dad533a9d702b1a148"
     },
     {
       "id": "piece-two-sided-proof",
@@ -1098,7 +1098,7 @@
       "title": "Piece: One hero word or number as a lit object",
       "path": "pieces/type3d.jsx",
       "kind": "code",
-      "sha256": "d411c43c29167acd5b6a48639537dcb12618304acd7a256e9bef1a8fa87d805e"
+      "sha256": "8636ea1c34e01d976d0ba9b9ba5ce8d959773dd10390a9b00c018b0c5639ea03"
     },
     {
       "id": "piece-type3d-proof",
@@ -1112,7 +1112,7 @@
       "title": "Piece: A line that builds word by word",
       "path": "pieces/words.jsx",
       "kind": "code",
-      "sha256": "394c9cadd2041ce92254c4f48e99ebb8d37cc668a302a3e5e718b55d04f38aa9"
+      "sha256": "f069fc5d8dd074c6f01ad38da8d9d143005cefbdf45f7b3723b64304c872536e"
     },
     {
       "id": "piece-words-proof",

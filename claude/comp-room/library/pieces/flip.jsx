@@ -1,8 +1,8 @@
 // piece: flip
 // name: Flip an object over
 // does: Turns an object over to its other side with a small overshoot, starting from wherever it is; call it again to turn it back.
-// use it for: a question turning into its answer; a change of mind; the other side of a card; something that turns over
-// job: before-after; support: fail-then-fix, reveal-headline
+// use it for: a question turning into its answer; a change of mind; an answer turning over to show it is wrong; the other side of a card; something that turns over
+// job: before-after; support: fail-then-fix, reveal-headline, flag-a-problem, compare
 // provides: motion: flip
 // works with: piece-plate, piece-stage
 // call: PCS.flip(layer, { t, dur, axis, dir })

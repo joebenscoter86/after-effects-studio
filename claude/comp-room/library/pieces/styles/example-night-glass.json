@@ -30,12 +30,12 @@
   "ink": [
    0.93,
    0.96,
-   1.0
+   1
   ],
   "type": [
    0.93,
    0.96,
-   1.0
+   1
   ],
   "accent": [
    0.38,
@@ -55,12 +55,12 @@
   "keyColor": [
    0.8,
    0.9,
-   1.0
+   1
   ],
   "fillColor": [
    0.62,
    0.74,
-   1.0
+   1
   ],
   "keyIntensity": 150,
   "fillIntensity": 80,
@@ -78,6 +78,10 @@
    "specular": 70,
    "shininess": 60,
    "metal": 40
-  }
+  },
+  "fillReach": 0,
+  "litCap": 0,
+  "rowDepth": 6,
+  "rowBevel": 0
  }
 }

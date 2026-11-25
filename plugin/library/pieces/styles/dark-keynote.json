@@ -87,6 +87,10 @@
   "material": {
    "specular": 40,
    "shininess": 50
-  }
+  },
+  "fillReach": 0,
+  "litCap": 0,
+  "rowDepth": 6,
+  "rowBevel": 0
  }
 }

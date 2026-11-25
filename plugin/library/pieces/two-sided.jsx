@@ -1,8 +1,8 @@
 // piece: two-sided
 // name: One object with a different colour each side
 // does: Makes one thick object whose front is one colour and whose back is another, so a flip changes its colour as well as what it says.
-// use it for: a question that turns into the answer; wrong to right; a quiet tile that turns to the accent
-// job: before-after; support: fail-then-fix, show-proof
+// use it for: a question that turns into the answer (a question mark on one side, the answer on the other); a question set against its answer; wrong to right; a quiet tile that turns to the accent
+// job: before-after; support: fail-then-fix, show-proof, compare
 // provides: depth: extrusion; depth: shadow
 // works with: piece-flip, piece-on-face, piece-tick, piece-land-on
 // call: PCS.twoSided(comp, { name, w, h, round, color, backColor, depth, bevel, pos, tilt, axis })

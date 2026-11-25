@@ -21,7 +21,7 @@
 // ---
 PCS.type3d = function (comp, o) {
   var T = comp.layers.addText(o.text); T.name = o.name || ('hero ' + o.text);
-  PCS.setText(T, { size: o.size || 330, weight: o.weight, color: o.color || PCS.S.type, maxWidth: o.maxWidth || 860 });
+  PCS.setText(T, { size: o.size || 330, weight: o.weight, color: PCS.lit(o.color || PCS.S.type), maxWidth: o.maxWidth || 860 });
   T.threeDLayer = true;
   PCS.sp(T, PCS.GEO, 'ADBE Extrsn Depth', o.depth === undefined ? Math.round((o.size || 330) * 0.12) : o.depth);
   PCS.sp(T, PCS.MG, 'ADBE Casts Shadows', 1);

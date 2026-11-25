@@ -1,7 +1,7 @@
 // piece: rows
 // name: Raised rows of content on a card
 // does: Lays thin lit bars on a plate's face as lines of a log, a list or a document, each growing in from the left in turn, with an optional tick before each.
-// use it for: a test log, a checklist, a document, a list that fills as it is read
+// use it for: evidence on a card: a test log, a checklist, a receipt, a document, a list that fills as it is read
 // job: list-items; support: show-proof, make-concrete
 // provides: motion: stagger; depth: extrusion
 // works with: piece-plate, piece-tick, piece-stand-up
@@ -30,7 +30,7 @@ PCS.rows = function (comp, plate, o) {
   for (var i = 0; i < n; i++) {
     var w = W * widths[i % widths.length]; var y = top + i * (h + gap);
     var x0 = left + (o.ticks ? h * 2.2 : 0);
-    var R = PCS.plate(comp, { name: 'row ' + (i + 1), w: w, h: h, round: h / 2, color: col, depth: 6, bevel: 0, tilt: [0, 0] });
+    var R = PCS.plate(comp, { name: 'row ' + (i + 1), w: w, h: h, round: h / 2, color: col, depth: S.rowDepth || 6, bevel: S.rowBevel || 0, tilt: [0, 0] });
     PCS.onFace(R, plate, [x0 + w / 2, y], true);
     out.rows.push(R);
     var t = (o.t === undefined) ? undefined : o.t + i * (o.stagger === undefined ? 0.09 : o.stagger);

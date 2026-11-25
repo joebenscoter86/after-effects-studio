@@ -46,6 +46,12 @@ PCS.readStyles = function () {
     // ExtendScript has no JSON object; these are our own shipped data files.
     var block = eval('(' + text + ')');
     out[block.id] = block.values;
+    if (block.previous) {   // the style's values before its last tune, kept so the two can be compared: '<id>-previous'
+      var pv = {}; var k;
+      for (k in block.values) { if (block.values.hasOwnProperty(k)) { pv[k] = block.values[k]; } }
+      for (k in block.previous.values) { if (block.previous.values.hasOwnProperty(k)) { pv[k] = block.previous.values[k]; } }
+      out[block.id + '-previous'] = pv;
+    }
   }
   if (!out[PCS.STYLE_DEFAULT]) { throw new Error('No ' + PCS.STYLE_DEFAULT + ' style in ' + dir.fsName); }
   return out;
@@ -97,6 +103,12 @@ PCS.cutAt = function (p, t, v) {
   var hold = KeyframeInterpolationType.HOLD;
   p.setInterpolationTypeAtKey(k, p.keyInInterpolationType(k), hold);
   if (k > 1) { p.setInterpolationTypeAtKey(k - 1, p.keyInInterpolationType(k - 1), hold); }
+};
+// Hidden until t, shown from t, whatever earlier keys said (a stand-up's reveal, say): keys before t are set to 0.
+PCS.showFrom = function (p, t) {
+  PCS.cutAt(p, 0, 0);
+  for (var k = 1; k <= p.numKeys; k++) { if (p.keyTime(k) < t - 0.0005) { p.setValueAtKey(k, 0); } }
+  PCS.cutAt(p, t, 100);
 };
 PCS.zero = function (L) {
   var T = PCS.TG(L);
@@ -152,6 +164,14 @@ PCS.material = function (L) {
   if (m.shininess !== undefined) { PCS.sp(L, PCS.MG, 'ADBE Shininess Coefficient', m.shininess); }
   if (m.metal !== undefined) { PCS.sp(L, PCS.MG, 'ADBE Metal Coefficient', m.metal); }
 };
+// The colour to give a lit object so it renders as the colour named. Advanced 3D renders a face as its colour times the
+// light on it, and the house light lifts a face above its colour, so a saturated accent would clip to a pale tint. With
+// the style's litCap, a colour whose brightest channel passes the cap is scaled down to it; darker colours are unchanged.
+PCS.lit = function (c) {
+  var cap = PCS.S.litCap; if (!cap || !c) { return c; }
+  var m = Math.max(c[0], c[1], c[2]); if (m <= cap) { return c; }
+  var k = cap / m; return [c[0] * k, c[1] * k, c[2] * k];
+};
 PCS.setText = function (L, o) {
   var d = L.property('ADBE Text Properties').property('ADBE Text Document');
   var v = d.value;
@@ -191,6 +211,14 @@ PCS.toWorld = function (layer, local, t) {
   try { if (src && src.usedIn.length === 0) { src.remove(); } } catch (e) {}   // a null leaves its solid in the project
   return p;
 };
+// An expression's reference to a layer, by name. Expressions find a layer by its name, so a name shared with another
+// layer in the comp is made unique first (with a warning), or the expression would follow the wrong one.
+PCS.ref = function (layer) {
+  var comp = layer.containingComp; var n = 0;
+  for (var i = 1; i <= comp.numLayers; i++) { if (comp.layer(i).name === layer.name) { n++; } }
+  if (n > 1) { var was = layer.name; layer.name = was + ' ' + layer.index; PCS.warnings.push('renamed "' + was + '" to "' + layer.name + '" so a light can follow it'); }
+  return 'thisComp.layer("' + layer.name.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '")';
+};
 // A colour k of the way from a to b.
 PCS.mix = function (a, b, k) { return [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k, a[2] + (b[2] - a[2]) * k]; };
 // A rounded rectangle as a mask or path Shape: centre [cx, cy], size [w, h], corner radius r.
@@ -204,7 +232,7 @@ PCS.roundRect = function (cx, cy, w, h, r) {
   s.closed = true;
   return s;
 };
-// A plate records its size in its comment (depth=, bevel=, w=, h=, round=) so later pieces can seat things on it.
+// A plate records its size in its comment (depth=, bevel=, w=, h=, round=, hi=: the brightest channel of the colour it was named with) so later pieces can seat things on it.
 // (A key must start a word: 'h=' must not match the end of 'depth='.)
 PCS.num = function (plate, key, dflt) { var m = new RegExp('(^|\\s)' + key + '=([\\d.]+)').exec(plate.comment || ''); return m ? parseFloat(m[2]) : dflt; };
 PCS.bevelOf = function (plate) { return PCS.num(plate, 'bevel', 3); };

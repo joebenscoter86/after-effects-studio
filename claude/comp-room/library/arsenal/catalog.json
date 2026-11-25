@@ -1,6 +1,6 @@
 {
  "vocab": "jobs-v1",
- "version": "525426ab",
+ "version": "f934b060",
  "jobs": [
   "land-number",
   "count-things",
@@ -162,17 +162,19 @@
  "entries": [
   {
    "id": "piece-flip",
-   "revision": "a37cb4a7",
+   "revision": "f912d95f",
    "level": "recipe",
    "name": "Flip an object over",
    "line": "Turns an object over to its other side with a small overshoot, starting from wherever it is; call it again to turn it back.",
-   "use_for": "a question turning into its answer; a change of mind; the other side of a card; something that turns over",
+   "use_for": "a question turning into its answer; a change of mind; an answer turning over to show it is wrong; the other side of a card; something that turns over",
    "status": "proven",
    "kind": "piece",
    "job": "before-after",
    "support": [
     "fail-then-fix",
-    "reveal-headline"
+    "reveal-headline",
+    "flag-a-problem",
+    "compare"
    ],
    "mood": [],
    "needs": [],
@@ -229,7 +231,7 @@
    },
    "still": {
     "path": "arsenal/stills/piece-flip.jpg",
-    "sha256": "dbab139cec95c89f0cfbc20529b2bad4a026dd65c52773014aecf373f3ed2beb"
+    "sha256": "b313d66952b3b3353a4ee97d5fd85ca371b9950d5c248b3f16e1ef824703417c"
    }
   },
   {
@@ -323,12 +325,12 @@
    },
    "still": {
     "path": "arsenal/stills/piece-hand-over.jpg",
-    "sha256": "193bce48481c55797a7b974a15a5a66eb7cb79bac0be99e4df50d5c67cca0fb8"
+    "sha256": "eaa0ca1d14c030fe2b1eed160665c4a816795a05aea687a989022d9b913bbe4e"
    }
   },
   {
    "id": "piece-hide",
-   "revision": "5037210d",
+   "revision": "e78f215b",
    "level": "recipe",
    "name": "Show or hide an object with what sits on it",
    "line": "Makes an object, and everything seated on it, appear at one time (hideUntil) or vanish at one time (hideAfter), with a clean cut and no fade.",
@@ -373,6 +375,7 @@
     "returns": "the layer",
     "example": "var yes = PCS.type3d(st.comp, { text: 'Yes', size: 240, pos: [770, 640, 0] });\nPCS.hideUntil(yes, 1.0);\nPCS.hideAfter(yes, 2.9);",
     "notes": [
+     "on a light it sets the light's start (hideUntil) or end (hideAfter); a pool made with piece-spot's on already goes with its object.",
      "children do not take a parent's opacity in After Effects, so hiding a plate by its own opacity leaves its labels floating; this hides them all.",
      "never fade or grey something out to dismiss it; move it away (piece-tip-away) and hide it once it is gone."
     ]
@@ -383,7 +386,7 @@
    },
    "still": {
     "path": "arsenal/stills/piece-hide.jpg",
-    "sha256": "50d359212dc0e2be829fc0249edbf40ae96aa372640faae708c787106729b6ec"
+    "sha256": "407f5c356693dea2bfa57fb6f00a350e74be58d0704e96e83960be7e3883c0e0"
    }
   },
   {
@@ -464,16 +467,16 @@
    },
    "still": {
     "path": "arsenal/stills/piece-label.jpg",
-    "sha256": "86fd9aba6e333995bcc2067be81246076029986dd7fcf00aeedc925f15c5061e"
+    "sha256": "419f82a8cadabcfa281ce7152f142a40a10ed21e905f1e81d3decef28c3f6b33"
    }
   },
   {
    "id": "piece-land-on",
-   "revision": "6db8b6f1",
+   "revision": "626652b3",
    "level": "recipe",
    "name": "Carry an object onto another",
    "line": "One object travels in an arc toward the camera and seats itself on a plate's face, taking the plate's angle, with a small settle; it can shrink as it lands.",
-   "use_for": "a seal on a result; a piece fitting into place; the thing that carried one idea arriving on the next",
+   "use_for": "a seal or stamp on a result (a stamp of approval); a piece fitting into place; the thing that carried one idea arriving on the next",
    "status": "proven",
    "kind": "piece",
    "job": "hand-over",
@@ -536,8 +539,9 @@
     "returns": "where it lands, [x, y, z] in the comp",
     "example": "PCS.standUp(card, { t: 2.6 });\nPCS.landOn(tile.front, card, { at: [250, 130], t: 3.3, dur: 0.6, scale: 34 });",
     "notes": [
-     "land after the plate has stopped moving: the object does not follow the plate afterwards.",
-     "it keeps whichever side is showing: an object turned over lands still turned over."
+     "it lands where the plate is when it lands and does not follow it afterwards, so the plate's own move must be over by the time the landing ends (it warns if not). The landing may start while the plate is still standing up: piece-stand-up pivots on the plate's bottom edge, so it never sweeps through an object coming in front of it.",
+     "it keeps whichever side is showing; a flip still running when it leaves is finished on the way, so it lands on the side the flip was turning to. A flip timed to start after it leaves is dropped.",
+     "a stamp or seal on a result: land the tick tile on the card, scale about 50, lift 400 or more."
     ]
    },
    "section": {
@@ -546,7 +550,7 @@
    },
    "still": {
     "path": "arsenal/stills/piece-land-on.jpg",
-    "sha256": "38f820eabc605717c28757d06a31360594b7d17025512ff86a05c567ff4a4d69"
+    "sha256": "f37a9498eab6683f244cdeb8a0a16ce89f9b3cd63d5a96b7b347bf95c74254ae"
    }
   },
   {
@@ -619,7 +623,7 @@
    },
    "still": {
     "path": "arsenal/stills/piece-on-face.jpg",
-    "sha256": "e4db6db86f5a6c4ac11754a26098ede4307ce3885c0b030bb42f67613bd0d84b"
+    "sha256": "263ee209013b792b4924383e8012a18913462808be05b3a073c84a8a8c57302a"
    }
   },
   {
@@ -696,16 +700,16 @@
    },
    "still": {
     "path": "arsenal/stills/piece-picture-face.jpg",
-    "sha256": "bfbcc1f354abe6248fe583db695873b6d7b8a3c61aa7148798c5e2f20b4d6a1d"
+    "sha256": "a4bf4e9903e56114fe075e321410806fc6548aa030b3f7777947991611be7ee6"
    }
   },
   {
    "id": "piece-plate",
-   "revision": "0b6bb09a",
+   "revision": "dbcb480a",
    "level": "recipe",
    "name": "Thick lit plate",
    "line": "Makes one thick, bevelled slab that takes the light and casts a shadow: a card, a pill, a tile, a chip or a bar.",
-   "use_for": "anything that should look built rather than drawn; the object words and pictures sit on",
+   "use_for": "anything that should look built rather than drawn; the object words and pictures sit on (a card, a document, a receipt, a tile, a pill)",
    "status": "proven",
    "kind": "piece",
    "job": "add-depth",
@@ -778,7 +782,7 @@
    },
    "still": {
     "path": "arsenal/stills/piece-plate.jpg",
-    "sha256": "422098b0b2cb7ebeff7d1712ed1b184d014b6ed2772276cf54d29a11bd87a262"
+    "sha256": "1b9fae68cf9602b3dbeedd0c972d2f86b4d4f031edc779cc0561ae984684813e"
    }
   },
   {
@@ -857,16 +861,16 @@
    },
    "still": {
     "path": "arsenal/stills/piece-room.jpg",
-    "sha256": "60eb4c7478dab48b0e95948c9d5f54e3b003fd44c2398127b82396ea963ad536"
+    "sha256": "03e2969e411cfae6c5d1d31652b1a527a4e1564f2e55c29d9017412ec73044e6"
    }
   },
   {
    "id": "piece-rows",
-   "revision": "6206dff8",
+   "revision": "4a43e684",
    "level": "recipe",
    "name": "Raised rows of content on a card",
    "line": "Lays thin lit bars on a plate's face as lines of a log, a list or a document, each growing in from the left in turn, with an optional tick before each.",
-   "use_for": "a test log, a checklist, a document, a list that fills as it is read",
+   "use_for": "evidence on a card: a test log, a checklist, a receipt, a document, a list that fills as it is read",
    "status": "proven",
    "kind": "piece",
    "job": "list-items",
@@ -933,22 +937,23 @@
    },
    "still": {
     "path": "arsenal/stills/piece-rows.jpg",
-    "sha256": "29122edf003d525a7004455cb2446b552aa9c0933fc644a7f215e47418819c09"
+    "sha256": "6f5a142a7fdda836d89a3346c8562e539c6da9a36e165d98b9b33c42e8a929ce"
    }
   },
   {
    "id": "piece-spot",
-   "revision": "b47cb2c2",
+   "revision": "bf6061d1",
    "level": "recipe",
    "name": "Spot light, or a pool of light on the hero",
-   "line": "Adds one spot light coloured by the style. Given an object (on), it lights that object from in front, up and to one side, with a pool sized to it, and can rise as the object arrives while the stage's key dips, so the lit thing is the one to look at.",
-   "use_for": "the one thing the line is about (\"the light tells the story\"); the key and fill of a stage",
+   "line": "Adds one spot light coloured by the style. Given an object (on), it lights that object from in front, up and to one side, with a pool sized to it that follows the object wherever it moves and goes out when the object is hidden or tips away; it can rise as the object arrives while the stage's key dips, so the lit thing is the one to look at.",
+   "use_for": "the one thing the line is about (\"the light tells the story\"); a light that keeps rising on a held picture; the key and fill of a stage",
    "status": "proven",
    "kind": "piece",
    "job": "light-the-hero",
    "support": [
     "add-depth",
-    "reveal-headline"
+    "reveal-headline",
+    "keep-it-alive"
    ],
    "mood": [],
    "needs": [],
@@ -966,7 +971,8 @@
    },
    "composes": [
     "piece-stage",
-    "piece-plate"
+    "piece-plate",
+    "piece-hide"
    ],
    "shelf": "shipped",
    "requires": [],
@@ -980,7 +986,7 @@
     "options": [
      {
       "name": "on",
-      "text": "a layer to light: aims at its centre from in front, up and to the left, cone sized to it, feather 50"
+      "text": "a layer to light: aims at its centre from in front, up and to the left, cone sized to it, feather 75. The light follows the layer (moves added before or after are both followed), is off while the layer is hidden or out of its time, and in front its light stops just past the object, so no pool is left on the wall behind"
      },
      {
       "name": "from",
@@ -988,7 +994,7 @@
      },
      {
       "name": "intensity",
-      "text": "percent; with on, by how light the object is: 1.5 x the style's key on a dark object, down to 0.75 x on a near-white one, so a pool reads on graphite and never clips cream; else 80"
+      "text": "percent; with on, by how light the object is and how much light already reaches it: 1.0 x the style's key plus fill on a dark object, down to 0.5 x on a near-white or fully saturated one, so a pool reads on graphite and never clips cream; else 80"
      },
      {
       "name": "color",
@@ -1002,7 +1008,8 @@
     "returns": "the light layer",
     "example": "var st = PCS.stage({ name: 'BEAT 3', duration: 5 });\nvar card = PCS.plate(st.comp, { name: 'card', w: 400, h: 520, round: 34, pos: [790, 720, 0] });\nPCS.spot(st.comp, { name: 'pool', on: card, t: 2.6, dimKey: 0.6 });",
     "notes": [
-     "light the hero from the front but off the camera's line: from high above a pool only grazes a face and lights the wall behind; straight from the camera it puts a milky highlight over a glossy face and washes what is on it.",
+     "one pool, on the one hero. Light it from the front but off the camera's line: from high above a pool only grazes a face and lights the wall behind; straight from the camera it puts a milky highlight over a glossy face and washes what is on it.",
+     "hiding or tipping the object away takes its pool with it; to end a pool by itself, PCS.hideAfter(light, t).",
      "never a point light near a glossy surface (it shows as a stray dot)."
     ]
    },
@@ -1012,22 +1019,23 @@
    },
    "still": {
     "path": "arsenal/stills/piece-spot.jpg",
-    "sha256": "426794daf977d97027b73e4a8f22ae138e420a9919491c4ad6edec5cc5d03356"
+    "sha256": "672f4d07d2efc646c8895dc6c0882f66fc6713bd0f9cd30778e00ed1f851cc34"
    }
   },
   {
    "id": "piece-stage",
-   "revision": "f00e8a2d",
+   "revision": "b316edeb",
    "level": "recipe",
    "name": "Lit stage for a face card beat",
    "line": "Makes a vertical Advanced 3D comp with a dark ground, a backplate that catches light and shadow, a key with soft shadows, a fill, a slowly drifting camera and grain on the graphics only, all coloured by the style.",
-   "use_for": "every face card beat that puts lit 3D graphics above the speaker; graphics live in about y 220 to 1180",
+   "use_for": "every face card beat that puts lit 3D graphics above the speaker; a held picture that keeps moving (its camera drifts slowly for the whole comp)",
    "status": "proven",
    "kind": "piece",
    "job": "add-depth",
    "support": [
     "light-the-hero",
-    "establish-place"
+    "establish-place",
+    "keep-it-alive"
    ],
    "mood": [],
    "needs": [],
@@ -1082,7 +1090,12 @@
     "returns": "{ comp, backplate, key, fill, cam, grain, warnings }",
     "example": "PCS.use('example-warm-paper');\nvar st = PCS.stage({ name: 'BEAT 3', duration: 5 });",
     "notes": [
-     "2D layers (grain, the face card) stay on top; pieces seat new 3D layers under them by themselves."
+     "2D layers (grain, the face card) stay on top; pieces seat new 3D layers under them by themselves.",
+     "read before placing anything. Graphics live in y 220 to 1180, above the speaker's card; fill that area: no more than about a fifth of it empty, so make objects big.",
+     "one hero per picture: bigger, nearer, or in the pool of light (piece-spot). Two equal plates means no hero.",
+     "the camera sits left of centre and low, so objects show a little off their y and lean differently at the top and bottom of the stage: set positions by render, not by arithmetic.",
+     "type on a plate is flat (piece-label); only a hero word is an object (piece-type3d). Move things off with piece-tip-away, never a fade.",
+     "the camera's slow drift keeps a held picture alive by itself; a pool that keeps rising (piece-spot, long dur) adds to it. No other motion is needed to hold."
     ]
    },
    "section": {
@@ -1091,15 +1104,15 @@
    },
    "still": {
     "path": "arsenal/stills/piece-stage.jpg",
-    "sha256": "606c6d55f5e9fa7e6f503022cfc3a65caf616446d644669bb5d9faad7737b61f"
+    "sha256": "90ae6600a1e171787ddaf6b135e3712eb2286a5695adeeac71360746b1f83d76"
    }
   },
   {
    "id": "piece-stand-up",
-   "revision": "f3c0bdba",
+   "revision": "e3ea8aba",
    "level": "recipe",
    "name": "Stand an object up",
-   "line": "An object lying flat stands up past upright and settles back, from wherever its rotation is; what sits on it stays hidden until it is half way up, so no type is seen squashed edge-on.",
+   "line": "An object lying flat on its back stands up on its bottom edge, past upright, and settles back, from wherever its rotation is; what sits on it stays hidden until it is half way up, so no type is seen squashed edge-on.",
    "use_for": "a pill, a card or a result arriving by standing up; the one item chosen from many standing up to be seen",
    "status": "proven",
    "kind": "piece",
@@ -1132,9 +1145,10 @@
    "call": {
     "load": "stand-up",
     "functions": [
-     "standUp"
+     "standUp",
+     "hingeBottom"
     ],
-    "signature": "PCS.standUp(plate, { t, dur, hide })",
+    "signature": "PCS.standUp(plate, { t, dur, hide, hinge })",
     "options": [
      {
       "name": "t",
@@ -1147,12 +1161,17 @@
      {
       "name": "hide",
       "text": "false keeps it visible before t (default: hidden until t)"
+     },
+     {
+      "name": "hinge",
+      "text": "'bottom' (default) pivots on its bottom edge, as a thing standing up does: it lies back away from the camera and never sweeps through what is in front of or below it; 'centre' turns about its middle. Once it has settled it turns about its middle again, so later flips stay in place"
      }
     ],
     "returns": "the layer",
     "example": "var card = PCS.plate(st.comp, { name: 'card', w: 720, h: 470, round: 34, pos: [540, 900, 0] });\nPCS.onFace(PCS.label(st.comp, { text: '42 passed, 0 failed', size: 52, on: 'surface' }), card);\nPCS.standUp(card, { t: 2.6 });",
     "notes": [
-     "seated layers with their own opacity timing keep it."
+     "seated layers with their own opacity timing keep it.",
+     "an object can land on it while it stands (piece-land-on) as long as the landing ends after it has settled."
     ]
    },
    "section": {
@@ -1161,12 +1180,12 @@
    },
    "still": {
     "path": "arsenal/stills/piece-stand-up.jpg",
-    "sha256": "9c6f3aeaba149dee5f632942794bf95bb85017cbd50eb1e8a8cebfa6bc2b2a73"
+    "sha256": "add7475f51e8d3539fa2588e7f8bbc780923f2bb9637285bbc612f607f197b95"
    }
   },
   {
    "id": "piece-swap-face",
-   "revision": "b9e21a62",
+   "revision": "baebbaf4",
    "level": "recipe",
    "name": "Change what a face says while it is turned away",
    "line": "At one moment the old layer on a face goes and the new one shows, so an object that turns away and back comes back saying something new.",
@@ -1216,7 +1235,7 @@
    },
    "still": {
     "path": "arsenal/stills/piece-swap-face.jpg",
-    "sha256": "e8b652c44b66584cf325f070c364c0157c0e78a612abd53a9d46acab39cc1c1a"
+    "sha256": "28e05c6d479e80b934bbdfaf3be7e0169abc4a58538026383e7e560736f05228"
    }
   },
   {
@@ -1287,22 +1306,23 @@
    },
    "still": {
     "path": "arsenal/stills/piece-tick.jpg",
-    "sha256": "d9b948265a6a018bae4b8fb312ec68f1ebf613406649ec7318b022e2521ddcc3"
+    "sha256": "85f9f14ec64b28f698641fbef393e097aba8ddbfb98479ed2865a1cf42649fcd"
    }
   },
   {
    "id": "piece-tip-away",
-   "revision": "e25a56bb",
+   "revision": "0b8b2e3d",
    "level": "recipe",
    "name": "Tip an object away into the dark",
-   "line": "An object tips backward and falls away behind the backplate, then is hidden with what sits on it.",
-   "use_for": "dismissing what is finished as the next thing arrives; a wrong answer leaving; clearing the frame without a fade",
+   "line": "An object tips backward and falls away behind the backplate, then is hidden with what sits on it; type on it goes once it has tipped half way, so it is never seen squashed.",
+   "use_for": "dismissing what is finished as the next thing arrives; a wrong or hollow answer leaving (flag a problem with it); a line of words leaving; clearing the frame without a fade",
    "status": "proven",
    "kind": "piece",
    "job": "hand-over",
    "support": [
     "fail-then-fix",
-    "before-after"
+    "before-after",
+    "flag-a-problem"
    ],
    "mood": [],
    "needs": [],
@@ -1362,22 +1382,23 @@
    },
    "still": {
     "path": "arsenal/stills/piece-tip-away.jpg",
-    "sha256": "c8d091cdf040939fa63be94a534bdf1a29f1fc5ca8723334ee2de31d94e6f95a"
+    "sha256": "7711085a3817a481cc34c26608c3ea40f8737f9c1665d74228b3fcf4d595a868"
    }
   },
   {
    "id": "piece-two-sided",
-   "revision": "16fa6c9d",
+   "revision": "764e923d",
    "level": "recipe",
    "name": "One object with a different colour each side",
    "line": "Makes one thick object whose front is one colour and whose back is another, so a flip changes its colour as well as what it says.",
-   "use_for": "a question that turns into the answer; wrong to right; a quiet tile that turns to the accent",
+   "use_for": "a question that turns into the answer (a question mark on one side, the answer on the other); a question set against its answer; wrong to right; a quiet tile that turns to the accent",
    "status": "proven",
    "kind": "piece",
    "job": "before-after",
    "support": [
     "fail-then-fix",
-    "show-proof"
+    "show-proof",
+    "compare"
    ],
    "mood": [],
    "needs": [],
@@ -1429,12 +1450,12 @@
    },
    "still": {
     "path": "arsenal/stills/piece-two-sided.jpg",
-    "sha256": "a2bb9b2d7afe959e408c2cb9c9fa28cf1fbd8c8a8427b7282c3ce259d2603ac5"
+    "sha256": "d9cb7e04f08f2b1793172f29f6ab1273b4909246964716c3af8904e5027beddf"
    }
   },
   {
    "id": "piece-type3d",
-   "revision": "d411c43c",
+   "revision": "8636ea1c",
    "level": "recipe",
    "name": "One hero word or number as a lit object",
    "line": "Makes one word or number a solid, lit object with a shallow extrusion and no bevel, that casts a shadow and shows its side wall.",
@@ -1511,15 +1532,15 @@
    },
    "still": {
     "path": "arsenal/stills/piece-type3d.jpg",
-    "sha256": "e9d5fe805718f622478f09b7fb4037bb1077bfd3b30de1d74dfb003b7f41fa2e"
+    "sha256": "3cff9f42aa1da14dcaf5c57e150d01e6c0742492940ecf51d951c9a61c5ffc3a"
    }
   },
   {
    "id": "piece-words",
-   "revision": "394c9cad",
+   "revision": "f069fc5d",
    "level": "recipe",
    "name": "A line that builds word by word",
-   "line": "Lays out one centred line of flat words and shows each at its own time, in place, so the line never jumps as it builds.",
+   "line": "Lays out one line of flat words and shows each at its own time; the words never slide, and the part already shown stays centred where you put the line (or under an object).",
    "use_for": "a phrase whose words appear one at a time as they are said; a second message that builds on the back of a card after a flip",
    "status": "proven",
    "kind": "piece",
@@ -1553,7 +1574,7 @@
     "functions": [
      "words"
     ],
-    "signature": "PCS.words(comp, { words: [{ text, t }], size, weight, color, on, gap, name })",
+    "signature": "PCS.words(comp, { words: [{ text, t }], size, weight, color, on, gap, name, pos, under, below, centre })",
     "options": [
      {
       "name": "words",
@@ -1570,10 +1591,22 @@
      {
       "name": "gap",
       "text": "space between words, default 0.28 of the size"
+     },
+     {
+      "name": "pos",
+      "text": "[x, y, z] where the line's centre sits (default [540, 960, 0]); graphics live in about y 220 to 1180"
+     },
+     {
+      "name": "under",
+      "text": "a layer to hang the line under, centred on it (instead of pos); below: space between its bottom edge and the line, default 0.9 of the size"
+     },
+     {
+      "name": "centre",
+      "text": "'visible' (default) keeps the words shown so far centred, easing the line over by half a word as each one appears; 'line' lays the whole line out centred from the start, so the first words sit left of centre until it is complete"
      }
     ],
-    "returns": "{ holder, layers, width }: the holder is a null the words hang on; seat or move it (PCS.onFace(line.holder, card))",
-    "example": "var line = PCS.words(st.comp, { words: [{ text: 'Ask', t: 1.5 }, { text: 'for', t: 1.9 }, { text: 'proof', t: 2.1 }], size: 80, on: 'surface' });\nPCS.onFace(line.holder, card);",
+    "returns": "{ holder, layers, width }: the holder is a null the words hang on; move it with its moves (tip-away), or seat it on a face (PCS.onFace(line.holder, card))",
+    "example": "var q = PCS.words(st.comp, { words: [{ text: 'is', t: 1.4 }, { text: 'it', t: 1.6 }, { text: 'right?', t: 1.9 }], size: 84, under: tile });\nvar line = PCS.words(st.comp, { words: [{ text: 'Ask', t: 1.5 }, { text: 'for', t: 1.9 }, { text: 'proof', t: 2.1 }], size: 80, on: 'surface' });\nPCS.onFace(line.holder, card);",
     "notes": [
      "time each word to the voice; a word that slides in makes the whole line look like it moves."
     ]
@@ -1584,7 +1617,7 @@
    },
    "still": {
     "path": "arsenal/stills/piece-words.jpg",
-    "sha256": "d483c4d37e58ad200681865256b71c57da7db5ac553be40ec481ca47a489b41f"
+    "sha256": "3df0306ef56dbf8660b40882c064c2988ac94959687acb84699476f995457f17"
    }
   },
   {
@@ -5898,7 +5931,7 @@
   },
   {
    "id": "style-house",
-   "revision": "f7672160",
+   "revision": "5d59c227",
    "level": "style",
    "name": "House: graphite",
    "line": "The house look: dark graphite objects a shade above a near-black ground, cream type, one vermilion, Jost SemiBold, no grain.",
@@ -5943,12 +5976,12 @@
    },
    "still": {
     "path": "arsenal/stills/style-house.jpg",
-    "sha256": "522a7f3ff6c2ac28f2c8f8b0ce0aacdd536db7bfc299aea208eb6ad90285ac2f"
+    "sha256": "fca45d34c05f8b30d31ed920f71ac2a969c0523488a76438e530abb3d143b58f"
    }
   },
   {
    "id": "style-example-night-glass",
-   "revision": "85ba824e",
+   "revision": "22d4d276",
    "level": "style",
    "name": "Example: night glass",
    "line": "An example, not a house look: thin blue-slate plates with a metallic sheen under cool light, one mint accent.",
@@ -5993,7 +6026,7 @@
   },
   {
    "id": "style-example-warm-paper",
-   "revision": "86044516",
+   "revision": "145db954",
    "level": "style",
    "name": "Example: warm paper",
    "line": "An example, not a house look: cream plates under a warm key on a deep blue-black ground, one red-orange accent, light grain.",

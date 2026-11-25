@@ -11,15 +11,18 @@
 //   var yes = PCS.type3d(st.comp, { text: 'Yes', size: 240, pos: [770, 640, 0] });
 //   PCS.hideUntil(yes, 1.0);
 //   PCS.hideAfter(yes, 2.9);
+// note: on a light it sets the light's start (hideUntil) or end (hideAfter); a pool made with piece-spot's on already goes with its object.
 // note: children do not take a parent's opacity in After Effects, so hiding a plate by its own opacity leaves its labels floating; this hides them all.
 // note: never fade or grey something out to dismiss it; move it away (piece-tip-away) and hide it once it is gone.
 // ---
 PCS.hideUntil = function (layer, t) {
+  if (layer instanceof LightLayer) { layer.inPoint = t; return layer; }
   var all = [layer].concat(PCS.children(layer));
-  for (var i = 0; i < all.length; i++) { try { var p = PCS.TG(all[i]).property('ADBE Opacity'); PCS.cutAt(p, 0, 0); PCS.cutAt(p, t, 100); } catch (e) {} }
+  for (var i = 0; i < all.length; i++) { try { PCS.showFrom(PCS.TG(all[i]).property('ADBE Opacity'), t); } catch (e) {} }
   return layer;
 };
 PCS.hideAfter = function (layer, t) {
+  if (layer instanceof LightLayer) { layer.outPoint = t; return layer; }
   var all = [layer].concat(PCS.children(layer));
   for (var i = 0; i < all.length; i++) { try { PCS.cutAt(PCS.TG(all[i]).property('ADBE Opacity'), t, 0); } catch (e) {} }
   return layer;

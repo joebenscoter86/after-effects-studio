@@ -289,7 +289,9 @@ export function pieceEntry(x, still) {
 export const STYLE_DEFAULT = 'house';
 export const STYLE_ROLES = ['house', 'example', 'look'];
 const BLOCK_COLOURS = ['ground', 'backplate', 'surface', 'ink', 'type', 'accent', 'onAccent', 'quiet', 'keyColor', 'fillColor'];
-const BLOCK_NUMBERS = ['keyIntensity', 'fillIntensity', 'envIntensity', 'grain', 'depth', 'bevel'];
+// fillReach: how far the fill reaches (0: everywhere), so objects lift and the backplate stays dark; litCap: the brightest a
+// lit colour's channel may be (0: no cap), so a saturated colour renders saturated; rowDepth, rowBevel: piece-rows' bars.
+const BLOCK_NUMBERS = ['keyIntensity', 'fillIntensity', 'envIntensity', 'grain', 'depth', 'bevel', 'fillReach', 'litCap', 'rowDepth', 'rowBevel'];
 const BLOCK_STRINGS = ['font', 'weight'];
 export const BLOCK_KEYS = [...BLOCK_COLOURS, ...BLOCK_NUMBERS, ...BLOCK_STRINGS, 'tilt', 'material'];
 const MATERIAL_KEYS = ['specular', 'shininess', 'metal'];
@@ -338,6 +340,11 @@ export function styleBlockProblems(blocks, { vocab = {}, styleIds = [] } = {}) {
     for (const k of BLOCK_COLOURS) if (k in v && !isColour(v[k])) p.push(`${where}: ${k} is not [r, g, b] from 0 to 1`);
     for (const k of BLOCK_NUMBERS) if (k in v && !isNumber(v[k])) p.push(`${where}: ${k} is not a number of 0 or more`);
     for (const k of BLOCK_STRINGS) if (k in v && !(typeof v[k] === 'string' && v[k].trim())) p.push(`${where}: ${k} is not a name`);
+    if (b.previous) {   // the values before the last tune, loadable as <id>-previous
+      const pv = b.previous.values ?? {};
+      if (!b.previous.date || !b.previous.why) p.push(`${where}: previous needs a date and a why`);
+      for (const k of Object.keys(pv)) if (!BLOCK_KEYS.includes(k)) p.push(`${where}: previous has unknown value "${k}"`);
+    }
     if ('tilt' in v && !(Array.isArray(v.tilt) && v.tilt.length === 2 && v.tilt.every((n) => typeof n === 'number'))) p.push(`${where}: tilt is not [x, y] degrees`);
     if ('material' in v && v.material !== null && !(typeof v.material === 'object' && Object.entries(v.material).every(([k, n]) => MATERIAL_KEYS.includes(k) && isNumber(n)))) {
       p.push(`${where}: material is null or { ${MATERIAL_KEYS.join(', ')} } numbers`);

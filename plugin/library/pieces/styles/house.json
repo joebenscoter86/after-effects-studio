@@ -11,7 +11,7 @@
   "depth: extrusion",
   "depth: shadow"
  ],
- "source": "Picked on 2026-11-24 (\"A, graphite\") from three options rendered on the face card. Colours from the house STYLE.md section 1: near-black #101012, cream #F2EEE4, one vermilion #FF5F3E; Jost SemiBold. Objects are graphite (0.20, 0.20, 0.225); a slightly warm key with a cool fill; light specular on the plates.",
+ "source": "Picked on 2026-11-24 (\"A, graphite\") from three options rendered on the face card. Colours from the house STYLE.md section 1: near-black #101012, cream #F2EEE4, one vermilion #FF5F3E; Jost SemiBold. Objects are graphite (0.20, 0.20, 0.225); a slightly warm key with a cool fill; light specular on the plates. Tuned by render on 2026-11-24 so objects read as built: a stronger fill that stops before the backplate (fillReach), so objects separate from the ground while the ground stays dark; colours capped at 0.6 (litCap) so the vermilion renders saturated instead of clipping to peach; a thicker plate and bevel for a side wall and a lit edge; raised rows with a bevel; the quiet tone darkened so it renders as before under the stronger fill.",
  "open": [
   "the quiet grid ground",
   "the house face card with its cream rim"
@@ -53,9 +53,9 @@
    0.894
   ],
   "quiet": [
-   0.34,
-   0.35,
-   0.4
+   0.25,
+   0.26,
+   0.29
   ],
   "keyColor": [
    1,
@@ -68,13 +68,13 @@
    1
   ],
   "keyIntensity": 170,
-  "fillIntensity": 80,
+  "fillIntensity": 170,
   "envIntensity": 60,
   "grain": 0,
   "font": "Jost",
   "weight": "SemiBold",
-  "depth": 36,
-  "bevel": 4,
+  "depth": 44,
+  "bevel": 8,
   "tilt": [
    4,
    -8
@@ -82,6 +82,28 @@
   "material": {
    "specular": 60,
    "shininess": 40
+  },
+  "fillReach": 1500,
+  "litCap": 0.6,
+  "rowDepth": 10,
+  "rowBevel": 3
+ },
+ "previous": {
+  "date": "2026-11-24",
+  "why": "The values before the graphite tune for thickness and light; PCS.use('house-previous') builds with them.",
+  "values": {
+   "fillIntensity": 80,
+   "depth": 36,
+   "bevel": 4,
+   "fillReach": 0,
+   "litCap": 0,
+   "rowDepth": 6,
+   "rowBevel": 0,
+   "quiet": [
+    0.34,
+    0.35,
+    0.4
+   ]
   }
  }
 }

@@ -728,7 +728,8 @@ test('pieces: the shipped folder reads clean, each with a proof scene, and the c
 
 const VALUES = { ground: [0.06, 0.06, 0.07], backplate: [0.08, 0.08, 0.1], surface: [0.2, 0.2, 0.22], ink: [0.95, 0.93, 0.89], type: [0.95, 0.93, 0.89],
   accent: [1, 0.37, 0.24], onAccent: [0.95, 0.93, 0.89], quiet: [0.34, 0.35, 0.4], keyColor: [1, 0.95, 0.88], fillColor: [0.92, 0.94, 1],
-  keyIntensity: 170, fillIntensity: 80, envIntensity: 60, grain: 0, font: 'Jost', weight: 'SemiBold', depth: 36, bevel: 4, tilt: [4, -8], material: { specular: 60 } };
+  keyIntensity: 170, fillIntensity: 80, envIntensity: 60, grain: 0, font: 'Jost', weight: 'SemiBold', depth: 36, bevel: 4, tilt: [4, -8], material: { specular: 60 },
+  fillReach: 0, litCap: 0, rowDepth: 6, rowBevel: 0 };
 const blockOf = (id, o = {}) => {
   const block = { id, title: `T ${id}`, role: id === 'house' ? 'house' : id.startsWith('example-') ? 'example' : 'look', line: 'A line.', source: 'Somewhere.',
     provides: ['depth: extrusion'], values: VALUES, ...(id === 'house' ? { default: true } : {}), ...o };
@@ -754,6 +755,10 @@ test('style blocks: the build refuses no house default, two defaults, a bad valu
   assert.match(probs([blockOf('house'), blockOf('ghost', { borrowed_from: 'style-ghost' })]), /style-ghost is no style/);
   assert.match(probs([blockOf('house'), blockOf('glassy', { role: 'example' })]), /an example's id starts with "example-"/);
   assert.match(probs([blockOf('house', { provides: ['material: wood'] })]), /wood/);
+  // values before a tune are kept as "previous": dated, with a why, and only known values
+  assert.deepEqual(styleBlockProblems([blockOf('house', { previous: { date: '2026-11-24', why: 'before the tune', values: { fillIntensity: 80, quiet: [0.34, 0.35, 0.4] } } })], { vocab: BLOCK_VOCAB }), []);
+  assert.match(probs([blockOf('house', { previous: { values: { fillIntensity: 80 } } })]), /previous needs a date and a why/);
+  assert.match(probs([blockOf('house', { previous: { date: 'd', why: 'w', values: { glow: 1 } } })]), /previous has unknown value "glow"/);
 });
 
 test('style blocks: house and examples become style entries, house first; a look adds block to its style; the name guard covers block text', () => {
