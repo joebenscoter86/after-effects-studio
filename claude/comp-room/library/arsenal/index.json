@@ -2,7 +2,7 @@
  "arsenal": "The library at three levels: styles (a look a section can borrow: colour, type, light, material), worlds (a set a section lives in) and recipes (one technique for one beat). Among the recipes, pieces are runnable code: one file each, called by name. Every entry has a still and says what it provides. Look at a level as pictures with ae_arsenal browse; ask per beat by job, by what an entry provides, or in plain words, with find (pieces come first); read any entry with get (a piece answers with its call); list the jobs and the provides vocabulary with jobs.",
  "tool": "ae_arsenal",
  "vocab": "jobs-v1",
- "version": "84b3f868",
+ "version": "48668ceb",
  "documents": [
   {
    "id": "arsenal-index",

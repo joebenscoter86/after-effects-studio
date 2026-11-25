@@ -748,14 +748,14 @@
       "title": "Technique arsenal index: documents, vocabulary and counts",
       "path": "arsenal/index.json",
       "kind": "catalog",
-      "sha256": "7c6d79c64e6f2ec7f6c3ebef5cde524593d9aef71d803510c4a689df2a4f2abd"
+      "sha256": "a111772c5403a19626b754d02024eb3caf912ebaf936396ca8bcaf952c37312f"
     },
     {
       "id": "arsenal-catalog",
       "title": "Library catalog: one record per style, world, recipe and piece, queried by ae_arsenal",
       "path": "arsenal/catalog.json",
       "kind": "catalog",
-      "sha256": "7aaffa8e02746901f77c6a9e358afc7a57b8d7a451113c994794a34d136533cd"
+      "sha256": "7e57efdb710e6d5c033947be46fc03666c5b4025d044c305dcc17009b070ec0c"
     },
     {
       "id": "arsenal-jobs",
@@ -846,7 +846,7 @@
       "title": "Style block: House: graphite (PCS.use('house'))",
       "path": "pieces/styles/house.json",
       "kind": "style",
-      "sha256": "db47a1cc183054f3d2ea0cd2ccf262c5486f9752e0e99f6e622ed1f0b29bc0a0"
+      "sha256": "05c00128d4bc91d5fe0b37be760d3a1da38bde1f869b5f63d63e0bd43052fdb7"
     },
     {
       "id": "pieces-styles-proof",

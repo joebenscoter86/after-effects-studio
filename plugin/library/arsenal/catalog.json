@@ -1,6 +1,6 @@
 {
  "vocab": "jobs-v1",
- "version": "84b3f868",
+ "version": "48668ceb",
  "jobs": [
   "land-number",
   "count-things",
@@ -6094,7 +6094,7 @@
   },
   {
    "id": "style-house",
-   "revision": "db47a1cc",
+   "revision": "05c00128",
    "level": "style",
    "name": "House: graphite",
    "line": "The house look: dark graphite objects a shade above a near-black ground, cream type, one vermilion, Jost SemiBold, no grain.",
