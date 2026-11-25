@@ -87,6 +87,17 @@ PCS.hold = function (p, keys) {
     p.setInterpolationTypeAtKey(k, KeyframeInterpolationType.HOLD, KeyframeInterpolationType.HOLD);
   }
 };
+// A clean cut at time t: from t on the property holds v. Earlier keys are kept, and the key before t holds its value up
+// to t instead of easing into the cut. A property with no keys keeps its current value before t. (One key alone would
+// hold its value for ALL time in After Effects, so a cut never goes on as a lone key.)
+PCS.cutAt = function (p, t, v) {
+  if (p.numKeys === 0) { var k0 = p.addKey(0); p.setValueAtKey(k0, p.value); }
+  for (var j = p.numKeys; j >= 1; j--) { if (Math.abs(p.keyTime(j) - t) < 0.0005) { p.removeKey(j); } }
+  var k = p.addKey(t); p.setValueAtKey(k, v);
+  var hold = KeyframeInterpolationType.HOLD;
+  p.setInterpolationTypeAtKey(k, p.keyInInterpolationType(k), hold);
+  if (k > 1) { p.setInterpolationTypeAtKey(k - 1, p.keyInInterpolationType(k - 1), hold); }
+};
 PCS.zero = function (L) {
   var T = PCS.TG(L);
   try { T.property('ADBE Orientation').setValue([0, 0, 0]); } catch (e) {}
@@ -96,20 +107,30 @@ PCS.findItem = function (name) {
   for (var i = 1; i <= app.project.numItems; i++) { if (app.project.item(i).name === name) { return app.project.item(i); } }
   return null;
 };
-// Removes a comp and the solids only it used (a stage's backplate and grain), so re-running a scene leaves nothing behind.
+// Removes a comp and what only it used: its solids (a stage's backplate and grain) and the library's own files it imported
+// (the light map), so re-running a scene leaves nothing behind. Footage from anywhere else is left in the project.
 PCS.removeComp = function (comp) {
-  var solids = [];
+  var mine = []; var lib = new Folder(PCS.dir).fsName; var prefix = comp.name + ' ';
   for (var i = 1; i <= comp.numLayers; i++) {
     var src = comp.layer(i).source;
-    if (src && src instanceof FootageItem && src.mainSource instanceof SolidSource) { solids.push(src); }
+    if (src instanceof CompItem && src.name.indexOf(prefix) === 0) { mine.push(src); continue; }   // its own sub-comps, named after it
+    if (!src || !(src instanceof FootageItem)) { continue; }
+    var solid = src.mainSource instanceof SolidSource;
+    var ours = !solid && src.mainSource && src.mainSource.file && src.mainSource.file.fsName.indexOf(lib) === 0;
+    if (solid || ours) { mine.push(src); }
   }
   comp.remove();
-  for (var j = 0; j < solids.length; j++) { try { if (solids[j].usedIn.length === 0) { solids[j].remove(); } } catch (e) {} }
+  for (var j = 0; j < mine.length; j++) {
+    try { if (mine[j].usedIn.length === 0) { if (mine[j] instanceof CompItem) { PCS.removeComp(mine[j]); } else { mine[j].remove(); } } } catch (e) {}
+  }
 };
+// The project's item for this file, imported the first time. Matched by path, so a same-named file from elsewhere is not taken.
 PCS.importOnce = function (path) {
-  var f = new File(path);
-  var it = PCS.findItem(decodeURI(f.name));
-  if (it && it.mainSource && it.mainSource.file && it.mainSource.file.fsName === f.fsName) { return it; }
+  var f = new File(path); var name = decodeURI(f.name);
+  for (var i = 1; i <= app.project.numItems; i++) {
+    var it = app.project.item(i);
+    if (it.name === name && it instanceof FootageItem && it.mainSource && it.mainSource.file && it.mainSource.file.fsName === f.fsName) { return it; }
+  }
   return app.project.importFile(new ImportOptions(f));
 };
 // The style's font by weight name. A font set by name alone silently falls back, so this warns when it is missing.
@@ -156,7 +177,35 @@ PCS.children = function (layer) {
   }
   return out;
 };
-// A plate records its size in its comment (depth=, bevel=, w=, h=) so later pieces can seat things on it.
-PCS.num = function (plate, key, dflt) { var m = new RegExp(key + '=([\\d.]+)').exec(plate.comment || ''); return m ? parseFloat(m[1]) : dflt; };
+// Where a point of a layer (its own coordinates, default its anchor) sits in the comp's 3D space at time t, parents and
+// all. After Effects gives this only to expressions, so a temporary null asks for it and is removed.
+PCS.toWorld = function (layer, local, t) {
+  var comp = layer.containingComp;
+  var N = comp.layers.addNull(); N.threeDLayer = true; N.parent = layer; PCS.zero(N);
+  PCS.TG(N).property('ADBE Anchor Point').setValue([0, 0, 0]);
+  PCS.TG(N).property('ADBE Position').setValue(local || PCS.TG(layer).property('ADBE Anchor Point').valueAtTime(t || 0, false));
+  var fx = N.property('ADBE Effect Parade').addProperty('ADBE Point3D Control');
+  fx.property(1).expression = 'toWorld([0,0,0])';
+  var p = fx.property(1).valueAtTime(t || 0, false);
+  var src = N.source; N.remove();
+  try { if (src && src.usedIn.length === 0) { src.remove(); } } catch (e) {}   // a null leaves its solid in the project
+  return p;
+};
+// A colour k of the way from a to b.
+PCS.mix = function (a, b, k) { return [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k, a[2] + (b[2] - a[2]) * k]; };
+// A rounded rectangle as a mask or path Shape: centre [cx, cy], size [w, h], corner radius r.
+PCS.roundRect = function (cx, cy, w, h, r) {
+  r = Math.max(0, Math.min(r || 0, w / 2, h / 2)); var k = 0.5523 * r;
+  var l = cx - w / 2; var t = cy - h / 2; var R = cx + w / 2; var B = cy + h / 2;
+  var s = new Shape();
+  s.vertices = [[l + r, t], [R - r, t], [R, t + r], [R, B - r], [R - r, B], [l + r, B], [l, B - r], [l, t + r]];
+  s.inTangents = [[-k, 0], [0, 0], [0, -k], [0, 0], [k, 0], [0, 0], [0, k], [0, 0]];
+  s.outTangents = [[0, 0], [k, 0], [0, 0], [0, k], [0, 0], [-k, 0], [0, 0], [0, -k]];
+  s.closed = true;
+  return s;
+};
+// A plate records its size in its comment (depth=, bevel=, w=, h=, round=) so later pieces can seat things on it.
+// (A key must start a word: 'h=' must not match the end of 'depth='.)
+PCS.num = function (plate, key, dflt) { var m = new RegExp('(^|\\s)' + key + '=([\\d.]+)').exec(plate.comment || ''); return m ? parseFloat(m[2]) : dflt; };
 PCS.bevelOf = function (plate) { return PCS.num(plate, 'bevel', 3); };
 PCS.depthOf = function (plate) { return PCS.num(plate, 'depth', 40); };

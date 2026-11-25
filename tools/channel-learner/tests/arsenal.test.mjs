@@ -688,7 +688,7 @@ test('pieces: an entry is a recipe of kind piece with its call, the pieces it lo
   assert.deepEqual(flip.composes, ['piece-plate']);
   assert.deepEqual(flip.requires, ['plate']);
   assert.equal(flip.use_for, 'something that turns over');
-  assert.deepEqual(flip.call, { load: 'flip', signature: 'PCS.flip(layer, { t, axis })', options: [{ name: 't', text: 'start time in seconds' }, { name: 'axis', text: "'y' or 'x'" }],
+  assert.deepEqual(flip.call, { load: 'flip', functions: ['flip'], signature: 'PCS.flip(layer, { t, axis })', options: [{ name: 't', text: 'start time in seconds' }, { name: 'axis', text: "'y' or 'x'" }],
     returns: 'the layer', example: 'PCS.flip(pill, { t: 1.2 });\nPCS.flip(pill, { t: 3.0 });   // and back', notes: ['put the back face on first.'] });
   assert.equal(flip.still.path, 'arsenal/stills/piece-flip.jpg');
   const plate = cat.entries[1];

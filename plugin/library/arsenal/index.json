@@ -2,7 +2,7 @@
  "arsenal": "The library at three levels: styles (a look a section can borrow: colour, type, light, material), worlds (a set a section lives in) and recipes (one technique for one beat). Among the recipes, pieces are runnable code: one file each, called by name. Every entry has a still and says what it provides. Look at a level as pictures with ae_arsenal browse; ask per beat by job, by what an entry provides, or in plain words, with find (pieces come first); read any entry with get (a piece answers with its call); list the jobs and the provides vocabulary with jobs.",
  "tool": "ae_arsenal",
  "vocab": "jobs-v1",
- "version": "74913d3f",
+ "version": "f2a859e7",
  "documents": [
   {
    "id": "arsenal-index",
@@ -113,6 +113,78 @@
    "kind": "code"
   },
   {
+   "id": "piece-hand-over",
+   "title": "Piece: Hand over from a face card beat to a cutaway room",
+   "path": "pieces/hand-over.jsx",
+   "kind": "code"
+  },
+  {
+   "id": "piece-hand-over-proof",
+   "title": "Proof scene for the Hand over from a face card beat to a cutaway room piece",
+   "path": "pieces/proof/hand-over.jsx",
+   "kind": "code"
+  },
+  {
+   "id": "piece-hide",
+   "title": "Piece: Show or hide an object with what sits on it",
+   "path": "pieces/hide.jsx",
+   "kind": "code"
+  },
+  {
+   "id": "piece-hide-proof",
+   "title": "Proof scene for the Show or hide an object with what sits on it piece",
+   "path": "pieces/proof/hide.jsx",
+   "kind": "code"
+  },
+  {
+   "id": "piece-label",
+   "title": "Piece: Flat crisp label",
+   "path": "pieces/label.jsx",
+   "kind": "code"
+  },
+  {
+   "id": "piece-label-proof",
+   "title": "Proof scene for the Flat crisp label piece",
+   "path": "pieces/proof/label.jsx",
+   "kind": "code"
+  },
+  {
+   "id": "piece-land-on",
+   "title": "Piece: Carry an object onto another",
+   "path": "pieces/land-on.jsx",
+   "kind": "code"
+  },
+  {
+   "id": "piece-land-on-proof",
+   "title": "Proof scene for the Carry an object onto another piece",
+   "path": "pieces/proof/land-on.jsx",
+   "kind": "code"
+  },
+  {
+   "id": "piece-on-face",
+   "title": "Piece: Seat a layer on a face of an object",
+   "path": "pieces/on-face.jsx",
+   "kind": "code"
+  },
+  {
+   "id": "piece-on-face-proof",
+   "title": "Proof scene for the Seat a layer on a face of an object piece",
+   "path": "pieces/proof/on-face.jsx",
+   "kind": "code"
+  },
+  {
+   "id": "piece-picture-face",
+   "title": "Piece: A picture or screenshot as the face of an object",
+   "path": "pieces/picture-face.jsx",
+   "kind": "code"
+  },
+  {
+   "id": "piece-picture-face-proof",
+   "title": "Proof scene for the A picture or screenshot as the face of an object piece",
+   "path": "pieces/proof/picture-face.jsx",
+   "kind": "code"
+  },
+  {
    "id": "piece-plate",
    "title": "Piece: Thick lit plate",
    "path": "pieces/plate.jsx",
@@ -125,14 +197,38 @@
    "kind": "code"
   },
   {
+   "id": "piece-room",
+   "title": "Piece: Lit room for a full-frame cutaway",
+   "path": "pieces/room.jsx",
+   "kind": "code"
+  },
+  {
+   "id": "piece-room-proof",
+   "title": "Proof scene for the Lit room for a full-frame cutaway piece",
+   "path": "pieces/proof/room.jsx",
+   "kind": "code"
+  },
+  {
+   "id": "piece-rows",
+   "title": "Piece: Raised rows of content on a card",
+   "path": "pieces/rows.jsx",
+   "kind": "code"
+  },
+  {
+   "id": "piece-rows-proof",
+   "title": "Proof scene for the Raised rows of content on a card piece",
+   "path": "pieces/proof/rows.jsx",
+   "kind": "code"
+  },
+  {
    "id": "piece-spot",
-   "title": "Piece: Spot light",
+   "title": "Piece: Spot light, or a pool of light on the hero",
    "path": "pieces/spot.jsx",
    "kind": "code"
   },
   {
    "id": "piece-spot-proof",
-   "title": "Proof scene for the Spot light piece",
+   "title": "Proof scene for the Spot light, or a pool of light on the hero piece",
    "path": "pieces/proof/spot.jsx",
    "kind": "code"
   },
@@ -147,13 +243,97 @@
    "title": "Proof scene for the Lit stage for a face card beat piece",
    "path": "pieces/proof/stage.jsx",
    "kind": "code"
+  },
+  {
+   "id": "piece-stand-up",
+   "title": "Piece: Stand an object up",
+   "path": "pieces/stand-up.jsx",
+   "kind": "code"
+  },
+  {
+   "id": "piece-stand-up-proof",
+   "title": "Proof scene for the Stand an object up piece",
+   "path": "pieces/proof/stand-up.jsx",
+   "kind": "code"
+  },
+  {
+   "id": "piece-swap-face",
+   "title": "Piece: Change what a face says while it is turned away",
+   "path": "pieces/swap-face.jsx",
+   "kind": "code"
+  },
+  {
+   "id": "piece-swap-face-proof",
+   "title": "Proof scene for the Change what a face says while it is turned away piece",
+   "path": "pieces/proof/swap-face.jsx",
+   "kind": "code"
+  },
+  {
+   "id": "piece-tick",
+   "title": "Piece: A tick that draws on",
+   "path": "pieces/tick.jsx",
+   "kind": "code"
+  },
+  {
+   "id": "piece-tick-proof",
+   "title": "Proof scene for the A tick that draws on piece",
+   "path": "pieces/proof/tick.jsx",
+   "kind": "code"
+  },
+  {
+   "id": "piece-tip-away",
+   "title": "Piece: Tip an object away into the dark",
+   "path": "pieces/tip-away.jsx",
+   "kind": "code"
+  },
+  {
+   "id": "piece-tip-away-proof",
+   "title": "Proof scene for the Tip an object away into the dark piece",
+   "path": "pieces/proof/tip-away.jsx",
+   "kind": "code"
+  },
+  {
+   "id": "piece-two-sided",
+   "title": "Piece: One object with a different colour each side",
+   "path": "pieces/two-sided.jsx",
+   "kind": "code"
+  },
+  {
+   "id": "piece-two-sided-proof",
+   "title": "Proof scene for the One object with a different colour each side piece",
+   "path": "pieces/proof/two-sided.jsx",
+   "kind": "code"
+  },
+  {
+   "id": "piece-type3d",
+   "title": "Piece: One hero word or number as a lit object",
+   "path": "pieces/type3d.jsx",
+   "kind": "code"
+  },
+  {
+   "id": "piece-type3d-proof",
+   "title": "Proof scene for the One hero word or number as a lit object piece",
+   "path": "pieces/proof/type3d.jsx",
+   "kind": "code"
+  },
+  {
+   "id": "piece-words",
+   "title": "Piece: A line that builds word by word",
+   "path": "pieces/words.jsx",
+   "kind": "code"
+  },
+  {
+   "id": "piece-words-proof",
+   "title": "Proof scene for the A line that builds word by word piece",
+   "path": "pieces/proof/words.jsx",
+   "kind": "code"
   }
  ],
  "counts": {
-  "recipes": 105,
+  "recipes": 120,
   "proven": 85,
-  "stills": 113,
-  "pieces": 4,
+  "stills": 128,
+  "pieces": 19,
   "style_blocks": 5,
   "styles": 34,
   "worlds": 4

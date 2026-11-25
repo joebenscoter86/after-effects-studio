@@ -67757,7 +67757,8 @@ function pieceReply(r, warning, catalog, root = LIBRARY) {
   if (!call) throw new Error(`the arsenal is inconsistent: piece ${r.id} has no call`);
   readLibraryEntry(r.section.document, root);
   const dir = path30.join(realpathSync3(root), "pieces");
-  const others = catalog.entries.filter((e) => e.kind === "piece" && e.call && e.id !== r.id && call.example.includes(`PCS.${e.call.load}(`)).map((e) => e.call.load);
+  const calls = (e) => e.call?.functions?.length ? e.call.functions : [e.call?.load ?? ""];
+  const others = catalog.entries.filter((e) => e.kind === "piece" && e.call && e.id !== r.id && calls(e).some((f) => call.example.includes(`PCS.${f}(`))).map((e) => e.call.load);
   const load = `$.evalFile(File(${JSON.stringify(path30.join(dir, "pcs-core.jsx"))})); ${[...others, call.load].map((n) => `PCS.need('${n}');`).join(" ")}`;
   const version3 = catalog.version;
   return [

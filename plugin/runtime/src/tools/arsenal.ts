@@ -28,7 +28,7 @@ export type Level = (typeof LEVELS)[number];
 
 /** How to call a piece: the file to load, the call, its options, what it returns, a short example and notes. */
 export type PieceCall = {
-  load: string; signature: string; options: Array<{ name: string; text: string }>; returns: string | null; example: string; notes: string[];
+  load: string; functions?: string[]; signature: string; options: Array<{ name: string; text: string }>; returns: string | null; example: string; notes: string[];
 };
 /**
  * One catalog entry at any level. A recipe has a job (or is a build aid); a piece is a recipe that is runnable code;
@@ -371,7 +371,9 @@ export function pieceReply(r: ArsenalEntry, warning: string | null, catalog: Ars
   readLibraryEntry(r.section.document, root);
   const dir = path.join(realpathSync(root), "pieces");
   // The load line loads every piece the example calls, so the example runs as written.
-  const others = catalog.entries.filter((e) => e.kind === "piece" && e.call && e.id !== r.id && call.example.includes(`PCS.${e.call.load}(`)).map((e) => e.call!.load);
+  // A piece is found by the functions its file defines (PCS.onFace lives in on-face.jsx), else by its file name.
+  const calls = (e: ArsenalEntry) => e.call?.functions?.length ? e.call.functions : [e.call?.load ?? ""];
+  const others = catalog.entries.filter((e) => e.kind === "piece" && e.call && e.id !== r.id && calls(e).some((f) => call.example.includes(`PCS.${f}(`))).map((e) => e.call!.load);
   const load = `$.evalFile(File(${JSON.stringify(path.join(dir, "pcs-core.jsx"))})); ${[...others, call.load].map((n) => `PCS.need('${n}');`).join(" ")}`;
   const version = catalog.version;
   return [

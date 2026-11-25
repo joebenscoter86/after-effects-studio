@@ -256,6 +256,8 @@ export function parseJobLine(line) {
   const m = String(line ?? '').match(/^\s*([a-z-]+)\s*(?:;\s*support:\s*(.*))?$/);
   return m ? [m[1], listOf(m[2])] : [null, []];
 }
+/** The PCS functions a piece file defines (PCS.<name> = function), in order: how an example's calls find their piece. */
+export const functionsOf = (text) => [...new Set([...text.matchAll(/^PCS\.([A-Za-z0-9_]+)\s*=\s*function/gm)].map((m) => m[1]))];
 /** The pieces a piece loads itself (PCS.need calls in its code). */
 const requiresOf = (text) => [...new Set([...text.matchAll(/PCS\.need\(\s*['"]([a-z0-9-]+)['"]\s*\)/g)].map((m) => m[1]))];
 
@@ -269,7 +271,7 @@ export function pieceEntry(x, still) {
     duration: null, motion: null, difficulty: null, taught_by: 1, variants: [],
     provides: listOf(h.provides).map(normProvides), cost: { renderer: h.renderer ?? 'advanced-3d' }, composes: listOf(h['works with']), shelf: 'shipped',
     requires: requiresOf(x.text),
-    call: { load: x.name, signature: h.call, options: h.options.map(([name, text]) => ({ name, text })), returns: h.returns ?? null, example: h.example.join('\n'), notes: h.notes },
+    call: { load: x.name, functions: functionsOf(x.text), signature: h.call, options: h.options.map(([name, text]) => ({ name, text })), returns: h.returns ?? null, example: h.example.join('\n'), notes: h.notes },
     section: { document: `${PIECE_PREFIX}${x.name}`, heading: null },
     still: still ?? null,
   };

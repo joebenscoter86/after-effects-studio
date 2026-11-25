@@ -5,8 +5,9 @@
 // job: light-the-hero; support: add-depth, reveal-headline
 // provides: light: key; light: fill
 // works with: piece-stage, piece-plate
-// call: PCS.spot(comp, { name, on, t, dur, dimKey, pos, aim, color, intensity, cone, feather, shadow, darkness, diffusion })
+// call: PCS.spot(comp, { name, on, from, t, dur, dimKey, pos, aim, color, intensity, cone, feather, shadow, darkness, diffusion })
 // option on: a layer to light: aims at its centre from in front and a little above, cone sized to it, feather 50
+// option from: with on, 'front' (default, for a face card stage) or 'above' (for a room: high above, so the pool also falls on the floor around it)
 // option t, dur: the pool rises from 0 at t over dur seconds (default 0.8); without t it is on from the start
 // option dimKey: 0 to 1, the stage key falls to this share of its strength over the same time (0.6 makes the pool read twice as strong)
 // option intensity: percent; with on, by how light the object is: 1.3 x the style's key on a dark object, down to 0.55 x on a near-white one, so a pool reads on graphite and never clips cream; else 80
@@ -28,9 +29,11 @@ PCS.spot = function (comp, o) {
   var full = (o.intensity === undefined) ? (o.on ? Math.round(S.keyIntensity * PCS.poolShare(o.on)) : 80) : o.intensity;
   if (o.on) {
     var c = PCS.toWorld(o.on, [0, 0, 0], o.t || 0);
-    aim = [c[0], c[1], c[2]]; pos = [c[0], c[1] - 260, c[2] - 1300];
-    var r = 0.45 * Math.max(PCS.num(o.on, 'w', 400), PCS.num(o.on, 'h', 400));
-    if (cone === undefined) { cone = Math.min(90, 2 * Math.atan(r / 1325) * 180 / Math.PI + 4); }
+    var half = 0.2 * (PCS.num(o.on, 'w', 400) + PCS.num(o.on, 'h', 400));   // about the object's half-size
+    var r; var dist;
+    if (o.from === 'above') { aim = [c[0], c[1] + 0.6 * half, c[2]]; pos = [c[0] - 150, c[1] - 1100, c[2] - 450]; r = 1.9 * half; dist = 1200; }
+    else { aim = [c[0], c[1], c[2]]; pos = [c[0], c[1] - 260, c[2] - 1300]; r = half; dist = 1325; }   // the pool sits on it, not around it
+    if (cone === undefined) { cone = Math.min(90, 2 * Math.atan(r / dist) * 180 / Math.PI + 4); }
     if (feather === undefined) { feather = 50; }
   }
   var L = comp.layers.addLight(o.name || 'spot', [540, 960]); L.lightType = LightType.SPOT;

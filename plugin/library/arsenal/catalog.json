@@ -1,6 +1,6 @@
 {
  "vocab": "jobs-v1",
- "version": "74913d3f",
+ "version": "f2a859e7",
  "jobs": [
   "land-number",
   "count-things",
@@ -195,6 +195,9 @@
    "requires": [],
    "call": {
     "load": "flip",
+    "functions": [
+     "flip"
+    ],
     "signature": "PCS.flip(layer, { t, dur, axis, dir })",
     "options": [
      {
@@ -230,8 +233,475 @@
    }
   },
   {
+   "id": "piece-hand-over",
+   "revision": "66c5435e",
+   "level": "recipe",
+   "name": "Hand over from a face card beat to a cutaway room",
+   "line": "In one comp with one camera, turns a face card beat into a full-frame cutaway: the face card slides away, the dark backplate falls away to reveal a lit room, the stage's light gives way to the room's, the camera travels from the face-on view down into the room, and the object that carried the idea flies into the room and lands where it belongs.",
+   "use_for": "the moment the explanation leaves the speaker for a cutaway; continuity between a face card beat and the cutaway after it",
+   "status": "proven",
+   "kind": "piece",
+   "job": "hand-over",
+   "support": [
+    "establish-place",
+    "move-camera"
+   ],
+   "mood": [],
+   "needs": [],
+   "duration": null,
+   "motion": null,
+   "difficulty": null,
+   "taught_by": 1,
+   "variants": [],
+   "provides": [
+    "camera: travel",
+    "environment: room"
+   ],
+   "cost": {
+    "renderer": "advanced-3d"
+   },
+   "composes": [
+    "piece-stage",
+    "piece-room",
+    "piece-land-on",
+    "piece-tip-away",
+    "piece-stand-up"
+   ],
+   "shelf": "shipped",
+   "requires": [
+    "room",
+    "tip-away",
+    "hide"
+   ],
+   "call": {
+    "load": "hand-over",
+    "functions": [
+     "handOver"
+    ],
+    "signature": "PCS.handOver(st, { t, dur, carry, to, pose, leave })",
+    "options": [
+     {
+      "name": "st",
+      "text": "what PCS.stage returned (the beat's comp, its backplate, its lights and its camera)"
+     },
+     {
+      "name": "t",
+      "text": "when the hand-over starts (required)"
+     },
+     {
+      "name": "dur",
+      "text": "seconds, default 1.0"
+     },
+     {
+      "name": "carry",
+      "text": "the layer that carries the idea into the room (optional); it keeps its colour and flies in an arc"
+     },
+     {
+      "name": "to",
+      "text": "where carry lands, [x, y, z] in the room (rm.stand(h, x, z) or rm.lie(x, z, depth) give a spot on the floor)"
+     },
+     {
+      "name": "pose",
+      "text": "carry's [x, y] rotation on landing, default [0, -12]"
+     },
+     {
+      "name": "leave",
+      "text": "layers that are finished; each tips away into the dark as the room arrives"
+     }
+    ],
+    "returns": "what PCS.room returns, for the room's floor, lights and spots",
+    "example": "var st = PCS.stage({ name: 'BEAT 4', duration: 6, stitch: { path: 'stitch.mp4', start: 12.4 } });\nvar tile = PCS.plate(st.comp, { name: 'tile', w: 300, h: 300, round: 56, color: PCS.S.accent, pos: [540, 560, 0] });\nvar rm = PCS.handOver(st, { t: 2.0, carry: tile, to: [540, 1349, 700] });\nPCS.spot(rm.comp, { name: 'pool', on: tile, from: 'above', t: 3.0, dimKey: 0.5 });",
+    "notes": [
+     "nothing cuts: one comp, one camera, and the carried object stays in view the whole way. The accent stays on it.",
+     "the stage's key and fill are renamed 'stage key' and 'stage fill' and fade out; 'key' is the room's from then on.",
+     "what is finished leaves in the same half second as the room arrives; never fade or grey it out."
+    ]
+   },
+   "section": {
+    "document": "piece-hand-over",
+    "heading": null
+   },
+   "still": {
+    "path": "arsenal/stills/piece-hand-over.jpg",
+    "sha256": "951436492e0fc2e9763c0912834b9d4d9a8af074fe9fd774643e91d122af0255"
+   }
+  },
+  {
+   "id": "piece-hide",
+   "revision": "5037210d",
+   "level": "recipe",
+   "name": "Show or hide an object with what sits on it",
+   "line": "Makes an object, and everything seated on it, appear at one time (hideUntil) or vanish at one time (hideAfter), with a clean cut and no fade.",
+   "use_for": "an object that arrives with its move; one that leaves after its move; keeping type off screen until its card has turned to face us",
+   "status": "proven",
+   "kind": "piece",
+   "job": "hand-over",
+   "support": [
+    "reveal-headline"
+   ],
+   "mood": [],
+   "needs": [],
+   "duration": null,
+   "motion": null,
+   "difficulty": null,
+   "taught_by": 1,
+   "variants": [],
+   "provides": [],
+   "cost": {
+    "renderer": "advanced-3d"
+   },
+   "composes": [
+    "piece-on-face",
+    "piece-stand-up",
+    "piece-tip-away"
+   ],
+   "shelf": "shipped",
+   "requires": [],
+   "call": {
+    "load": "hide",
+    "functions": [
+     "hideUntil",
+     "hideAfter"
+    ],
+    "signature": "PCS.hideUntil(layer, t)  and  PCS.hideAfter(layer, t)",
+    "options": [
+     {
+      "name": "t",
+      "text": "the time it appears (hideUntil) or goes (hideAfter)"
+     }
+    ],
+    "returns": "the layer",
+    "example": "var yes = PCS.type3d(st.comp, { text: 'Yes', size: 240, pos: [770, 640, 0] });\nPCS.hideUntil(yes, 1.0);\nPCS.hideAfter(yes, 2.9);",
+    "notes": [
+     "children do not take a parent's opacity in After Effects, so hiding a plate by its own opacity leaves its labels floating; this hides them all.",
+     "never fade or grey something out to dismiss it; move it away (piece-tip-away) and hide it once it is gone."
+    ]
+   },
+   "section": {
+    "document": "piece-hide",
+    "heading": null
+   },
+   "still": {
+    "path": "arsenal/stills/piece-hide.jpg",
+    "sha256": "50d359212dc0e2be829fc0249edbf40ae96aa372640faae708c787106729b6ec"
+   }
+  },
+  {
+   "id": "piece-label",
+   "revision": "8dac7fb7",
+   "level": "recipe",
+   "name": "Flat crisp label",
+   "line": "Sets one line of flat type in the style's font, in the colour that reads on what it sits on (the ground, a surface or the accent), unlit so it keeps its exact colour.",
+   "use_for": "what a card says; a caption under a number; a short supporting line beside a lit object",
+   "status": "proven",
+   "kind": "piece",
+   "job": "reveal-headline",
+   "support": [
+    "make-concrete",
+    "land-number"
+   ],
+   "mood": [],
+   "needs": [],
+   "duration": null,
+   "motion": null,
+   "difficulty": null,
+   "taught_by": 1,
+   "variants": [],
+   "provides": [
+    "type: label"
+   ],
+   "cost": {
+    "renderer": "advanced-3d"
+   },
+   "composes": [
+    "piece-on-face",
+    "piece-plate",
+    "piece-type3d"
+   ],
+   "shelf": "shipped",
+   "requires": [],
+   "call": {
+    "load": "label",
+    "functions": [
+     "label"
+    ],
+    "signature": "PCS.label(comp, { text, size, weight, color, on, maxWidth, anchor, pos, name })",
+    "options": [
+     {
+      "name": "text",
+      "text": "the words"
+     },
+     {
+      "name": "size",
+      "text": "pixels, default 64; never under 44 on a phone frame"
+     },
+     {
+      "name": "on",
+      "text": "'ground' (default), 'surface' or 'accent': picks the style colour that reads there"
+     },
+     {
+      "name": "color",
+      "text": "overrides on"
+     },
+     {
+      "name": "anchor",
+      "text": "'left' sets the anchor at the line's left edge (default its centre)"
+     },
+     {
+      "name": "pos",
+      "text": "[x, y, z]"
+     }
+    ],
+    "returns": "the text layer (3D, unlit)",
+    "example": "var card = PCS.plate(st.comp, { name: 'card', w: 720, h: 300, round: 34, pos: [540, 600, 0] });\nPCS.onFace(PCS.label(st.comp, { text: '42 passed, 0 failed', size: 60, on: 'surface' }), card);",
+    "notes": [
+     "type on a plate is flat, never extruded; one hero word that should be an object is piece-type3d."
+    ]
+   },
+   "section": {
+    "document": "piece-label",
+    "heading": null
+   },
+   "still": {
+    "path": "arsenal/stills/piece-label.jpg",
+    "sha256": "86fd9aba6e333995bcc2067be81246076029986dd7fcf00aeedc925f15c5061e"
+   }
+  },
+  {
+   "id": "piece-land-on",
+   "revision": "6db8b6f1",
+   "level": "recipe",
+   "name": "Carry an object onto another",
+   "line": "One object travels in an arc toward the camera and seats itself on a plate's face, taking the plate's angle, with a small settle; it can shrink as it lands.",
+   "use_for": "a seal on a result; a piece fitting into place; the thing that carried one idea arriving on the next",
+   "status": "proven",
+   "kind": "piece",
+   "job": "hand-over",
+   "support": [
+    "show-proof",
+    "relate-things"
+   ],
+   "mood": [],
+   "needs": [],
+   "duration": null,
+   "motion": null,
+   "difficulty": null,
+   "taught_by": 1,
+   "variants": [],
+   "provides": [
+    "motion: bounce"
+   ],
+   "cost": {
+    "renderer": "advanced-3d"
+   },
+   "composes": [
+    "piece-two-sided",
+    "piece-stand-up",
+    "piece-plate"
+   ],
+   "shelf": "shipped",
+   "requires": [],
+   "call": {
+    "load": "land-on",
+    "functions": [
+     "landOn"
+    ],
+    "signature": "PCS.landOn(obj, plate, { at, t, dur, lift, scale, gap })",
+    "options": [
+     {
+      "name": "at",
+      "text": "[x, y] on the plate's face from its centre, default [0, 0]"
+     },
+     {
+      "name": "t",
+      "text": "when it leaves (required)"
+     },
+     {
+      "name": "dur",
+      "text": "seconds, default 0.5"
+     },
+     {
+      "name": "lift",
+      "text": "how far toward the camera it comes on the way, default 260, so it never cuts through the plate"
+     },
+     {
+      "name": "scale",
+      "text": "its size in percent at landing (optional), with a small overshoot"
+     },
+     {
+      "name": "gap",
+      "text": "space in front of the face, default 4"
+     }
+    ],
+    "returns": "where it lands, [x, y, z] in the comp",
+    "example": "PCS.standUp(card, { t: 2.6 });\nPCS.landOn(tile.front, card, { at: [250, 130], t: 3.3, dur: 0.6, scale: 34 });",
+    "notes": [
+     "land after the plate has stopped moving: the object does not follow the plate afterwards.",
+     "it keeps whichever side is showing: an object turned over lands still turned over."
+    ]
+   },
+   "section": {
+    "document": "piece-land-on",
+    "heading": null
+   },
+   "still": {
+    "path": "arsenal/stills/piece-land-on.jpg",
+    "sha256": "38f820eabc605717c28757d06a31360594b7d17025512ff86a05c567ff4a4d69"
+   }
+  },
+  {
+   "id": "piece-on-face",
+   "revision": "35c54cac",
+   "level": "recipe",
+   "name": "Seat a layer on a face of an object",
+   "line": "Puts a layer (type, a tick, a picture, a smaller plate) on the front or the back face of a plate, so it moves, turns and stands up with it.",
+   "use_for": "words or a mark on a card, a pill or a tile; what the back says before a flip; a raised detail on a face",
+   "status": "proven",
+   "kind": "piece",
+   "job": "make-concrete",
+   "support": [
+    "before-after",
+    "list-items"
+   ],
+   "mood": [],
+   "needs": [],
+   "duration": null,
+   "motion": null,
+   "difficulty": null,
+   "taught_by": 1,
+   "variants": [],
+   "provides": [],
+   "cost": {
+    "renderer": "advanced-3d"
+   },
+   "composes": [
+    "piece-plate",
+    "piece-flip",
+    "piece-label",
+    "piece-two-sided"
+   ],
+   "shelf": "shipped",
+   "requires": [],
+   "call": {
+    "load": "on-face",
+    "functions": [
+     "onFace",
+     "onBack"
+    ],
+    "signature": "PCS.onFace(layer, plate, at, lit)  and  PCS.onBack(layer, plate, at, axis, gap)",
+    "options": [
+     {
+      "name": "at",
+      "text": "[x, y] from the plate's centre, default [0, 0]"
+     },
+     {
+      "name": "lit",
+      "text": "onFace only. false (default) keeps flat graphics and type their exact colour; true seats a thick detail (a smaller plate) that takes the light"
+     },
+     {
+      "name": "axis",
+      "text": "onBack only. The axis the plate will flip on ('x' or 'y'), so the back reads the right way up after the flip"
+     },
+     {
+      "name": "gap",
+      "text": "onBack only. Distance behind the plate's body, default twice the bevel plus 6"
+     }
+    ],
+    "returns": "the layer",
+    "example": "var card = PCS.plate(st.comp, { name: 'card', w: 600, h: 360, round: 34, pos: [540, 500, 0] });\nPCS.onFace(PCS.label(st.comp, { text: 'Question', size: 80, on: 'surface' }), card);\nPCS.onBack(PCS.label(st.comp, { text: 'Answer', size: 80, on: 'surface' }), card, [0, 0], 'x');\nPCS.flip(card, { t: 1.2, axis: 'x' });",
+    "notes": [
+     "children do not take a parent's opacity in After Effects: hide an object with piece-hide, which takes what sits on it too."
+    ]
+   },
+   "section": {
+    "document": "piece-on-face",
+    "heading": null
+   },
+   "still": {
+    "path": "arsenal/stills/piece-on-face.jpg",
+    "sha256": "e4db6db86f5a6c4ac11754a26098ede4307ce3885c0b030bb42f67613bd0d84b"
+   }
+  },
+  {
+   "id": "piece-picture-face",
+   "revision": "79ff8b3e",
+   "level": "recipe",
+   "name": "A picture or screenshot as the face of an object",
+   "line": "Puts a picture, a screenshot, a movie or a comp on a plate's front face, filled to the face inside a small rim and cut to its rounded corners, so the screen is part of a lit object rather than a flat card.",
+   "use_for": "a real screen or app shown as a device; a document page; a photo on a card; the product itself",
+   "status": "proven",
+   "kind": "piece",
+   "job": "show-real-screen",
+   "support": [
+    "make-concrete",
+    "introduce-tool"
+   ],
+   "mood": [],
+   "needs": [],
+   "duration": null,
+   "motion": null,
+   "difficulty": null,
+   "taught_by": 1,
+   "variants": [],
+   "provides": [
+    "environment: screen"
+   ],
+   "cost": {
+    "renderer": "advanced-3d"
+   },
+   "composes": [
+    "piece-plate",
+    "piece-stage",
+    "piece-room",
+    "piece-flip"
+   ],
+   "shelf": "shipped",
+   "requires": [
+    "on-face"
+   ],
+   "call": {
+    "load": "picture-face",
+    "functions": [
+     "pictureFace"
+    ],
+    "signature": "PCS.pictureFace(plate, { source, inset, fit, lit, name })",
+    "options": [
+     {
+      "name": "source",
+      "text": "a project item (footage or comp) or a file path (imported once)"
+     },
+     {
+      "name": "inset",
+      "text": "the rim of plate left showing around the picture, default 18"
+     },
+     {
+      "name": "fit",
+      "text": "'cover' (default) fills the face and trims the overflow; 'contain' shows the whole picture"
+     },
+     {
+      "name": "lit",
+      "text": "false (default) keeps the picture's own colours, like a screen; true lets the stage's lights fall on it, like a print"
+     }
+    ],
+    "returns": "the picture layer, seated on the plate (it moves, turns and stands up with it)",
+    "example": "var tablet = PCS.plate(st.comp, { name: 'tablet', w: 820, h: 560, round: 44, pos: [540, 600, 0] });\nPCS.pictureFace(tablet, { source: 'screenshots/app.png' });",
+    "notes": [
+     "the plate's own colour shows as the rim: a dark surface reads as a device, the accent as a frame.",
+     "set the plate a little larger than the picture's shape; a cover fit trims what does not fit the face."
+    ]
+   },
+   "section": {
+    "document": "piece-picture-face",
+    "heading": null
+   },
+   "still": {
+    "path": "arsenal/stills/piece-picture-face.jpg",
+    "sha256": "bfbcc1f354abe6248fe583db695873b6d7b8a3c61aa7148798c5e2f20b4d6a1d"
+   }
+  },
+  {
    "id": "piece-plate",
-   "revision": "77b1e0b2",
+   "revision": "0b6bb09a",
    "level": "recipe",
    "name": "Thick lit plate",
    "line": "Makes one thick, bevelled slab that takes the light and casts a shadow: a card, a pill, a tile, a chip or a bar.",
@@ -266,6 +736,9 @@
    "requires": [],
    "call": {
     "load": "plate",
+    "functions": [
+     "plate"
+    ],
     "signature": "PCS.plate(comp, { name, w, h, round, color, depth, bevel, pos, tilt })",
     "options": [
      {
@@ -309,17 +782,173 @@
    }
   },
   {
-   "id": "piece-spot",
-   "revision": "a8a357ea",
+   "id": "piece-room",
+   "revision": "33f90ba4",
    "level": "recipe",
-   "name": "Spot light",
-   "line": "Adds one spot light aimed at a point, coloured by the style, with soft shadows when asked.",
-   "use_for": "the key and fill of a stage; a pool of light that rises on the hero as it arrives (\"the light tells the story\")",
+   "name": "Lit room for a full-frame cutaway",
+   "line": "Makes the full-frame setting for a cutaway: a floor and a back wall, a key that casts shadows, a front fill, a cool wash on the wall and a two-node camera looking down into the room that pushes in slowly with depth of field, all coloured by the style.",
+   "use_for": "a cutaway beat where objects stand or lie in a place (documents on a floor, a device on a desk, chosen items standing up); never behind the speaker's face card",
+   "status": "proven",
+   "kind": "piece",
+   "job": "establish-place",
+   "support": [
+    "add-depth",
+    "move-camera",
+    "light-the-hero"
+   ],
+   "mood": [],
+   "needs": [],
+   "duration": null,
+   "motion": null,
+   "difficulty": null,
+   "taught_by": 1,
+   "variants": [],
+   "provides": [
+    "environment: room",
+    "floor: ground",
+    "light: key",
+    "light: fill",
+    "camera: push",
+    "camera: depth-of-field",
+    "depth: shadow"
+   ],
+   "cost": {
+    "renderer": "advanced-3d"
+   },
+   "composes": [
+    "piece-plate",
+    "piece-spot",
+    "piece-stand-up",
+    "piece-hand-over",
+    "piece-picture-face"
+   ],
+   "shelf": "shipped",
+   "requires": [
+    "spot"
+   ],
+   "call": {
+    "load": "room",
+    "functions": [
+     "room"
+    ],
+    "signature": "PCS.room({ name, duration, comp, t, dur, cam })",
+    "options": [
+     {
+      "name": "comp",
+      "text": "build the room inside this comp instead (piece-hand-over does this); its lights then rise from 0 at t over dur"
+     },
+     {
+      "name": "cam",
+      "text": "with comp, the camera to take over from t; without it a new camera named 'cam' is made"
+     }
+    ],
+    "returns": "{ comp, floor, wall, key, fill, wash, env, cam, floorY, stand(h, x, z), lie(x, z, depth) }",
+    "example": "var rm = PCS.room({ name: 'CUTAWAY 2', duration: 5 });\nvar card = PCS.plate(rm.comp, { name: 'card', w: 560, h: 380, round: 30, tilt: [0, -10], pos: rm.stand(380, 540, 700) });\nPCS.spot(rm.comp, { name: 'pool', on: card, from: 'above', t: 1.2, dimKey: 0.4 });",
+    "notes": [
+     "colours come from the style: its wall and floor values when it has them, else the wall from its backplate and quiet colour and the floor from its backplate and surface. The wash takes its wash colour, else its fill colour.",
+     "rm.stand(h, x, z) is the position for an upright plate h tall standing on the floor at x, z; rm.lie(x, z, depth) for one lying flat, face up (give it tilt [-90, 0]).",
+     "a pool on something in the room comes from above (piece-spot with from: 'above'), so it also lights the floor around it; from the front it would splash the wall.",
+     "the light picture is set for a 1080 x 1920 frame with the camera's own framing; objects read best between z 300 and 1600 on the floor."
+    ]
+   },
+   "section": {
+    "document": "piece-room",
+    "heading": null
+   },
+   "still": {
+    "path": "arsenal/stills/piece-room.jpg",
+    "sha256": "a2600289f5007cbddae0447a70d74ee4c476659d95790e163c38c4a9dd456fa4"
+   }
+  },
+  {
+   "id": "piece-rows",
+   "revision": "6206dff8",
+   "level": "recipe",
+   "name": "Raised rows of content on a card",
+   "line": "Lays thin lit bars on a plate's face as lines of a log, a list or a document, each growing in from the left in turn, with an optional tick before each.",
+   "use_for": "a test log, a checklist, a document, a list that fills as it is read",
+   "status": "proven",
+   "kind": "piece",
+   "job": "list-items",
+   "support": [
+    "show-proof",
+    "make-concrete"
+   ],
+   "mood": [],
+   "needs": [],
+   "duration": null,
+   "motion": null,
+   "difficulty": null,
+   "taught_by": 1,
+   "variants": [],
+   "provides": [
+    "motion: stagger",
+    "depth: extrusion"
+   ],
+   "cost": {
+    "renderer": "advanced-3d"
+   },
+   "composes": [
+    "piece-plate",
+    "piece-tick",
+    "piece-stand-up"
+   ],
+   "shelf": "shipped",
+   "requires": [
+    "plate",
+    "on-face",
+    "tick"
+   ],
+   "call": {
+    "load": "rows",
+    "functions": [
+     "rows"
+    ],
+    "signature": "PCS.rows(comp, plate, { n, widths, left, top, rowWidth, h, gap, color, ticks, t, stagger })",
+    "options": [
+     {
+      "name": "n",
+      "text": "how many rows, default 3"
+     },
+     {
+      "name": "widths",
+      "text": "each row's share of rowWidth (0 to 1), varied by default"
+     },
+     {
+      "name": "color",
+      "text": "default a tone between the style's surface and ink"
+     },
+     {
+      "name": "ticks",
+      "text": "true puts a small tick before each row"
+     }
+    ],
+    "returns": "{ rows, ticks }",
+    "example": "var card = PCS.plate(st.comp, { name: 'card', w: 720, h: 470, round: 34, pos: [540, 900, 0] });\nPCS.rows(st.comp, card, { n: 3, left: -300, top: -150, rowWidth: 430, ticks: true, t: 3.1 });",
+    "notes": []
+   },
+   "section": {
+    "document": "piece-rows",
+    "heading": null
+   },
+   "still": {
+    "path": "arsenal/stills/piece-rows.jpg",
+    "sha256": "29122edf003d525a7004455cb2446b552aa9c0933fc644a7f215e47418819c09"
+   }
+  },
+  {
+   "id": "piece-spot",
+   "revision": "babbed12",
+   "level": "recipe",
+   "name": "Spot light, or a pool of light on the hero",
+   "line": "Adds one spot light coloured by the style. Given an object (on), it lights that object from in front and a little above with a tight pool sized to it, and can rise as the object arrives while the stage's key dips, so the lit thing is the one to look at.",
+   "use_for": "the one thing the line is about (\"the light tells the story\"); the key and fill of a stage",
    "status": "proven",
    "kind": "piece",
    "job": "light-the-hero",
    "support": [
-    "add-depth"
+    "add-depth",
+    "reveal-headline"
    ],
    "mood": [],
    "needs": [],
@@ -343,27 +972,27 @@
    "requires": [],
    "call": {
     "load": "spot",
-    "signature": "PCS.spot(comp, { name, pos, aim, color, intensity, cone, shadow, darkness, diffusion })",
+    "functions": [
+     "spot",
+     "poolShare"
+    ],
+    "signature": "PCS.spot(comp, { name, on, from, t, dur, dimKey, pos, aim, color, intensity, cone, feather, shadow, darkness, diffusion })",
     "options": [
      {
-      "name": "pos",
-      "text": "[x, y, z] where the light sits"
+      "name": "on",
+      "text": "a layer to light: aims at its centre from in front and a little above, cone sized to it, feather 50"
      },
      {
-      "name": "aim",
-      "text": "[x, y, z] the point it points at"
-     },
-     {
-      "name": "color",
-      "text": "light colour; default the style's key colour"
+      "name": "from",
+      "text": "with on, 'front' (default, for a face card stage) or 'above' (for a room: high above, so the pool also falls on the floor around it)"
      },
      {
       "name": "intensity",
-      "text": "percent, default 80. Key it from 0 for a pool that rises on the hero"
+      "text": "percent; with on, by how light the object is: 1.3 x the style's key on a dark object, down to 0.55 x on a near-white one, so a pool reads on graphite and never clips cream; else 80"
      },
      {
-      "name": "cone",
-      "text": "cone angle in degrees, default 80 (feather 90)"
+      "name": "color",
+      "text": "default the style's key colour"
      },
      {
       "name": "shadow",
@@ -371,8 +1000,9 @@
      }
     ],
     "returns": "the light layer",
-    "example": "var st = PCS.stage({ name: 'BEAT 3', duration: 5 });\nvar pool = PCS.spot(st.comp, { name: 'pool', pos: [540, 300, -900], aim: [540, 900, 0], intensity: 0, cone: 60 });\nPCS.kf(pool.property('ADBE Light Options Group').property('ADBE Light Intensity'), [[2.6, 0], [3.6, 60]]);",
+    "example": "var st = PCS.stage({ name: 'BEAT 3', duration: 5 });\nvar card = PCS.plate(st.comp, { name: 'card', w: 400, h: 520, round: 34, pos: [790, 720, 0] });\nPCS.spot(st.comp, { name: 'pool', on: card, t: 2.6, dimKey: 0.6 });",
     "notes": [
+     "light the hero from the front: a pool from high above only grazes a face and spills onto the wall behind.",
      "never a point light near a glossy surface (it shows as a stray dot)."
     ]
    },
@@ -382,7 +1012,7 @@
    },
    "still": {
     "path": "arsenal/stills/piece-spot.jpg",
-    "sha256": "d58cd2978513cde239556e215a9b36e30ff06a9c1fbaf34623acbbbbcb0cf9bb"
+    "sha256": "74bd2e51690789f676db64d454d32864357bb045c237e4eebea80a14d06b2c5b"
    }
   },
   {
@@ -427,6 +1057,9 @@
    ],
    "call": {
     "load": "stage",
+    "functions": [
+     "stage"
+    ],
     "signature": "PCS.stage({ name, duration, env, stitch })",
     "options": [
      {
@@ -458,7 +1091,500 @@
    },
    "still": {
     "path": "arsenal/stills/piece-stage.jpg",
-    "sha256": "d759b7e1a651f1297cf2e68605ad7da377f62eaeec41fe041e451b021607bf96"
+    "sha256": "606c6d55f5e9fa7e6f503022cfc3a65caf616446d644669bb5d9faad7737b61f"
+   }
+  },
+  {
+   "id": "piece-stand-up",
+   "revision": "f3c0bdba",
+   "level": "recipe",
+   "name": "Stand an object up",
+   "line": "An object lying flat stands up past upright and settles back, from wherever its rotation is; what sits on it stays hidden until it is half way up, so no type is seen squashed edge-on.",
+   "use_for": "a pill, a card or a result arriving by standing up; the one item chosen from many standing up to be seen",
+   "status": "proven",
+   "kind": "piece",
+   "job": "reveal-headline",
+   "support": [
+    "show-proof",
+    "list-items"
+   ],
+   "mood": [],
+   "needs": [],
+   "duration": null,
+   "motion": null,
+   "difficulty": null,
+   "taught_by": 1,
+   "variants": [],
+   "provides": [
+    "motion: bounce"
+   ],
+   "cost": {
+    "renderer": "advanced-3d"
+   },
+   "composes": [
+    "piece-plate",
+    "piece-on-face",
+    "piece-flip",
+    "piece-land-on"
+   ],
+   "shelf": "shipped",
+   "requires": [],
+   "call": {
+    "load": "stand-up",
+    "functions": [
+     "standUp"
+    ],
+    "signature": "PCS.standUp(plate, { t, dur, hide })",
+    "options": [
+     {
+      "name": "t",
+      "text": "when it starts (required)"
+     },
+     {
+      "name": "dur",
+      "text": "seconds, default 0.5 (past upright at 60 percent, settled at the end)"
+     },
+     {
+      "name": "hide",
+      "text": "false keeps it visible before t (default: hidden until t)"
+     }
+    ],
+    "returns": "the layer",
+    "example": "var card = PCS.plate(st.comp, { name: 'card', w: 720, h: 470, round: 34, pos: [540, 900, 0] });\nPCS.onFace(PCS.label(st.comp, { text: '42 passed, 0 failed', size: 52, on: 'surface' }), card);\nPCS.standUp(card, { t: 2.6 });",
+    "notes": [
+     "seated layers with their own opacity timing keep it."
+    ]
+   },
+   "section": {
+    "document": "piece-stand-up",
+    "heading": null
+   },
+   "still": {
+    "path": "arsenal/stills/piece-stand-up.jpg",
+    "sha256": "9c6f3aeaba149dee5f632942794bf95bb85017cbd50eb1e8a8cebfa6bc2b2a73"
+   }
+  },
+  {
+   "id": "piece-swap-face",
+   "revision": "b9e21a62",
+   "level": "recipe",
+   "name": "Change what a face says while it is turned away",
+   "line": "At one moment the old layer on a face goes and the new one shows, so an object that turns away and back comes back saying something new.",
+   "use_for": "a card that turns twice and returns with a new message; a counter that changes while edge-on; a third side on a two-sided object",
+   "status": "proven",
+   "kind": "piece",
+   "job": "before-after",
+   "support": [
+    "hand-over"
+   ],
+   "mood": [],
+   "needs": [],
+   "duration": null,
+   "motion": null,
+   "difficulty": null,
+   "taught_by": 1,
+   "variants": [],
+   "provides": [],
+   "cost": {
+    "renderer": "advanced-3d"
+   },
+   "composes": [
+    "piece-flip",
+    "piece-on-face"
+   ],
+   "shelf": "shipped",
+   "requires": [],
+   "call": {
+    "load": "swap-face",
+    "functions": [
+     "swapFace"
+    ],
+    "signature": "PCS.swapFace(oldLayer, newLayer, t)",
+    "options": [
+     {
+      "name": "t",
+      "text": "the swap time; put it where the face is edge-on or turned away (half way through a flip)"
+     }
+    ],
+    "returns": "nothing",
+    "example": "PCS.onFace(first, card); PCS.onFace(second, card);\nPCS.flip(card, { t: 1.0, axis: 'x' }); PCS.flip(card, { t: 2.0, axis: 'x' });\nPCS.swapFace(first, second, 1.7);   // while the front is turned away",
+    "notes": []
+   },
+   "section": {
+    "document": "piece-swap-face",
+    "heading": null
+   },
+   "still": {
+    "path": "arsenal/stills/piece-swap-face.jpg",
+    "sha256": "e8b652c44b66584cf325f070c364c0157c0e78a612abd53a9d46acab39cc1c1a"
+   }
+  },
+  {
+   "id": "piece-tick",
+   "revision": "a1c5e056",
+   "level": "recipe",
+   "name": "A tick that draws on",
+   "line": "Draws a round-capped tick mark stroke by stroke at a time, sized to what it sits on.",
+   "use_for": "done, passed, proven; the answer side of a tile; a checked row",
+   "status": "proven",
+   "kind": "piece",
+   "job": "show-proof",
+   "support": [
+    "fail-then-fix",
+    "list-items"
+   ],
+   "mood": [],
+   "needs": [],
+   "duration": null,
+   "motion": null,
+   "difficulty": null,
+   "taught_by": 1,
+   "variants": [],
+   "provides": [
+    "motion: draw-on"
+   ],
+   "cost": {
+    "renderer": "advanced-3d"
+   },
+   "composes": [
+    "piece-on-face",
+    "piece-two-sided",
+    "piece-rows"
+   ],
+   "shelf": "shipped",
+   "requires": [],
+   "call": {
+    "load": "tick",
+    "functions": [
+     "tick"
+    ],
+    "signature": "PCS.tick(comp, { size, color, t, dur, name })",
+    "options": [
+     {
+      "name": "size",
+      "text": "width of the thing it sits on, default 82"
+     },
+     {
+      "name": "color",
+      "text": "default the style's colour for things on the accent"
+     },
+     {
+      "name": "t",
+      "text": "when it starts drawing (without t it is drawn from the start)"
+     },
+     {
+      "name": "dur",
+      "text": "seconds to draw, default 0.18"
+     }
+    ],
+    "returns": "the shape layer; seat it with PCS.onFace",
+    "example": "var tile = PCS.plate(st.comp, { name: 'tile', w: 300, h: 300, round: 56, color: PCS.S.accent, pos: [540, 600, 0] });\nPCS.onFace(PCS.tick(st.comp, { size: 260, t: 1.0 }), tile);",
+    "notes": []
+   },
+   "section": {
+    "document": "piece-tick",
+    "heading": null
+   },
+   "still": {
+    "path": "arsenal/stills/piece-tick.jpg",
+    "sha256": "d9b948265a6a018bae4b8fb312ec68f1ebf613406649ec7318b022e2521ddcc3"
+   }
+  },
+  {
+   "id": "piece-tip-away",
+   "revision": "e25a56bb",
+   "level": "recipe",
+   "name": "Tip an object away into the dark",
+   "line": "An object tips backward and falls away behind the backplate, then is hidden with what sits on it.",
+   "use_for": "dismissing what is finished as the next thing arrives; a wrong answer leaving; clearing the frame without a fade",
+   "status": "proven",
+   "kind": "piece",
+   "job": "hand-over",
+   "support": [
+    "fail-then-fix",
+    "before-after"
+   ],
+   "mood": [],
+   "needs": [],
+   "duration": null,
+   "motion": null,
+   "difficulty": null,
+   "taught_by": 1,
+   "variants": [],
+   "provides": [
+    "motion: swing"
+   ],
+   "cost": {
+    "renderer": "advanced-3d"
+   },
+   "composes": [
+    "piece-hide",
+    "piece-type3d",
+    "piece-plate"
+   ],
+   "shelf": "shipped",
+   "requires": [
+    "hide"
+   ],
+   "call": {
+    "load": "tip-away",
+    "functions": [
+     "tipAway"
+    ],
+    "signature": "PCS.tipAway(plate, { t, dur, down, back })",
+    "options": [
+     {
+      "name": "t",
+      "text": "when it starts (required)"
+     },
+     {
+      "name": "dur",
+      "text": "seconds, default 0.45"
+     },
+     {
+      "name": "down",
+      "text": "how far it drops, default 200"
+     },
+     {
+      "name": "back",
+      "text": "how far it travels back from the camera, default 800 (behind the backplate)"
+     }
+    ],
+    "returns": "the layer",
+    "example": "var yes = PCS.type3d(st.comp, { text: 'Yes', size: 240, pos: [770, 640, 0] });\nPCS.tipAway(yes, { t: 2.4 });",
+    "notes": [
+     "it falls back, never down through the face card. Never fade or grey something out to dismiss it."
+    ]
+   },
+   "section": {
+    "document": "piece-tip-away",
+    "heading": null
+   },
+   "still": {
+    "path": "arsenal/stills/piece-tip-away.jpg",
+    "sha256": "c8d091cdf040939fa63be94a534bdf1a29f1fc5ca8723334ee2de31d94e6f95a"
+   }
+  },
+  {
+   "id": "piece-two-sided",
+   "revision": "16fa6c9d",
+   "level": "recipe",
+   "name": "One object with a different colour each side",
+   "line": "Makes one thick object whose front is one colour and whose back is another, so a flip changes its colour as well as what it says.",
+   "use_for": "a question that turns into the answer; wrong to right; a quiet tile that turns to the accent",
+   "status": "proven",
+   "kind": "piece",
+   "job": "before-after",
+   "support": [
+    "fail-then-fix",
+    "show-proof"
+   ],
+   "mood": [],
+   "needs": [],
+   "duration": null,
+   "motion": null,
+   "difficulty": null,
+   "taught_by": 1,
+   "variants": [],
+   "provides": [
+    "depth: extrusion",
+    "depth: shadow"
+   ],
+   "cost": {
+    "renderer": "advanced-3d"
+   },
+   "composes": [
+    "piece-flip",
+    "piece-on-face",
+    "piece-tick",
+    "piece-land-on"
+   ],
+   "shelf": "shipped",
+   "requires": [
+    "plate"
+   ],
+   "call": {
+    "load": "two-sided",
+    "functions": [
+     "twoSided"
+    ],
+    "signature": "PCS.twoSided(comp, { name, w, h, round, color, backColor, depth, bevel, pos, tilt, axis })",
+    "options": [
+     {
+      "name": "color",
+      "text": "the front, default the style's surface"
+     },
+     {
+      "name": "axis",
+      "text": "the axis it will flip on, 'y' (default) or 'x', so the back reads the right way up"
+     }
+    ],
+    "returns": "{ front, back }: move and flip front; seat things with PCS.onFace(layer, obj.front) and PCS.onFace(layer, obj.back)",
+    "example": "var tile = PCS.twoSided(st.comp, { name: 'tile', w: 330, h: 330, round: 60, color: PCS.S.quiet, backColor: PCS.S.accent, pos: [300, 640, 0] });\nPCS.onFace(PCS.label(st.comp, { text: '?', size: 190 }), tile.front);\nPCS.onFace(PCS.tick(st.comp, { size: 280, t: 1.0 }), tile.back);\nPCS.flip(tile.front, { t: 0.8 });",
+    "notes": []
+   },
+   "section": {
+    "document": "piece-two-sided",
+    "heading": null
+   },
+   "still": {
+    "path": "arsenal/stills/piece-two-sided.jpg",
+    "sha256": "a2bb9b2d7afe959e408c2cb9c9fa28cf1fbd8c8a8427b7282c3ce259d2603ac5"
+   }
+  },
+  {
+   "id": "piece-type3d",
+   "revision": "d411c43c",
+   "level": "recipe",
+   "name": "One hero word or number as a lit object",
+   "line": "Makes one word or number a solid, lit object with a shallow extrusion and no bevel, that casts a shadow and shows its side wall.",
+   "use_for": "the number the line lands on; the one word that is the answer; never a sentence",
+   "status": "proven",
+   "kind": "piece",
+   "job": "land-number",
+   "support": [
+    "reveal-headline"
+   ],
+   "mood": [],
+   "needs": [],
+   "duration": null,
+   "motion": null,
+   "difficulty": null,
+   "taught_by": 1,
+   "variants": [],
+   "provides": [
+    "type: 3d",
+    "depth: extrusion",
+    "depth: shadow"
+   ],
+   "cost": {
+    "renderer": "advanced-3d"
+   },
+   "composes": [
+    "piece-stage",
+    "piece-label",
+    "piece-tip-away"
+   ],
+   "shelf": "shipped",
+   "requires": [],
+   "call": {
+    "load": "type3d",
+    "functions": [
+     "type3d"
+    ],
+    "signature": "PCS.type3d(comp, { text, size, depth, weight, color, pos, tilt, maxWidth, name })",
+    "options": [
+     {
+      "name": "text",
+      "text": "the word or number"
+     },
+     {
+      "name": "size",
+      "text": "pixels, default 330"
+     },
+     {
+      "name": "depth",
+      "text": "extrusion, default 12 percent of the size"
+     },
+     {
+      "name": "color",
+      "text": "default the style's type colour"
+     },
+     {
+      "name": "pos",
+      "text": "[x, y, z]"
+     },
+     {
+      "name": "tilt",
+      "text": "[x, y] resting angle, default the style's tilt"
+     }
+    ],
+    "returns": "the text layer",
+    "example": "var n = PCS.type3d(st.comp, { text: '42', size: 420, pos: [540, 560, 0] });\nPCS.label(st.comp, { text: 'tests passed', size: 64, pos: [540, 860, 0] });",
+    "notes": [
+     "no bevel and a shallow depth: deeper or bevelled type reads as word art. Supporting words are piece-label."
+    ]
+   },
+   "section": {
+    "document": "piece-type3d",
+    "heading": null
+   },
+   "still": {
+    "path": "arsenal/stills/piece-type3d.jpg",
+    "sha256": "e9d5fe805718f622478f09b7fb4037bb1077bfd3b30de1d74dfb003b7f41fa2e"
+   }
+  },
+  {
+   "id": "piece-words",
+   "revision": "394c9cad",
+   "level": "recipe",
+   "name": "A line that builds word by word",
+   "line": "Lays out one centred line of flat words and shows each at its own time, in place, so the line never jumps as it builds.",
+   "use_for": "a phrase whose words appear one at a time as they are said; a second message that builds on the back of a card after a flip",
+   "status": "proven",
+   "kind": "piece",
+   "job": "reveal-headline",
+   "support": [
+    "before-after"
+   ],
+   "mood": [],
+   "needs": [],
+   "duration": null,
+   "motion": null,
+   "difficulty": null,
+   "taught_by": 1,
+   "variants": [],
+   "provides": [
+    "type: reveal",
+    "motion: stagger"
+   ],
+   "cost": {
+    "renderer": "advanced-3d"
+   },
+   "composes": [
+    "piece-on-face",
+    "piece-flip",
+    "piece-label"
+   ],
+   "shelf": "shipped",
+   "requires": [],
+   "call": {
+    "load": "words",
+    "functions": [
+     "words"
+    ],
+    "signature": "PCS.words(comp, { words: [{ text, t }], size, weight, color, on, gap, name })",
+    "options": [
+     {
+      "name": "words",
+      "text": "each { text, t }: the word and the time it appears (0 or no t: from the start)"
+     },
+     {
+      "name": "size",
+      "text": "pixels, default 64"
+     },
+     {
+      "name": "on",
+      "text": "'ground' (default), 'surface' or 'accent', as piece-label"
+     },
+     {
+      "name": "gap",
+      "text": "space between words, default 0.28 of the size"
+     }
+    ],
+    "returns": "{ holder, layers, width }: the holder is a null the words hang on; seat or move it (PCS.onFace(line.holder, card))",
+    "example": "var line = PCS.words(st.comp, { words: [{ text: 'Ask', t: 1.5 }, { text: 'for', t: 1.9 }, { text: 'proof', t: 2.1 }], size: 80, on: 'surface' });\nPCS.onFace(line.holder, card);",
+    "notes": [
+     "time each word to the voice; a word that slides in makes the whole line look like it moves."
+    ]
+   },
+   "section": {
+    "document": "piece-words",
+    "heading": null
+   },
+   "still": {
+    "path": "arsenal/stills/piece-words.jpg",
+    "sha256": "d483c4d37e58ad200681865256b71c57da7db5ac553be40ec481ca47a489b41f"
    }
   },
   {

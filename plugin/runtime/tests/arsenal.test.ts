@@ -661,6 +661,39 @@ describe("ae_arsenal with pieces", () => {
     expect(text(pinned)).toMatch(/WARNING: pinned revision 00000000.*The piece changed since it was pinned: this is the shipped call/);
   });
 
+  it("a piece's load line finds the other pieces its example calls by the functions their files define, not by file name", async () => {
+    const c = loadCatalog(LIB);
+    const pieces = c.entries.filter((e) => e.kind === "piece");
+    for (const p of pieces) {
+      expect(p.call!.functions?.length, p.id).toBeGreaterThan(0);
+      const file = readFileSync(path.join(LIB, "pieces", `${p.call!.load}.jsx`), "utf8");
+      for (const f of p.call!.functions!) expect(file, `${p.id} defines PCS.${f}`).toMatch(new RegExp(`^PCS\\.${f}\\s*=\\s*function`, "m"));
+    }
+    // land-on's example stands the card up first: PCS.standUp lives in stand-up.jsx
+    const t = text(await call({ action: "get", id: "piece-land-on" }));
+    expect(t).toMatch(/PCS\.need\('stand-up'\); PCS\.need\('land-on'\);$/m);
+    // every PCS call in every example is loaded by that piece's load line (or by the core)
+    for (const p of pieces) {
+      const reply = text(await call({ action: "get", id: p.id }));
+      const loaded = [...reply.matchAll(/PCS\.need\('([a-z0-9-]+)'\)/g)].map((m) => m[1]);
+      for (const [, f] of p.call!.example.matchAll(/PCS\.([A-Za-z0-9_]+)\(/g)) {
+        const owner = pieces.find((o) => o.call!.functions?.includes(f));
+        if (owner) expect(loaded, `${p.id} example calls PCS.${f}`).toContain(owner.call!.load);
+      }
+    }
+  });
+
+  it("plain words an agent would use find the stage 3 pieces", () => {
+    const ids = (q: string) => findByProvides(loadCatalog(LIB), { query: q }).results.map((r) => r.id);
+    expect(ids("a pill that stands up")).toContain("piece-stand-up");
+    expect(ids("words that appear one by one")[0]).toBe("piece-words");
+    expect(ids("a screenshot on an object")[0]).toBe("piece-picture-face");
+    expect(ids("a lit room for a cutaway")).toContain("piece-room");
+    expect(ids("hand over from the face card to a cutaway")[0]).toBe("piece-hand-over");
+    expect(ids("a number as a 3d object")[0]).toBe("piece-type3d");
+    expect(ids("change what a card says")[0]).toBe("piece-swap-face");
+  });
+
   it("browse labels a piece as runnable", async () => {
     const t = text(await call({ action: "browse", level: "recipe" }));
     expect(t).toMatch(/Tile 1: piece-\w+ · [^·]+ · recipe · piece \(runnable; get returns its call\) · provides/);

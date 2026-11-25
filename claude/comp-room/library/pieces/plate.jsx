@@ -38,6 +38,6 @@ PCS.plate = function (comp, o) {
   var tilt = o.tilt || S.tilt;
   PCS.TG(L).property('ADBE Rotate X').setValue(tilt[0]);
   PCS.TG(L).property('ADBE Rotate Y').setValue(tilt[1]);
-  L.comment = 'depth=' + depth + ' bevel=' + bevel + ' w=' + o.w + ' h=' + o.h;
+  L.comment = 'depth=' + depth + ' bevel=' + bevel + ' w=' + o.w + ' h=' + o.h + ' round=' + (o.round || 0);
   return PCS.seat(comp, L);
 };
