@@ -1,6 +1,6 @@
 {
  "vocab": "jobs-v1",
- "version": "f2a859e7",
+ "version": "525426ab",
  "jobs": [
   "land-number",
   "count-things",
@@ -229,7 +229,7 @@
    },
    "still": {
     "path": "arsenal/stills/piece-flip.jpg",
-    "sha256": "5f673fd4750dea6ac746a6be266e2d5bf2a75abf0fa44875fe6bf8a9f45bdb63"
+    "sha256": "dbab139cec95c89f0cfbc20529b2bad4a026dd65c52773014aecf373f3ed2beb"
    }
   },
   {
@@ -323,7 +323,7 @@
    },
    "still": {
     "path": "arsenal/stills/piece-hand-over.jpg",
-    "sha256": "951436492e0fc2e9763c0912834b9d4d9a8af074fe9fd774643e91d122af0255"
+    "sha256": "193bce48481c55797a7b974a15a5a66eb7cb79bac0be99e4df50d5c67cca0fb8"
    }
   },
   {
@@ -778,7 +778,7 @@
    },
    "still": {
     "path": "arsenal/stills/piece-plate.jpg",
-    "sha256": "1add09cfa261c8d3985c4c043cccd30ea78f2630ae082e65c01e11366e22215b"
+    "sha256": "422098b0b2cb7ebeff7d1712ed1b184d014b6ed2772276cf54d29a11bd87a262"
    }
   },
   {
@@ -857,7 +857,7 @@
    },
    "still": {
     "path": "arsenal/stills/piece-room.jpg",
-    "sha256": "a2600289f5007cbddae0447a70d74ee4c476659d95790e163c38c4a9dd456fa4"
+    "sha256": "60eb4c7478dab48b0e95948c9d5f54e3b003fd44c2398127b82396ea963ad536"
    }
   },
   {
@@ -938,10 +938,10 @@
   },
   {
    "id": "piece-spot",
-   "revision": "babbed12",
+   "revision": "b47cb2c2",
    "level": "recipe",
    "name": "Spot light, or a pool of light on the hero",
-   "line": "Adds one spot light coloured by the style. Given an object (on), it lights that object from in front and a little above with a tight pool sized to it, and can rise as the object arrives while the stage's key dips, so the lit thing is the one to look at.",
+   "line": "Adds one spot light coloured by the style. Given an object (on), it lights that object from in front, up and to one side, with a pool sized to it, and can rise as the object arrives while the stage's key dips, so the lit thing is the one to look at.",
    "use_for": "the one thing the line is about (\"the light tells the story\"); the key and fill of a stage",
    "status": "proven",
    "kind": "piece",
@@ -980,7 +980,7 @@
     "options": [
      {
       "name": "on",
-      "text": "a layer to light: aims at its centre from in front and a little above, cone sized to it, feather 50"
+      "text": "a layer to light: aims at its centre from in front, up and to the left, cone sized to it, feather 50"
      },
      {
       "name": "from",
@@ -988,7 +988,7 @@
      },
      {
       "name": "intensity",
-      "text": "percent; with on, by how light the object is: 1.3 x the style's key on a dark object, down to 0.55 x on a near-white one, so a pool reads on graphite and never clips cream; else 80"
+      "text": "percent; with on, by how light the object is: 1.5 x the style's key on a dark object, down to 0.75 x on a near-white one, so a pool reads on graphite and never clips cream; else 80"
      },
      {
       "name": "color",
@@ -1002,7 +1002,7 @@
     "returns": "the light layer",
     "example": "var st = PCS.stage({ name: 'BEAT 3', duration: 5 });\nvar card = PCS.plate(st.comp, { name: 'card', w: 400, h: 520, round: 34, pos: [790, 720, 0] });\nPCS.spot(st.comp, { name: 'pool', on: card, t: 2.6, dimKey: 0.6 });",
     "notes": [
-     "light the hero from the front: a pool from high above only grazes a face and spills onto the wall behind.",
+     "light the hero from the front but off the camera's line: from high above a pool only grazes a face and lights the wall behind; straight from the camera it puts a milky highlight over a glossy face and washes what is on it.",
      "never a point light near a glossy surface (it shows as a stray dot)."
     ]
    },
@@ -1012,7 +1012,7 @@
    },
    "still": {
     "path": "arsenal/stills/piece-spot.jpg",
-    "sha256": "74bd2e51690789f676db64d454d32864357bb045c237e4eebea80a14d06b2c5b"
+    "sha256": "426794daf977d97027b73e4a8f22ae138e420a9919491c4ad6edec5cc5d03356"
    }
   },
   {

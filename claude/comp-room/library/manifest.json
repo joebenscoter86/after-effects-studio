@@ -748,14 +748,14 @@
       "title": "Technique arsenal index: documents, vocabulary and counts",
       "path": "arsenal/index.json",
       "kind": "catalog",
-      "sha256": "604814e2c75b96dc2fb142375a5295eec5f2deb4fbde342d6dd79a3f3cfe7f42"
+      "sha256": "eebb80341b1eda775ffc0bfaa990d2a2d67ae33193ea5a97a31ca2f660159204"
     },
     {
       "id": "arsenal-catalog",
       "title": "Library catalog: one record per style, world, recipe and piece, queried by ae_arsenal",
       "path": "arsenal/catalog.json",
       "kind": "catalog",
-      "sha256": "65eeb4a62609bfc2b2276bb4a3caab0ecea877f13e8cb5c57ef4e312b37e0bad"
+      "sha256": "b1eb53d4b25b725ecb8b9c13debd548a5d3c0fe19725b7383aec8697a7f463b9"
     },
     {
       "id": "arsenal-jobs",
@@ -1000,7 +1000,7 @@
       "title": "Piece: Spot light, or a pool of light on the hero",
       "path": "pieces/spot.jsx",
       "kind": "code",
-      "sha256": "babbed12066f35b9837be2570c53f165cc1095bfcbc187bf3e7fd6bdc5440e17"
+      "sha256": "b47cb2c29ab17f30a3fadc18bb733325ece5baa34e007d4813d73f4f676d2704"
     },
     {
       "id": "piece-spot-proof",
