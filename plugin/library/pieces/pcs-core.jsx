@@ -96,15 +96,19 @@ PCS.findItem = function (name) {
   for (var i = 1; i <= app.project.numItems; i++) { if (app.project.item(i).name === name) { return app.project.item(i); } }
   return null;
 };
-// Removes a comp and the solids only it used (a stage's backplate and grain), so re-running a scene leaves nothing behind.
+// Removes a comp and what only it used: its solids (a stage's backplate and grain) and the library's own files it imported
+// (the light map), so re-running a scene leaves nothing behind. Footage from anywhere else is left in the project.
 PCS.removeComp = function (comp) {
-  var solids = [];
+  var mine = []; var lib = new Folder(PCS.dir).fsName;
   for (var i = 1; i <= comp.numLayers; i++) {
     var src = comp.layer(i).source;
-    if (src && src instanceof FootageItem && src.mainSource instanceof SolidSource) { solids.push(src); }
+    if (!src || !(src instanceof FootageItem)) { continue; }
+    var solid = src.mainSource instanceof SolidSource;
+    var ours = !solid && src.mainSource && src.mainSource.file && src.mainSource.file.fsName.indexOf(lib) === 0;
+    if (solid || ours) { mine.push(src); }
   }
   comp.remove();
-  for (var j = 0; j < solids.length; j++) { try { if (solids[j].usedIn.length === 0) { solids[j].remove(); } } catch (e) {} }
+  for (var j = 0; j < mine.length; j++) { try { if (mine[j].usedIn.length === 0) { mine[j].remove(); } } catch (e) {} }
 };
 PCS.importOnce = function (path) {
   var f = new File(path);
@@ -155,6 +159,19 @@ PCS.children = function (layer) {
     while (p) { if (p.index === layer.index) { out.push(L); break; } p = p.parent; }
   }
   return out;
+};
+// Where a point of a layer (its own coordinates, default its anchor) sits in the comp's 3D space at time t, parents and
+// all. After Effects gives this only to expressions, so a temporary null asks for it and is removed.
+PCS.toWorld = function (layer, local, t) {
+  var comp = layer.containingComp;
+  var N = comp.layers.addNull(); N.threeDLayer = true; N.parent = layer; PCS.zero(N);
+  PCS.TG(N).property('ADBE Anchor Point').setValue([0, 0, 0]);
+  PCS.TG(N).property('ADBE Position').setValue(local || PCS.TG(layer).property('ADBE Anchor Point').valueAtTime(t || 0, false));
+  var fx = N.property('ADBE Effect Parade').addProperty('ADBE Point3D Control');
+  fx.property(1).expression = 'toWorld([0,0,0])';
+  var p = fx.property(1).valueAtTime(t || 0, false);
+  N.remove();
+  return p;
 };
 // A plate records its size in its comment (depth=, bevel=, w=, h=) so later pieces can seat things on it.
 PCS.num = function (plate, key, dflt) { var m = new RegExp(key + '=([\\d.]+)').exec(plate.comment || ''); return m ? parseFloat(m[1]) : dflt; };

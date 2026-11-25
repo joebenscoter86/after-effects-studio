@@ -1,33 +1,63 @@
 // piece: spot
-// name: Spot light
-// does: Adds one spot light aimed at a point, coloured by the style, with soft shadows when asked.
-// use it for: the key and fill of a stage; a pool of light that rises on the hero as it arrives ("the light tells the story")
-// job: light-the-hero; support: add-depth
+// name: Spot light, or a pool of light on the hero
+// does: Adds one spot light coloured by the style. Given an object (on), it lights that object from in front and a little above with a tight pool sized to it, and can rise as the object arrives while the stage's key dips, so the lit thing is the one to look at.
+// use it for: the one thing the line is about ("the light tells the story"); the key and fill of a stage
+// job: light-the-hero; support: add-depth, reveal-headline
 // provides: light: key; light: fill
 // works with: piece-stage, piece-plate
-// call: PCS.spot(comp, { name, pos, aim, color, intensity, cone, shadow, darkness, diffusion })
-// option pos: [x, y, z] where the light sits
-// option aim: [x, y, z] the point it points at
-// option color: light colour; default the style's key colour
-// option intensity: percent, default 80. Key it from 0 for a pool that rises on the hero
-// option cone: cone angle in degrees, default 80 (feather 90)
+// call: PCS.spot(comp, { name, on, t, dur, dimKey, pos, aim, color, intensity, cone, feather, shadow, darkness, diffusion })
+// option on: a layer to light: aims at its centre from in front and a little above, cone sized to it, feather 50
+// option t, dur: the pool rises from 0 at t over dur seconds (default 0.8); without t it is on from the start
+// option dimKey: 0 to 1, the stage key falls to this share of its strength over the same time (0.6 makes the pool read twice as strong)
+// option intensity: percent; with on, by how light the object is: 1.3 x the style's key on a dark object, down to 0.55 x on a near-white one, so a pool reads on graphite and never clips cream; else 80
+// option pos, aim: [x, y, z] where the light sits and the point it points at (without on)
+// option cone, feather: cone angle in degrees (default 80, or sized to the object with on) and feather percent (90, or 50 with on)
+// option color: default the style's key colour
 // option shadow: true to cast shadows (darkness 60, diffusion 90 unless given)
 // returns: the light layer
 // example:
 //   var st = PCS.stage({ name: 'BEAT 3', duration: 5 });
-//   var pool = PCS.spot(st.comp, { name: 'pool', pos: [540, 300, -900], aim: [540, 900, 0], intensity: 0, cone: 60 });
-//   PCS.kf(pool.property('ADBE Light Options Group').property('ADBE Light Intensity'), [[2.6, 0], [3.6, 60]]);
+//   var card = PCS.plate(st.comp, { name: 'card', w: 400, h: 520, round: 34, pos: [790, 720, 0] });
+//   PCS.spot(st.comp, { name: 'pool', on: card, t: 2.6, dimKey: 0.6 });
+// note: light the hero from the front: a pool from high above only grazes a face and spills onto the wall behind.
 // note: never a point light near a glossy surface (it shows as a stray dot).
 // ---
 PCS.spot = function (comp, o) {
-  var S = comp.layers.addLight(o.name || 'spot', [540, 960]); S.lightType = LightType.SPOT;
-  PCS.TG(S).property('ADBE Position').setValue(o.pos);
-  try { PCS.TG(S).property('ADBE Anchor Point').setValue(o.aim); } catch (e) {}
-  var G = 'ADBE Light Options Group';
-  PCS.sp(S, G, 'ADBE Light Color', o.color || PCS.S.keyColor);
-  PCS.sp(S, G, 'ADBE Light Intensity', o.intensity === undefined ? 80 : o.intensity);
-  PCS.sp(S, G, 'ADBE Light Cone Angle', o.cone || 80); PCS.sp(S, G, 'ADBE Light Cone Feather 2', 90);
-  PCS.sp(S, G, 'ADBE Casts Shadows', o.shadow ? 1 : 0);
-  if (o.shadow) { PCS.sp(S, G, 'ADBE Light Shadow Darkness', o.darkness || 60); PCS.sp(S, G, 'ADBE Light Shadow Diffusion', o.diffusion || 90); }
-  return S;
+  var G = 'ADBE Light Options Group'; var S = PCS.S;
+  var aim = o.aim; var pos = o.pos; var cone = o.cone; var feather = o.feather;
+  var full = (o.intensity === undefined) ? (o.on ? Math.round(S.keyIntensity * PCS.poolShare(o.on)) : 80) : o.intensity;
+  if (o.on) {
+    var c = PCS.toWorld(o.on, [0, 0, 0], o.t || 0);
+    aim = [c[0], c[1], c[2]]; pos = [c[0], c[1] - 260, c[2] - 1300];
+    var r = 0.45 * Math.max(PCS.num(o.on, 'w', 400), PCS.num(o.on, 'h', 400));
+    if (cone === undefined) { cone = Math.min(90, 2 * Math.atan(r / 1325) * 180 / Math.PI + 4); }
+    if (feather === undefined) { feather = 50; }
+  }
+  var L = comp.layers.addLight(o.name || 'spot', [540, 960]); L.lightType = LightType.SPOT;
+  PCS.TG(L).property('ADBE Position').setValue(pos);
+  try { PCS.TG(L).property('ADBE Anchor Point').setValue(aim); } catch (e) {}
+  PCS.sp(L, G, 'ADBE Light Color', o.color || S.keyColor);
+  PCS.sp(L, G, 'ADBE Light Intensity', full);
+  PCS.sp(L, G, 'ADBE Light Cone Angle', cone || 80); PCS.sp(L, G, 'ADBE Light Cone Feather 2', feather === undefined ? 90 : feather);
+  PCS.sp(L, G, 'ADBE Casts Shadows', o.shadow ? 1 : 0);
+  if (o.shadow) { PCS.sp(L, G, 'ADBE Light Shadow Darkness', o.darkness || 60); PCS.sp(L, G, 'ADBE Light Shadow Diffusion', o.diffusion || 90); }
+  var d = o.dur || 0.8;
+  if (o.t !== undefined) { PCS.kf(L.property(G).property('ADBE Light Intensity'), [[o.t, 0], [o.t + d, full]]); }
+  if (o.dimKey !== undefined) {
+    var key = null; try { key = comp.layer('key'); } catch (e2) {}
+    if (key) {
+      var ki = key.property(G).property('ADBE Light Intensity'); var k0 = ki.valueAtTime(o.t || 0, false);
+      PCS.kfFrom(ki, [[o.t || 0, k0], [(o.t || 0) + d, k0 * o.dimKey]]);
+    } else { PCS.warnings.push('spot dimKey: no layer named "key" in ' + comp.name); }
+  }
+  return L;
+};
+// How strong a pool should be on this object, as a share of the style's key: 1.3 on a dark face (luminance 0.3 or less),
+// 0.55 on a near-white one (0.85 or more), in between by luminance. The face colour is the plate's fill, else the style's surface.
+PCS.poolShare = function (layer) {
+  var c = PCS.S.surface;
+  try { c = layer.property('ADBE Root Vectors Group').property(1).property('ADBE Vectors Group').property('ADBE Vector Graphic - Fill').property('ADBE Vector Fill Color').value; } catch (e) {}
+  var lum = 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+  var k = (lum - 0.3) / 0.55; k = Math.max(0, Math.min(1, k));
+  return 1.3 - 0.75 * k;
 };
