@@ -4,6 +4,7 @@ import { AMBIENT_CONTEXT_JSX, PACKAGE_ROOT, denyAppConfig, denyOperation, denyUn
 import { init_instances, instanceLabel, listInstances, resolveTarget } from "./transport-1.js";
 import { COMP_CORNERS_FN, COMP_INFO_FN, LAYER_FULL_FN, LIST_MISSING_FONTS_FN, LIST_MISSING_FOOTAGE_FN, MISSING_SOURCES_FN, OCIO_CAPTURE_FN, RENDER_FRAME_FN, init_snippets } from "./operations-4.js";
 import { PieceWatcher, alphaChange, analyzeFrame, calibrationKey, compareRegions, composeContactSheet, decodePng, diffArgsError, edgeArgsError, encodePngGray8, encodePngSrgb8, encodePngSrgbRgba8, flattenOver, frameLabel, histogramOf, init_calibration, init_matte, init_motion, init_png16, init_screen, init_settled_read, init_sheet, init_transform, init_watch, lookArgsError, lookCrops, measureCaptureTransfer, measureEdge, measureLook, measureScreen, pictureChange, pictureOf, profileForWorkingSpace, resample, resolveDiffThresholds, resolveEdgeThresholds, resolveScreenThresholds, resolveWatchThresholds, rgbHex, sampleRegions, sceneLinearToDisplaySrgb, screenArgsError, settleTimeoutFor, stampFiles, summarizeFlicker, summarizeLookSeries, summarizeSeries, unmatte, waitForSettled, watchArgsError } from "./color-1.js";
+import { init_save_project, init_version_info, saveProjectTool, versionInfoTool } from "./tools-2.js";
 import { promises, readFileSync, realpathSync } from "node:fs";
 import * as os$1 from "node:os";
 import * as path$1 from "node:path";
@@ -2743,12 +2744,12 @@ function init_comp_info() {
 }
 
 // server/tools/context.js
-var CODE$1, contextTool;
+var CODE, contextTool;
 function init_context() {
 	return (init_context = __esmMin((() => {
 		init_instances();
 		init_define_tool();
-		CODE$1 = `
+		CODE = `
     var proj = app.project;
     var ai = proj.activeItem;
     // The resident agent (pull path) marks the instance that answered; null
@@ -2887,7 +2888,7 @@ function init_context() {
 			inputShape: {},
 			handler: async (_args, transport) => {
 				const result = await transport.execute({
-					code: CODE$1,
+					code: CODE,
 					label: "context"
 				});
 				if (!result.ok) return toMcpResult(result);
@@ -3440,124 +3441,6 @@ function init_project_info() {
 	})))();
 }
 
-// server/tools/save-project.js
-var saveProjectTool;
-function init_save_project() {
-	return (init_save_project = __esmMin((() => {
-		init_schemas();
-		init_registry();
-		init_define_tool();
-		saveProjectTool = defineTool({
-			name: "ae_save_project",
-			title: "Save project",
-			description: "Save the project. Pass `path` for Save As.",
-			group: "document",
-			blockedInReadOnly: true,
-			effect: "destructive",
-			inputShape: { path: string$1().optional().describe("Optional absolute path to save the project to (Save As). If omitted, save to the existing path — errors if the project has never been saved.") },
-			handler: async (args, transport) => {
-				const code = `
-        var _path = ${jsxVal(args.path ?? null)};
-        if (_path) {
-            // Save As into a folder that does not exist yet fails inside AE on a
-            // temp file name; create the folder first, as the render ops do.
-            var f = AE.ensureParentDir(_path);
-            if (f.parent && !f.parent.exists) {
-                return { ok: false, saved: false, error: "cannot create folder " + f.parent.fsName.replace(/\\\\/g, "/") + " for the project file" };
-            }
-            app.project.save(f);
-            return { ok: true, saved: true, path: f.fsName.replace(/\\\\/g, "/") };
-        }
-        if (!app.project.file) {
-            return { ok: false, saved: false, error: "project has no existing path; pass 'path' to save as" };
-        }
-        app.project.save();
-        return { ok: true, saved: true, path: app.project.file.fsName.replace(/\\\\/g, "/") };
-    `;
-				const result = await transport.execute({
-					code,
-					label: "save_project"
-				});
-				return toMcpResult(result);
-			}
-		});
-	})))();
-}
-
-// server/tools/version-info.js
-var CODE, versionInfoTool;
-function init_version_info() {
-	return (init_version_info = __esmMin((() => {
-		init_define_tool();
-		CODE = `
-    return {
-        app: {
-            version: app.version,
-            buildName: AE.safeGet(function () { return app.buildName; }, null),
-            buildNumber: AE.safeGet(function () { return app.buildNumber; }, null),
-            language: AE.safeGet(function () { return String(app.isoLanguage); }, null),
-            memoryInUse: AE.safeGet(function () { return app.memoryInUse; }, null),
-            availableGPUs: AE.safeGet(function () { return app.availableGPUAccelTypes ? app.availableGPUAccelTypes.length : 0; }, null)
-        },
-        capabilities: {
-            saveFrameToPng: AE.safeGet(function () {
-                // A create/remove probe dirties even a previously clean project.
-                // Inspect an existing comp only; null means there is no comp
-                // from which to determine this capability safely.
-                for (var i = 1; i <= app.project.numItems; i++) {
-                    var item = app.project.item(i);
-                    if (item instanceof CompItem) {
-                        return typeof item.saveFrameToPng === "function";
-                    }
-                }
-                return null;
-            }, null),
-            appEffects: AE.safeGet(function () { return !!(app.effects && app.effects.length); }, false),
-            bridgeTalk: AE.safeGet(function () { return typeof BridgeTalk !== "undefined"; }, false),
-            socket: AE.safeGet(function () { return typeof Socket !== "undefined"; }, false)
-        },
-        project: {
-            numItems: app.project.numItems,
-            file: app.project.file ? app.project.file.fsName.replace(/\\\\/g, "/") : null,
-            dirty: app.project.dirty
-        },
-        // The resident agent (pull path), when this instance runs one. null
-        // means the call arrived through the push path (AfterFX.exe -r).
-        agent: AE.safeGet(function () {
-            var a = $.global.AE_MCP_AGENT;
-            if (!a) return null;
-            return {
-                id: a.state.id,
-                idSource: a.state.idSource,
-                agentVersion: a.state.agentVersion,
-                ticks: a.state.ticks,
-                served: a.state.served
-            };
-        }, null),
-        server: {
-            exportSchemaVersion: AE.EXPORT_SCHEMA_VERSION
-        }
-    };
-`;
-		versionInfoTool = defineTool({
-			name: "ae_version_info",
-			title: "Version info",
-			description: "AE version, build, and read-only capabilities (saveFrameToPng, app.effects, Socket). saveFrameToPng is null when no existing comp can be inspected.",
-			group: "inspect",
-			blockedInReadOnly: false,
-			effect: "read",
-			inputShape: {},
-			handler: async (_args, transport) => {
-				const result = await transport.execute({
-					code: CODE,
-					label: "version_info"
-				});
-				return toMcpResult(result);
-			}
-		});
-	})))();
-}
-
 // server/tools/index.js
 function bindTransportToInstance(transport, instance) {
 	return {
@@ -3727,7 +3610,7 @@ function validateCatalog(raw, refs) {
 	for (const id of ids) visit(id);
 	return catalog;
 }
-function queryWords(query) {
+function queryWords$1(query) {
 	return [...new Set((query ?? "").toLowerCase().split(/[\s,;]+/u).filter(Boolean))];
 }
 function moduleWords(m, words) {
@@ -3741,7 +3624,7 @@ function moduleWords(m, words) {
 }
 function findModules(catalog, query) {
 	if (!query?.trim()) return catalog.modules;
-	const words = queryWords(query);
+	const words = queryWords$1(query);
 	return catalog.modules.filter((m) => moduleWords(m, words).length > 0);
 }
 function init_library_modules() {
@@ -4116,7 +3999,7 @@ function readLibrary(document, query, root = path.resolve(PACKAGE_ROOT, "../libr
 			throw new Error(`Module catalog: ${e instanceof Error ? e.message : String(e)}`);
 		}
 		const matches = findModules(catalog, query);
-		const words = queryWords(query);
+		const words = queryWords$1(query);
 		const viaModules = /* @__PURE__ */ new Map();
 		for (const m of matches) for (const w of moduleWords(m, words)) viaModules.set(m.entryDocument, (viaModules.get(m.entryDocument) ?? /* @__PURE__ */ new Set()).add(w));
 		const seen = /* @__PURE__ */ new Set();
@@ -4246,7 +4129,7 @@ function findTechniques(catalog, ask) {
 	const exclude = new Set(ask.exclude ?? []);
 	const limit = ask.limit ?? 5;
 	const tier = (r) => r.job === ask.job ? 0 : r.support.includes(ask.job) ? 1 : [r.job, ...r.support].some((j) => j !== null && support.includes(j)) ? 2 : null;
-	const byJob = catalog.recipes.filter((r) => r.kind === "technique" && !r.variant_of && tier(r) !== null && !exclude.has(r.id));
+	const byJob = catalog.entries.filter((r) => (r.kind === "technique" || r.kind === "piece") && !r.variant_of && tier(r) !== null && !exclude.has(r.id));
 	const pass = (r, loose) => (loose.includes("status") || ask.constraints?.status === "any" || r.status === "proven") && (loose.includes("needs") || have === null || unmet(r.needs, have).length === 0);
 	let relaxed = [];
 	let hits = byJob.filter((r) => pass(r, relaxed));
@@ -4259,6 +4142,7 @@ function findTechniques(catalog, ask) {
 	const ranked = hits.map((r) => ({
 		r,
 		key: [
+			r.kind === "piece" ? 0 : 1,
 			tier(r),
 			r.status === "proven" ? 0 : 1,
 			-r.taught_by,
@@ -4276,6 +4160,7 @@ function findTechniques(catalog, ask) {
 		const needs = !r.needs.length ? "needs nothing" : missing.length ? `needs ${missing.join(", ")}, not on hand` : have === null ? `needs ${r.needs.join(", ")}` : `needs met: ${r.needs.join(", ")}`;
 		const m = overlap(r);
 		return [
+			r.kind === "piece" ? "piece: runnable code, get returns its call" : null,
 			job,
 			needs,
 			m.length ? `mood: ${m.join(", ")}` : mood.length ? "no mood overlap" : null,
@@ -4298,17 +4183,186 @@ function findTechniques(catalog, ask) {
 			still: r.still?.path ?? null,
 			section: r.section,
 			fit: fit(r),
-			...r.variants?.length ? { variants: r.variants } : {}
+			...r.variants?.length ? { variants: r.variants } : {},
+			...r.kind === "piece" && r.call ? {
+				kind: "piece",
+				call: r.call.signature
+			} : {}
 		}))
 	};
 	if (relaxed.length && out.results.length) out.relaxed = relaxed;
 	return out;
+}
+function parseProvides(p) {
+	const m = /^\s*([a-z-]+)\s*(?::\s*([a-z0-9-]+)\s*)?$/.exec(String(p).toLowerCase());
+	return m ? [m[1], m[2] ?? null] : null;
+}
+function askedProvides(catalog, asked) {
+	const vocab = catalog.provides ?? {};
+	return (asked ?? []).map((p) => {
+		const k = parseProvides(p);
+		if (!k) throw new ArsenalRefusal(`refused: provides "${p}" is not "key" or "key: word"; keys: ${Object.keys(vocab).join(", ")}`);
+		if (!vocab[k[0]]) throw new ArsenalRefusal(`refused: unknown provides key "${k[0]}"; valid keys: ${Object.keys(vocab).join(", ")}`);
+		if (k[1] && !vocab[k[0]].includes(k[1])) throw new ArsenalRefusal(`refused: unknown ${k[0]} word "${k[1]}"; valid ${k[0]} words: ${vocab[k[0]].join(", ")}`);
+		return k;
+	});
+}
+function checkLevel(level) {
+	if (level === void 0) return void 0;
+	if (!LEVELS.includes(level)) throw new ArsenalRefusal(`refused: unknown level "${level}"; valid levels: ${LEVELS.join(", ")}`);
+	return level;
+}
+function matched(e, asked) {
+	const own = e.provides.map(parseProvides).filter((x) => x !== null);
+	return asked.filter(([k, w]) => own.some(([ok, ow]) => ok === k && (w === null || ow === w))).map(showProvides);
+}
+function stem(word) {
+	let w = word.toLowerCase().replace(/[^a-z0-9]/g, "");
+	if (w.length > 4 && w.endsWith("ies")) w = `${w.slice(0, -3)}y`;
+	else if (w.length > 4 && w.endsWith("ing")) w = w.slice(0, -3);
+	else if (w.length > 3 && w.endsWith("ed")) w = w.slice(0, -2);
+	else if (w.length > 3 && w.endsWith("s") && !w.endsWith("ss")) w = w.slice(0, -1);
+	if (w.length > 3 && w.at(-1) === w.at(-2) && !/[aeiouls]/.test(w.at(-1))) w = w.slice(0, -1);
+	if (w.length > 3 && w.endsWith("e")) w = w.slice(0, -1);
+	return w;
+}
+function queryWords(query) {
+	return [...new Set(query.split(/[^A-Za-z0-9]+/).filter((w) => w && !STOP.has(w.toLowerCase())).map(stem).filter((w) => w.length > 1))];
+}
+function wordsMatched(e, words) {
+	if (!words.length) return [];
+	const own = new Set(stems([
+		e.id,
+		e.name,
+		e.line,
+		e.use_for ?? "",
+		e.job ?? "",
+		...e.support,
+		...e.provides
+	].join(" ")));
+	return words.filter((w) => own.has(w));
+}
+function findByProvides(catalog, ask) {
+	const level = checkLevel(ask.level);
+	const asked = askedProvides(catalog, ask.provides);
+	const words = ask.query === void 0 ? [] : queryWords(ask.query);
+	if (ask.query !== void 0 && !words.length) throw new ArsenalRefusal(`refused: query "${ask.query}" has no words to look for once common words are dropped; say what the beat does, e.g. "turns over" or "glass floor"`);
+	if (!level && !asked.length && !words.length) throw new ArsenalRefusal("refused: find needs a job, a level, provides or a query");
+	const exclude = new Set(ask.exclude ?? []);
+	const limit = ask.limit ?? 5;
+	let pool = catalog.entries.filter((e) => !e.variant_of && !exclude.has(e.id) && (!level || atLevel(e, level)) && (!ask.shelf || e.shelf === ask.shelf) && (!asked.length || matched(e, asked).length > 0));
+	let relaxed = [];
+	if (words.length) {
+		const best = Math.max(0, ...pool.map((e) => wordsMatched(e, words).length));
+		pool = best ? pool.filter((e) => wordsMatched(e, words).length === best) : [];
+		if (best && best < words.length) relaxed = ["words"];
+	}
+	let hits = pool.filter((e) => ask.status === "any" || e.status === "proven");
+	if (!hits.length && pool.length) {
+		relaxed = [...relaxed, "status"];
+		hits = pool;
+	}
+	const ranked = hits.map((e, i) => ({
+		e,
+		key: [
+			words.length && e.kind === "piece" ? 0 : 1,
+			-matched(e, asked).length,
+			e.still ? 0 : 1,
+			i
+		]
+	})).sort((a, b) => {
+		for (let i = 0; i < a.key.length; i++) if (a.key[i] !== b.key[i]) return a.key[i] - b.key[i];
+		return 0;
+	}).slice(0, limit);
+	const out = {
+		vocab: catalog.vocab,
+		version: catalog.version,
+		...words.length ? { words } : {},
+		results: ranked.map(({ e }) => {
+			const m = matched(e, asked);
+			const w = wordsMatched(e, words);
+			return {
+				id: e.id,
+				revision: e.revision,
+				level: e.level,
+				...e.also_level?.length ? { also_level: e.also_level } : {},
+				name: e.name,
+				line: e.line,
+				status: e.status,
+				kind: e.kind,
+				provides: e.provides,
+				needs: e.needs,
+				cost: e.cost,
+				still: e.still?.path ?? null,
+				section: e.section,
+				...e.kind === "piece" && e.call ? {
+					use_for: e.use_for,
+					call: e.call.signature
+				} : {},
+				fit: [
+					e.kind === "piece" ? "piece: runnable code, get returns its call" : null,
+					levelText(e),
+					w.length ? `words: ${w.join(", ")} of ${words.join(", ")}` : null,
+					m.length ? `provides ${m.join(", ")}` : null,
+					e.status === "proven" ? "proven" : "unproven, needs a test build first",
+					e.still ? null : `no still: ${e.no_still ?? "none shipped"}`
+				].filter(Boolean).join("; "),
+				...e.variants?.length ? { variants: e.variants } : {}
+			};
+		})
+	};
+	if (relaxed.length && out.results.length) out.relaxed = relaxed;
+	return out;
+}
+function browseCatalog(catalog, ask = {}) {
+	const level = checkLevel(ask.level);
+	const asked = askedProvides(catalog, ask.provides);
+	const size = Math.min(Math.max(1, Math.floor(ask.page_size ?? 12)), 24);
+	const order = level ? [level] : [...LEVELS];
+	const seen = /* @__PURE__ */ new Set();
+	const all = [];
+	for (const l of order) for (const e of catalog.entries) {
+		if (seen.has(e.id) || e.variant_of || !atLevel(e, l)) continue;
+		if (ask.shelf && e.shelf !== ask.shelf) continue;
+		if (asked.length && !matched(e, asked).length) continue;
+		seen.add(e.id);
+		all.push(e);
+	}
+	const shown = ask.include_unpictured ? all : all.filter((e) => e.still);
+	const pages = Math.max(1, Math.ceil(shown.length / size));
+	const page = Math.min(Math.max(1, Math.floor(ask.page ?? 1)), pages);
+	const tiles = shown.slice((page - 1) * size, page * size).map((e, i) => ({
+		n: (page - 1) * size + i + 1,
+		id: e.id,
+		name: e.name,
+		level: e.level,
+		...e.also_level?.length ? { also_level: e.also_level } : {},
+		...e.kind === "piece" ? { kind: "piece" } : {},
+		...e.role ? { role: e.role } : {},
+		...e.block ? { block: e.block } : {},
+		provides: e.provides,
+		status: e.status,
+		...e.still ? {} : { no_still: e.no_still ?? "none shipped" }
+	}));
+	return {
+		vocab: catalog.vocab,
+		version: catalog.version,
+		level: level ?? "all",
+		...asked.length ? { provides: asked.map(showProvides) } : {},
+		page,
+		pages,
+		page_size: size,
+		total: shown.length,
+		hidden_without_still: all.length - shown.length,
+		tiles
+	};
 }
 function loadCatalog(root = LIBRARY) {
 	return JSON.parse(readLibraryEntry("arsenal-catalog", root).content);
 }
 function listJobs(root = LIBRARY) {
 	const file = JSON.parse(readLibraryEntry("arsenal-jobs", root).content);
+	const catalog = loadCatalog(root);
 	return {
 		vocab: `jobs-v${String(file.version).replace(/^v/, "")}`,
 		groups: file.groups,
@@ -4318,20 +4372,78 @@ function listJobs(root = LIBRARY) {
 			name,
 			definition
 		})),
-		tags: file.tags
+		tags: file.tags,
+		levels: catalog.levels ?? LEVELS,
+		provides: catalog.provides ?? {}
 	};
+}
+function pieceReply(r, warning, catalog, root = LIBRARY) {
+	const call = r.call;
+	if (!call) throw new Error(`the arsenal is inconsistent: piece ${r.id} has no call`);
+	readLibraryEntry(r.section.document, root);
+	const dir = path.join(realpathSync(root), "pieces");
+	const calls = (e) => e.call?.functions?.length ? e.call.functions : [e.call?.load ?? ""];
+	const others = catalog.entries.filter((e) => e.kind === "piece" && e.call && e.id !== r.id && calls(e).some((f) => call.example.includes(`PCS.${f}(`))).map((e) => e.call.load);
+	const load = `$.evalFile(File(${JSON.stringify(path.join(dir, "pcs-core.jsx"))})); ${[...others, call.load].map((n) => `PCS.need('${n}');`).join(" ")}`;
+	const version = catalog.version;
+	return [
+		`ae_arsenal piece ${r.id}@${r.revision} (${r.status}; recipe level, runnable code; renderer ${r.cost.renderer}; catalog ${version}; file library/pieces/${call.load}.jsx, readable with ae_library ${r.section.document})`,
+		warning,
+		`${r.name}: ${r.line}`,
+		r.use_for ? `use it for: ${r.use_for}` : null,
+		`jobs: ${[r.job, ...r.support].filter(Boolean).join(", ")}; provides: ${r.provides.join("; ") || "nothing listed"}; needs: ${r.needs.length ? r.needs.join(", ") : "nothing"}`,
+		"",
+		"load (in eval.run with rollback: false; the house style is on until PCS.use picks another, by style block name or a style object):",
+		`  ${load}`,
+		`call: ${call.signature}`,
+		...call.options.length ? ["options:", ...call.options.map((o) => `  ${o.name}: ${o.text}`)] : [],
+		call.returns ? `returns: ${call.returns}` : null,
+		"example:",
+		...call.example.split("\n").map((l) => `  ${l}`),
+		`works with: ${r.composes.length ? r.composes.join(", ") : "nothing recorded yet"}`,
+		...r.requires?.length ? [`loads itself: ${r.requires.join(", ")}`] : [],
+		...call.notes.map((n) => `note: ${n}`)
+	].filter((l) => l !== null).join("\n");
 }
 function recipeReply(id, revision, root = LIBRARY) {
 	const catalog = loadCatalog(root);
-	const r = catalog.recipes.find((x) => x.id === id);
-	if (!r) throw new ArsenalRefusal(`refused: unknown recipe "${id}"; ae_arsenal find returns ids for a beat`);
+	const r = catalog.entries.find((x) => x.id === id);
+	if (!r) throw new ArsenalRefusal(`refused: unknown id "${id}"; ae_arsenal browse and find return ids`);
+	const warning = revision !== void 0 && revision !== r.revision ? `WARNING: pinned revision ${revision}; the shipped revision is ${r.revision}. The ${r.kind === "style" ? "entry" : r.kind === "piece" ? "piece" : "recipe"} changed since it was pinned: this is the shipped ${r.kind === "piece" ? "call" : "text"}, not the pinned one. Check it still fits the beat.` : null;
+	if (r.kind === "piece") return pieceReply(r, warning, catalog, root);
+	if (r.kind === "style") {
+		const head2 = `ae_arsenal ${r.level} ${r.id}@${r.revision} (${levelText(r)}${r.role ? `; ${r.role === "house" ? "the house style" : "an example, not a house look"}` : ""}; ${r.status}; shelf ${r.shelf}; catalog ${catalog.version}; its document is library document ${r.section.document}, also readable with ae_library)`;
+		const blockDoc = r.block ? `pieces-style-${r.block}` : null;
+		const facts = [
+			...r.block ? [`in pieces: PCS.use('${r.block}') after loading pieces/pcs-core.jsx${r.default ? " (the default: pieces use it when no style is picked)" : ""}; the values are in library document ${blockDoc}`, ...(r.open ?? []).map((o) => `not in it yet: ${o}`)] : [],
+			`provides: ${r.provides.join("; ")}`,
+			`needs: ${r.needs.length ? r.needs.join(", ") : "nothing"}`,
+			`cost: renderer ${r.cost.renderer}${r.cost.seconds_per_frame !== void 0 ? `, ${r.cost.seconds_per_frame} s per frame (${r.cost.measured ?? "measured"})` : ""}`,
+			`composes: ${r.composes.length ? r.composes.join(", ") : "none recorded yet"}`,
+			...r.good_for ? [`good for: ${r.good_for}`] : []
+		];
+		const block = blockDoc && blockDoc !== r.section.document ? [
+			"",
+			`style block for pieces (${blockDoc}):`,
+			readLibraryEntry(blockDoc, root).content.trimEnd()
+		] : [];
+		return [
+			head2,
+			warning,
+			...facts,
+			"",
+			libraryDocumentReply(r.section.document, void 0, root),
+			...block
+		].filter((l) => l !== null).join("\n");
+	}
 	const { content } = readLibraryEntry(r.section.document, root);
-	const section = content.split(/^(?=## )/m).find((s) => s.startsWith(`## ${r.section.heading}
+	const section = content.split(/^(?=## )/m).find((s) => s.startsWith(`## ${r.section.heading ?? ""}
 `) && new RegExp(`^id: ${r.id}$`, "m").test(s));
 	if (!section) throw new Error(`the arsenal is inconsistent: ${r.section.document} has no section for ${r.id}`);
 	return [
 		`ae_arsenal recipe ${r.id}@${r.revision} (${r.status}, ${r.kind}; ${r.variant_of ? `variant of ${r.variant_of}; ` : ""}${catalog.vocab}, catalog ${catalog.version}; from library document ${r.section.document})`,
-		revision !== void 0 && revision !== r.revision ? `WARNING: pinned revision ${revision}; the shipped revision is ${r.revision}. The recipe changed since it was pinned: this is the shipped text, not the pinned one. Check it still fits the beat.` : null,
+		warning,
+		r.provides?.length ? `provides: ${r.provides.join("; ")}` : null,
 		"",
 		section.trimEnd()
 	].filter((l) => l !== null).join("\n");
@@ -4345,18 +4457,18 @@ function readStill(still, root = LIBRARY) {
 	if (createHash("sha256").update(bytes).digest("hex") !== still.sha256) throw new Error(`Arsenal still hash mismatch: ${still.path}`);
 	return bytes;
 }
-function stillContent(r, root = LIBRARY) {
+function stillContent(r, root = LIBRARY, label) {
 	if (!r.still) return [];
 	return [{
 		type: "text",
-		text: `Still of ${r.id} (${r.name}), from our own proof build:`
+		text: label ?? `Still of ${r.id} (${r.name}), from our own proof build:`
 	}, {
 		type: "image",
 		data: readStill(r.still, root).toString("base64"),
 		mimeType: "image/jpeg"
 	}];
 }
-var LIBRARY, ArsenalRefusal, MET_BY, lower, unmet, askShape, arsenalTool;
+var LIBRARY, LEVELS, ArsenalRefusal, MET_BY, lower, unmet, showProvides, atLevel, levelText, STOP, stems, BROWSE_PAGE, BROWSE_PAGE_MAX, providesArg, askShape, listOf, arsenalTool;
 function init_arsenal() {
 	return (init_arsenal = __esmMin((() => {
 		init_schemas();
@@ -4365,6 +4477,11 @@ function init_arsenal() {
 		init_define_tool();
 		init_library();
 		LIBRARY = path.resolve(PACKAGE_ROOT, "../library");
+		LEVELS = [
+			"style",
+			"world",
+			"recipe"
+		];
 		ArsenalRefusal = class extends Error {};
 		MET_BY = {
 			footage: ["footage", "screen"],
@@ -4378,12 +4495,28 @@ function init_arsenal() {
 		};
 		lower = (xs) => (xs ?? []).map((x) => String(x).toLowerCase());
 		unmet = (needs, have) => lower(needs).filter((n) => MET_BY[n] && !MET_BY[n].some((a) => have.includes(a)));
+		showProvides = ([k, w]) => w ? `${k}: ${w}` : k;
+		atLevel = (e, level) => e.level === level || (e.also_level ?? []).includes(level);
+		levelText = (e) => [e.level, ...(e.also_level ?? []).map((l) => `also ${l}`)].join(", ");
+		STOP = new Set("a an the this that these those it its something anything thing things some any one i me my we our you your need needs want wants make makes made get gets can could will would should like into onto to of for and or but with on in at by is are be was were been from as so then than which what when where who how do does please just more very".split(" "));
+		stems = (text) => text.split(/[^A-Za-z0-9]+/).filter(Boolean).map(stem);
+		BROWSE_PAGE = 12;
+		BROWSE_PAGE_MAX = 24;
+		providesArg = union([string$1(), array(string$1())]).optional().describe("browse and find: what an entry must provide, \"key\" or \"key: word\" (e.g. \"material: glass\", \"floor\"), one or a list; action jobs lists the vocabulary");
 		askShape = {
 			action: _enum([
+				"browse",
 				"find",
 				"get",
 				"jobs"
-			]).describe("find: a shortlist for one beat; get: one recipe's full text; jobs: the job vocabulary"),
+			]).describe("browse: a level as labelled stills, a page at a time; find: a shortlist by job for one beat, or by level, provides and/or plain words across levels; get: any entry by id (a piece answers with its call); jobs: the job and provides vocabularies"),
+			level: _enum(LEVELS).optional().describe("browse and find: style (a look a section can borrow: colour, type, light, material), world (a set a section lives in) or recipe (one technique for one beat; pieces are recipes you run); browse without it shows every level, styles first"),
+			provides: providesArg,
+			query: string$1().optional().describe("find: what the beat needs in plain words (e.g. \"something that turns over\"); returns the entries that carry the most of its words, pieces first"),
+			shelf: _enum(["shipped", "user"]).optional().describe("browse and find: only entries from this shelf"),
+			page: number().int().positive().optional().describe("browse: which page, from 1"),
+			page_size: number().int().positive().max(24).optional().describe(`browse: tiles per page, default ${12}`),
+			include_unpictured: boolean().optional().describe("browse: also list entries with no still (build aids, unproven recipes); hidden by default and counted"),
 			vocab: string$1().optional().describe("find: the job vocabulary the beat was written against (e.g. jobs-v1); omitted means the shipped one"),
 			job: string$1().optional().describe("find: the beat's job id, from action jobs (e.g. add-depth, land-number, hand-over)"),
 			support: array(string$1()).optional().describe("find: up to two support job ids"),
@@ -4399,38 +4532,88 @@ function init_arsenal() {
 				aspect: string$1().optional(),
 				theme: string$1().optional(),
 				palette: string$1().optional(),
-				status: _enum(["proven", "any"]).optional().describe("proven (the default) or any, to let unproven recipes through")
+				status: _enum(["proven", "any"]).optional().describe("proven (the default) or any, to let unproven entries through")
 			}).optional(),
-			exclude: array(string$1()).optional().describe("find: recipe ids already used or ruled out"),
+			exclude: array(string$1()).optional().describe("find: ids already used or ruled out"),
 			limit: number().int().positive().max(20).optional().describe("find: how many candidates, default 5"),
-			id: string$1().optional().describe("get: the recipe id from find"),
+			id: string$1().optional().describe("get: an id from browse or find, at any level"),
 			revision: string$1().optional().describe("get: the revision the brief pinned; a different shipped revision is answered with a warning")
 		};
+		listOf = (p) => p === void 0 ? void 0 : Array.isArray(p) ? p : [p];
 		arsenalTool = defineTool({
 			name: "ae_arsenal",
-			title: "Technique arsenal",
+			title: "Library: styles, worlds, recipes and pieces",
 			group: "document",
 			effect: "read",
 			blockedInReadOnly: false,
-			description: "Find proven After Effects techniques for a beat by the job it must do, then read the chosen recipe. Use it while planning shots, once per beat, before building. action jobs lists the job vocabulary (ids with one-line definitions). action find takes the beat (job, and optionally support, duration, mood, assets, constraints.status, exclude, limit) and returns a ranked shortlist (proven recipes only unless constraints.status is any; relaxed names any filter loosened when nothing passed; never another job) with each candidate's still from our own proof build; a candidate taught in other ways lists their ids as variants, each readable with get. An unknown job is refused with the valid ids: pick one, never invent one. action get takes id (and the pinned revision) and returns the full recipe. Offline; no After Effects needed.",
+			description: "The library at three levels, each entry with a still from our own proof build and what it provides: styles (a look a section can borrow: colour, type, light, material), worlds (a set a section lives in: floor, light, environment, materials) and recipes (one technique for one beat). Among the recipes, pieces are runnable code: one file each, called by name, built and lit (thickness, light, shadow, overshoot) but carrying no look of their own. action browse shows a level as labelled stills, a page at a time (level, provides, shelf, page, page_size); start a brief there. action find with job returns a ranked shortlist for one beat, pieces first, then written recipes (job, and optionally support, duration, mood, assets, constraints.status, exclude, limit; proven only unless constraints.status is any; relaxed names any filter loosened when nothing passed; never another job; a candidate taught in other ways lists their ids as variants). action find with query (plain words, e.g. \"something that turns over\"), level and/or provides (e.g. \"material: glass\", \"floor: gloss-dark\") returns entries across levels, pieces first when the words fit one. An unknown job, level or provides word is refused with the valid ones: pick one, never invent one. action jobs lists the job and provides vocabularies. action get takes any id (and the pinned revision) with its still: a piece answers with its call (the load line, signature, options, returns and a short example) to run in eval.run; a recipe with its text; a style or world with its document. Offline; no After Effects needed.",
 			inputShape: askShape,
 			handler: async (args) => {
 				try {
 					if (args.action === "jobs") return jsonResult(listJobs());
+					const catalog = loadCatalog();
+					const byId = new Map(catalog.entries.map((r) => [r.id, r]));
 					if (args.action === "get") {
-						if (!args.id) return errorResult("INVALID_ARGS", "get needs id: a recipe id from ae_arsenal find");
-						const text = recipeReply(args.id, args.revision);
-						const r = loadCatalog().recipes.find((x) => x.id === args.id);
+						if (!args.id) return errorResult("INVALID_ARGS", "get needs id: an id from ae_arsenal browse or find");
 						return {
 							content: [{
 								type: "text",
-								text
-							}, ...stillContent(r)],
+								text: recipeReply(args.id, args.revision)
+							}, ...stillContent(byId.get(args.id))],
 							isError: false
 						};
 					}
-					if (!args.job) return errorResult("INVALID_ARGS", "find needs job: a job id from ae_arsenal action jobs", { hint: "call ae_arsenal with action jobs for the valid ids" });
-					const catalog = loadCatalog();
+					if (args.action === "browse") {
+						const page = browseCatalog(catalog, {
+							level: args.level,
+							provides: listOf(args.provides),
+							shelf: args.shelf,
+							page: args.page,
+							page_size: args.page_size,
+							include_unpictured: args.include_unpictured
+						});
+						const label = (t) => `Tile ${t.n}: ${t.id} \xB7 ${t.name} \xB7 ${[t.level, ...(t.also_level ?? []).map((l) => `also ${l}`)].join(", ")}${t.kind === "piece" ? " · piece (runnable; get returns its call)" : ""}${t.role === "house" ? " · the house style, the default for pieces" : t.role === "example" ? " · an example style, not a house look" : ""}${t.block ? ` \xB7 pieces: PCS.use('${t.block}')` : ""} \xB7 provides ${t.provides.length ? t.provides.join(", ") : "nothing listed"}${t.status === "proven" ? "" : " · unproven"}`;
+						const images2 = page.tiles.flatMap((t) => byId.get(t.id).still ? stillContent(byId.get(t.id), LIBRARY, label(t)) : [{
+							type: "text",
+							text: `${label(t)} \xB7 no still: ${t.no_still}`
+						}]);
+						const next = page.page < page.pages ? ` Next: page ${page.page + 1}.` : "";
+						return {
+							content: [{
+								type: "text",
+								text: `${`ae_arsenal browse: ${page.level === "all" ? "every level, styles first" : `level ${page.level}`}${page.provides ? `, providing ${page.provides.join(" or ")}` : ""}; page ${page.page} of ${page.pages}, tiles ${page.tiles.length ? `${page.tiles[0].n} to ${page.tiles.at(-1).n}` : "none"} of ${page.total}${page.hidden_without_still ? `; ${page.hidden_without_still} without a still hidden (include_unpictured lists them)` : ""}.${next} Read one with get.`}
+${JSON.stringify({
+									ok: true,
+									...page
+								}, null, 2)}`
+							}, ...images2],
+							isError: false
+						};
+					}
+					if (!args.job) {
+						if (args.level === void 0 && args.provides === void 0 && args.query === void 0) return errorResult("INVALID_ARGS", "find needs job (a job id from ae_arsenal action jobs), or a query in plain words, level and/or provides", { hint: "call ae_arsenal with action jobs for the valid job ids and provides words" });
+						const answer2 = findByProvides(catalog, {
+							level: args.level,
+							provides: listOf(args.provides),
+							query: args.query,
+							shelf: args.shelf,
+							status: args.constraints?.status,
+							exclude: args.exclude,
+							limit: args.limit
+						});
+						const images2 = answer2.results.flatMap((c) => stillContent(byId.get(c.id)));
+						return {
+							content: [{
+								type: "text",
+								text: JSON.stringify({
+									ok: true,
+									...answer2
+								}, null, 2)
+							}, ...images2],
+							isError: false
+						};
+					}
+					if (args.level !== void 0 || args.provides !== void 0 || args.shelf !== void 0 || args.query !== void 0) return errorResult("INVALID_ARGS", "find asks by job for one beat, or by query, level and provides across levels, not both: drop job, or drop query, level, provides and shelf");
 					const answer = findTechniques(catalog, {
 						vocab: args.vocab ?? catalog.vocab,
 						job: args.job,
@@ -4443,7 +4626,6 @@ function init_arsenal() {
 						exclude: args.exclude,
 						limit: args.limit
 					});
-					const byId = new Map(catalog.recipes.map((r) => [r.id, r]));
 					const images = answer.results.flatMap((c) => stillContent(byId.get(c.id)));
 					return {
 						content: [{
@@ -4464,4 +4646,4 @@ function init_arsenal() {
 	})))();
 }
 
-export { ALL_TOOLS, arsenalTool, iccManagedReason, init_arsenal, init_capture_shared, init_library, init_render_frame, init_tools, libraryTool, renderFrameTool };
+export { ALL_TOOLS, arsenalTool, defineTool, iccManagedReason, init_arsenal, init_capture_shared, init_define_tool, init_library, init_render_frame, init_tools, libraryTool, renderFrameTool, toMcpResult };

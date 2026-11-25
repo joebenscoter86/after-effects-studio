@@ -1,0 +1,54 @@
+// piece: stand-up
+// name: Stand an object up
+// does: An object (a plate, a card, a two-sided tile's front or a hero word from piece-type3d) lying flat on its back stands up on its bottom edge, past upright, and settles back, from wherever its rotation is; what sits on it stays hidden until it is half way up, so no type is seen squashed edge-on.
+// use it for: a pill, a card or a result arriving by standing up; a big word (piece-type3d) arriving; the one item chosen from many standing up to be seen
+// job: reveal-headline; support: show-proof, list-items
+// provides: motion: bounce
+// works with: piece-plate, piece-type3d, piece-on-face, piece-flip, piece-land-on, piece-move
+// call: PCS.standUp(layer, { t, dur, hide, hinge })
+// option t: when it starts (required)
+// option dur: seconds, default 0.5 (past upright at 60 percent, settled at the end)
+// option hide: false keeps it visible before t (default: hidden until t)
+// option hinge: 'bottom' (default) pivots on its bottom edge (for type, the bottom of its letters' box), as a thing standing up does: it lies back away from the camera and never sweeps through what is in front of or below it; 'centre' turns about its middle. Once it has settled it turns about its middle again, so later flips stay in place
+// returns: the layer
+// example:
+//   var card = PCS.plate(st.comp, { name: 'card', w: 720, h: 470, round: 34, pos: [540, 900, 0] });
+//   PCS.onFace(PCS.label(st.comp, { text: '42 passed, 0 failed', size: 52, on: 'surface' }), card);
+//   PCS.standUp(card, { t: 2.6 });
+// note: seated layers with their own opacity timing keep it.
+// note: an object can land on it while it stands (piece-land-on) as long as the landing ends after it has settled.
+// ---
+PCS.standUp = function (plate, o) {
+  var d = o.dur || 0.5; var p = PCS.TG(plate).property('ADBE Rotate X');
+  if ((o.hinge || 'bottom') === 'bottom') { PCS.hingeBottom(plate, o.t + d, o.t + d); }
+  var tx = p.valueAtTime(o.t + d, false); if (p.numKeys === 0) { tx = p.value; }
+  PCS.kfFrom(p, [[o.t, tx - 94], [o.t + d * 0.6, tx + 7], [o.t + d * 0.85, tx - 3], [o.t + d, tx]]);
+  if (o.hide !== false) {
+    try { PCS.hold(PCS.TG(plate).property('ADBE Opacity'), [[0, 0], [o.t, 100]]); } catch (e) {}
+    var ch = PCS.children(plate);
+    for (var i = 0; i < ch.length; i++) { try { var op = PCS.TG(ch[i]).property('ADBE Opacity'); if (op.numKeys === 0) { PCS.hold(op, [[0, 0], [o.t + d * 0.32, 100]]); } } catch (e2) {} }
+  }
+  return plate;
+};
+// Turns a layer on the middle of its bottom edge until time `until`, then on its own anchor again, with no jump: the
+// anchor and position change together (held keys), placed so the layer is where it was at time t. Children stay put
+// (they hang on the layer's own space, not on its anchor). A layer with a parent keeps its anchor; one whose anchor or
+// position already has keys keeps the bottom hinge for good.
+PCS.hingeBottom = function (L, t, until) {
+  if (L.parent) { PCS.warnings.push('stand-up: ' + L.name + ' has a parent, so it turns about its anchor'); return; }
+  var r; try { r = L.sourceRectAtTime(t, false); } catch (e) { return; }
+  if (!r || !r.height) { return; }
+  var T = PCS.TG(L); var A = T.property('ADBE Anchor Point'); var P = T.property('ADBE Position');
+  var a = A.valueAtTime(t, false); var local = [r.left + r.width / 2, r.top + r.height, a[2] || 0];
+  if (Math.abs(local[1] - a[1]) < 0.5 && Math.abs(local[0] - a[0]) < 0.5) { return; }
+  var w = PCS.toWorld(L, local, t); var p = P.valueAtTime(t, false);
+  var dl = [w[0] - p[0], w[1] - p[1], w[2] - p[2]];
+  if (A.numKeys === 0 && P.numKeys === 0 && until !== undefined) {
+    PCS.hold(A, [[0, local], [until, a]]);
+    PCS.hold(P, [[0, [p[0] + dl[0], p[1] + dl[1], p[2] + dl[2]]], [until, p]]);
+    return;
+  }
+  A.setValue(local);
+  if (P.numKeys === 0) { P.setValue([p[0] + dl[0], p[1] + dl[1], p[2] + dl[2]]); return; }
+  for (var k = 1; k <= P.numKeys; k++) { var v = P.keyValue(k); P.setValueAtKey(k, [v[0] + dl[0], v[1] + dl[1], v[2] + dl[2]]); }
+};

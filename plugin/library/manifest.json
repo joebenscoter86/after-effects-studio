@@ -748,14 +748,14 @@
       "title": "Technique arsenal index: documents, vocabulary and counts",
       "path": "arsenal/index.json",
       "kind": "catalog",
-      "sha256": "7d8dab232e6bf45877fce349e9ff5e2419e6c7fbc662f0afe01af8168207b204"
+      "sha256": "a111772c5403a19626b754d02024eb3caf912ebaf936396ca8bcaf952c37312f"
     },
     {
       "id": "arsenal-catalog",
-      "title": "Technique arsenal catalog: one record per recipe, queried by ae_arsenal",
+      "title": "Library catalog: one record per style, world, recipe and piece, queried by ae_arsenal",
       "path": "arsenal/catalog.json",
       "kind": "catalog",
-      "sha256": "25a4e6a5896f51009b4e77df77f0efa4bc3b29cb8ce475c9d43367c5a63f0f86"
+      "sha256": "7e57efdb710e6d5c033947be46fc03666c5b4025d044c305dcc17009b070ec0c"
     },
     {
       "id": "arsenal-jobs",
@@ -805,6 +805,335 @@
       "path": "arsenal/recipes-build-aid.md",
       "kind": "recipes",
       "sha256": "7bc9a6ac7868fab8de2a16823e333da60d1e47e00e8972c6b52c9cb2a5a1e50a"
+    },
+    {
+      "id": "pieces-core-jsx",
+      "title": "Pieces: the shared helpers every piece uses (PCS core)",
+      "path": "pieces/pcs-core.jsx",
+      "kind": "code",
+      "sha256": "7c1a201d2167e7b78027fd993c1c6e5af57dffca8f1b048db1cf350d81594037"
+    },
+    {
+      "id": "pieces-style-dark-keynote",
+      "title": "Style block: Dark keynote (for pieces) (PCS.use('dark-keynote'))",
+      "path": "pieces/styles/dark-keynote.json",
+      "kind": "style",
+      "sha256": "81c87d3e2ce34fc44e3f6e152dfb0332c3156152ad743d05f8f66325c8c25454"
+    },
+    {
+      "id": "pieces-style-example-night-glass",
+      "title": "Style block: Example: night glass (PCS.use('example-night-glass'))",
+      "path": "pieces/styles/example-night-glass.json",
+      "kind": "style",
+      "sha256": "6d509692e09a9b4dfaba5b0597c1371828bc54ef695a30a20fa1d8cfad4f5deb"
+    },
+    {
+      "id": "pieces-style-example-warm-paper",
+      "title": "Style block: Example: warm paper (PCS.use('example-warm-paper'))",
+      "path": "pieces/styles/example-warm-paper.json",
+      "kind": "style",
+      "sha256": "0076ae8eede47b96f00661bba07cf8f971f78ea9482071900177a057186be339"
+    },
+    {
+      "id": "pieces-style-glass-product",
+      "title": "Style block: Glass product (for pieces) (PCS.use('glass-product'))",
+      "path": "pieces/styles/glass-product.json",
+      "kind": "style",
+      "sha256": "9b70e6519b36c0e1e786480b43b86b4cee782de32222d25e4e6243088b6f9a0d"
+    },
+    {
+      "id": "pieces-style-house",
+      "title": "Style block: House: graphite (PCS.use('house'))",
+      "path": "pieces/styles/house.json",
+      "kind": "style",
+      "sha256": "05c00128d4bc91d5fe0b37be760d3a1da38bde1f869b5f63d63e0bd43052fdb7"
+    },
+    {
+      "id": "pieces-styles-proof",
+      "title": "Proof scene for a style: the same pieces under any style",
+      "path": "pieces/proof/styles.jsx",
+      "kind": "code",
+      "sha256": "db9aba03cfd8d24b364dc34652133ca88c60682fe66e1c7fbfe81389b6b0f276"
+    },
+    {
+      "id": "piece-flip",
+      "title": "Piece: Flip an object over",
+      "path": "pieces/flip.jsx",
+      "kind": "code",
+      "sha256": "f912d95fbfcb03a455841294c0bc7212c6f57a1f72f212a7c42d70f159f29017"
+    },
+    {
+      "id": "piece-flip-proof",
+      "title": "Proof scene for the Flip an object over piece",
+      "path": "pieces/proof/flip.jsx",
+      "kind": "code",
+      "sha256": "5a634c0f1eed636e359dd15e0c649d962b8be1fdd001ae66c869355702c96778"
+    },
+    {
+      "id": "piece-hand-over",
+      "title": "Piece: Hand over from a face card beat to a cutaway room",
+      "path": "pieces/hand-over.jsx",
+      "kind": "code",
+      "sha256": "861db960750b933907cbba974bbfe1060c8aed1a7e1ca116d62ae2107049ffce"
+    },
+    {
+      "id": "piece-hand-over-proof",
+      "title": "Proof scene for the Hand over from a face card beat to a cutaway room piece",
+      "path": "pieces/proof/hand-over.jsx",
+      "kind": "code",
+      "sha256": "5898294f3f5083b1156f5f055b5d212d5dbf9d38b48e7ff7c451f40c4b2f37ca"
+    },
+    {
+      "id": "piece-hide",
+      "title": "Piece: Show or hide an object with what sits on it",
+      "path": "pieces/hide.jsx",
+      "kind": "code",
+      "sha256": "e78f215bf9169ec24b9f14c953a93b736cfe9c0eb34a43e1a59dfc18161cb9d3"
+    },
+    {
+      "id": "piece-hide-proof",
+      "title": "Proof scene for the Show or hide an object with what sits on it piece",
+      "path": "pieces/proof/hide.jsx",
+      "kind": "code",
+      "sha256": "e49d2592c4f74bb77aa1c9b6ed96103e9d763c999baaf366cf364a58f2a7ab36"
+    },
+    {
+      "id": "piece-label",
+      "title": "Piece: Flat crisp label",
+      "path": "pieces/label.jsx",
+      "kind": "code",
+      "sha256": "8dac7fb7d1ad38efb4d923b49f2b45c125ba0e565b6874253de00ea7298fb2d8"
+    },
+    {
+      "id": "piece-label-proof",
+      "title": "Proof scene for the Flat crisp label piece",
+      "path": "pieces/proof/label.jsx",
+      "kind": "code",
+      "sha256": "35e355874e517d557da594a4293a5dc6c3dea6240c296563fded733ee66b2daa"
+    },
+    {
+      "id": "piece-land-on",
+      "title": "Piece: Carry an object onto another",
+      "path": "pieces/land-on.jsx",
+      "kind": "code",
+      "sha256": "a48a9e75a614a56fd5e27b05c08dcecad31929d447b4c6799b0413fc6f749f66"
+    },
+    {
+      "id": "piece-land-on-proof",
+      "title": "Proof scene for the Carry an object onto another piece",
+      "path": "pieces/proof/land-on.jsx",
+      "kind": "code",
+      "sha256": "7b2b6338391e110eb9c8c6bf99b13a9e25e95d6ba3bf2cfd8febc9fd9aaae5ae"
+    },
+    {
+      "id": "piece-move",
+      "title": "Piece: Move or grow an object to a new place",
+      "path": "pieces/move.jsx",
+      "kind": "code",
+      "sha256": "3b1029bfa568f3ed329f89048613da7361682b1fad6b2d9fee23b7c100302e9e"
+    },
+    {
+      "id": "piece-move-proof",
+      "title": "Proof scene for the Move or grow an object to a new place piece",
+      "path": "pieces/proof/move.jsx",
+      "kind": "code",
+      "sha256": "654df8ab14ef969a43c6ebf0c19e6114affeefcf71bac65fda05df71309dd5d6"
+    },
+    {
+      "id": "piece-on-face",
+      "title": "Piece: Seat a layer on a face of an object",
+      "path": "pieces/on-face.jsx",
+      "kind": "code",
+      "sha256": "35c54cac05e73aae8adfd706e83cb5f784a2b6c2985ae1af0130e04c8a0086c8"
+    },
+    {
+      "id": "piece-on-face-proof",
+      "title": "Proof scene for the Seat a layer on a face of an object piece",
+      "path": "pieces/proof/on-face.jsx",
+      "kind": "code",
+      "sha256": "7f6d24e8737e77083be062258d483092d2b260608b9d37ed462ce9769760d140"
+    },
+    {
+      "id": "piece-picture-face",
+      "title": "Piece: A picture or screenshot as the face of an object",
+      "path": "pieces/picture-face.jsx",
+      "kind": "code",
+      "sha256": "79ff8b3e7f2c6a531cd91cd65ef012580b77be8d52468759d4590371baaffaa4"
+    },
+    {
+      "id": "piece-picture-face-proof",
+      "title": "Proof scene for the A picture or screenshot as the face of an object piece",
+      "path": "pieces/proof/picture-face.jsx",
+      "kind": "code",
+      "sha256": "5b9559f20d6a87171094451d1041677365d04c3910a792b19a3bee93ee6e68c7"
+    },
+    {
+      "id": "piece-plate",
+      "title": "Piece: Thick lit plate",
+      "path": "pieces/plate.jsx",
+      "kind": "code",
+      "sha256": "dbcb480a5daef2defc4256d44e03f9e96601ef2ebb75d86676920f7c3d333b59"
+    },
+    {
+      "id": "piece-plate-proof",
+      "title": "Proof scene for the Thick lit plate piece",
+      "path": "pieces/proof/plate.jsx",
+      "kind": "code",
+      "sha256": "3515fd60290302cfb5e141273c84c23ef07c4b79fa2b2df572926eb2212da0c1"
+    },
+    {
+      "id": "piece-room",
+      "title": "Piece: Lit room for a full-frame cutaway",
+      "path": "pieces/room.jsx",
+      "kind": "code",
+      "sha256": "33f90ba4d4345fe9795b374ae0c05605db66882e3c61eb1e4e0a7478e8ff7dda"
+    },
+    {
+      "id": "piece-room-proof",
+      "title": "Proof scene for the Lit room for a full-frame cutaway piece",
+      "path": "pieces/proof/room.jsx",
+      "kind": "code",
+      "sha256": "584cef9e96d95952aa97ff4dd31fc607386bdfc3dd5ccef56051bea9bd097cde"
+    },
+    {
+      "id": "piece-rows",
+      "title": "Piece: Raised rows of content on a card",
+      "path": "pieces/rows.jsx",
+      "kind": "code",
+      "sha256": "1c05335837208d3ff507d1e847e598625df6633470b2b26d292e9173130f4862"
+    },
+    {
+      "id": "piece-rows-proof",
+      "title": "Proof scene for the Raised rows of content on a card piece",
+      "path": "pieces/proof/rows.jsx",
+      "kind": "code",
+      "sha256": "b832b49611174965458ba1a18bb4a3d93912d2d0db88d01c1b65005e6abb304e"
+    },
+    {
+      "id": "piece-spot",
+      "title": "Piece: Spot light, or a pool of light on the hero",
+      "path": "pieces/spot.jsx",
+      "kind": "code",
+      "sha256": "e49c201ae29f75cff0c882dcc475a5004d9127619fe73142fd14bdd87dd0faab"
+    },
+    {
+      "id": "piece-spot-proof",
+      "title": "Proof scene for the Spot light, or a pool of light on the hero piece",
+      "path": "pieces/proof/spot.jsx",
+      "kind": "code",
+      "sha256": "36e062cedc69df5e07bc62c0ef26378edb6eba9a0356d564e329b1cd602c7dc1"
+    },
+    {
+      "id": "piece-stage",
+      "title": "Piece: Lit stage for a face card beat",
+      "path": "pieces/stage.jsx",
+      "kind": "code",
+      "sha256": "ba407e0349edc0055341be2072601d5334e7c0e582bb7c2919b3c82a7cb5c562"
+    },
+    {
+      "id": "piece-stage-proof",
+      "title": "Proof scene for the Lit stage for a face card beat piece",
+      "path": "pieces/proof/stage.jsx",
+      "kind": "code",
+      "sha256": "2bd16d170465de88918927ad4cc5cea1d7feeeced65cf034739857e8ae49fd83"
+    },
+    {
+      "id": "piece-stand-up",
+      "title": "Piece: Stand an object up",
+      "path": "pieces/stand-up.jsx",
+      "kind": "code",
+      "sha256": "d6990a01d4db4ad3da4ccdcf7b7646067aaf65204df20e2cab3ba16edc8e3a98"
+    },
+    {
+      "id": "piece-stand-up-proof",
+      "title": "Proof scene for the Stand an object up piece",
+      "path": "pieces/proof/stand-up.jsx",
+      "kind": "code",
+      "sha256": "0117f48cfc8ac5ec781bdb415e30ddff9ff8494c4d16d3cb7095110b301fb8ed"
+    },
+    {
+      "id": "piece-swap-face",
+      "title": "Piece: Change what a face says while it is turned away",
+      "path": "pieces/swap-face.jsx",
+      "kind": "code",
+      "sha256": "baebbaf4972183d112b43d0e351f4b4b1d4f71d0d497a043977df9631da19faf"
+    },
+    {
+      "id": "piece-swap-face-proof",
+      "title": "Proof scene for the Change what a face says while it is turned away piece",
+      "path": "pieces/proof/swap-face.jsx",
+      "kind": "code",
+      "sha256": "ea319cd71efc37d67ef90d951ba2fe006be3da85a58601561d3e0ee4b04b70b2"
+    },
+    {
+      "id": "piece-tick",
+      "title": "Piece: A tick that draws on",
+      "path": "pieces/tick.jsx",
+      "kind": "code",
+      "sha256": "a1c5e05639800e54a51947223ec4add3270f1630a3119baebd5ccd3d24ea0862"
+    },
+    {
+      "id": "piece-tick-proof",
+      "title": "Proof scene for the A tick that draws on piece",
+      "path": "pieces/proof/tick.jsx",
+      "kind": "code",
+      "sha256": "8590fc473b36cdc4e836e9d64c080b40cde6d632ed85284325c93bf74acd3ff9"
+    },
+    {
+      "id": "piece-tip-away",
+      "title": "Piece: Tip an object away into the dark",
+      "path": "pieces/tip-away.jsx",
+      "kind": "code",
+      "sha256": "0b8b2e3dcceea5619e764388e779a50930cbe62d376b152145b4d135a9665e0b"
+    },
+    {
+      "id": "piece-tip-away-proof",
+      "title": "Proof scene for the Tip an object away into the dark piece",
+      "path": "pieces/proof/tip-away.jsx",
+      "kind": "code",
+      "sha256": "9072938c5fc1fa461bb33a33c2764f626f3af88e4051894bd56a4581ce839874"
+    },
+    {
+      "id": "piece-two-sided",
+      "title": "Piece: One object with a different colour each side",
+      "path": "pieces/two-sided.jsx",
+      "kind": "code",
+      "sha256": "764e923ddc1447d8f286a04b647c48a2849e54030d0264dad533a9d702b1a148"
+    },
+    {
+      "id": "piece-two-sided-proof",
+      "title": "Proof scene for the One object with a different colour each side piece",
+      "path": "pieces/proof/two-sided.jsx",
+      "kind": "code",
+      "sha256": "bf84a531089a79b7e1a1a2e3a47820351b0e64d0804db0688c18ce5cdf9dbee9"
+    },
+    {
+      "id": "piece-type3d",
+      "title": "Piece: One hero word or number as a lit object",
+      "path": "pieces/type3d.jsx",
+      "kind": "code",
+      "sha256": "10f752c09e30bed703eb6602475d72e54db129a5b94745e4b01a930929fd0d40"
+    },
+    {
+      "id": "piece-type3d-proof",
+      "title": "Proof scene for the One hero word or number as a lit object piece",
+      "path": "pieces/proof/type3d.jsx",
+      "kind": "code",
+      "sha256": "464ee8c6b1d6e275d71db94f8f6c76a298d35a8811892b6deb18c14476906bbe"
+    },
+    {
+      "id": "piece-words",
+      "title": "Piece: A line that builds word by word",
+      "path": "pieces/words.jsx",
+      "kind": "code",
+      "sha256": "f069fc5d8dd074c6f01ad38da8d9d143005cefbdf45f7b3723b64304c872536e"
+    },
+    {
+      "id": "piece-words-proof",
+      "title": "Proof scene for the A line that builds word by word piece",
+      "path": "pieces/proof/words.jsx",
+      "kind": "code",
+      "sha256": "0f9b81ef6b2c8717be1ce7eb7c12e165a2c8798f02eeb853377ec4810b78c741"
     }
   ]
 }

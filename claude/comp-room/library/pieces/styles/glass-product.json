@@ -1,0 +1,99 @@
+{
+ "id": "glass-product",
+ "title": "Glass product (for pieces)",
+ "role": "look",
+ "borrowed_from": "style-glass-product",
+ "line": "The glass product look for pieces: frosted cool slabs with a hard sheen on black, light type, one ice-blue accent. The real look uses Blender glass; this is its After Effects stand-in for pieces.",
+ "provides": [
+  "environment: studio-dark",
+  "light: strip",
+  "material: gloss",
+  "depth: extrusion"
+ ],
+ "source": "Colours and font from the glass-product style's own code and document (glass.jsx PAL; STYLE.md frosted glass base #9EA8B8): text #EEF2F7, secondary #9AA3AF, ice #6BC7FF, cool #DBEAFF, black; Inter Tight Light.",
+ "chosen": [
+  "ground",
+  "backplate",
+  "keyIntensity",
+  "fillIntensity",
+  "envIntensity",
+  "depth",
+  "bevel",
+  "tilt",
+  "material"
+ ],
+ "values": {
+  "ground": [
+   0.012,
+   0.014,
+   0.02
+  ],
+  "backplate": [
+   0.04,
+   0.045,
+   0.06
+  ],
+  "surface": [
+   0.62,
+   0.659,
+   0.722
+  ],
+  "ink": [
+   0.03,
+   0.04,
+   0.06
+  ],
+  "type": [
+   0.933,
+   0.949,
+   0.969
+  ],
+  "accent": [
+   0.42,
+   0.78,
+   1
+  ],
+  "onAccent": [
+   0,
+   0,
+   0
+  ],
+  "quiet": [
+   0.604,
+   0.639,
+   0.686
+  ],
+  "keyColor": [
+   1,
+   1,
+   1
+  ],
+  "fillColor": [
+   0.859,
+   0.918,
+   1
+  ],
+  "keyIntensity": 160,
+  "fillIntensity": 60,
+  "envIntensity": 70,
+  "grain": 0,
+  "font": "Inter Tight",
+  "weight": "Light",
+  "depth": 30,
+  "bevel": 6,
+  "tilt": [
+   4,
+   -8
+  ],
+  "material": {
+   "specular": 55,
+   "shininess": 70,
+   "metal": 10
+  },
+  "fillReach": 0,
+  "litCap": 0,
+  "rowDepth": 6,
+  "rowBevel": 0,
+  "typeLit": 0
+ }
+}

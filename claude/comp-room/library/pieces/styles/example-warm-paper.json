@@ -1,0 +1,84 @@
+{
+ "id": "example-warm-paper",
+ "title": "Example: warm paper",
+ "role": "example",
+ "line": "An example, not a house look: cream plates under a warm key on a deep blue-black ground, one red-orange accent, light grain.",
+ "provides": [
+  "environment: studio-dark",
+  "light: key",
+  "depth: extrusion",
+  "depth: shadow",
+  "finish: grain"
+ ],
+ "source": "Written for the 2026-11-24 pieces experiment to prove the pieces carry no look of their own.",
+ "values": {
+  "ground": [
+   0.045,
+   0.05,
+   0.07
+  ],
+  "backplate": [
+   0.1,
+   0.115,
+   0.17
+  ],
+  "surface": [
+   0.96,
+   0.93,
+   0.87
+  ],
+  "ink": [
+   0.1,
+   0.11,
+   0.15
+  ],
+  "type": [
+   0.96,
+   0.93,
+   0.87
+  ],
+  "accent": [
+   0.9,
+   0.27,
+   0.17
+  ],
+  "onAccent": [
+   0.96,
+   0.93,
+   0.87
+  ],
+  "quiet": [
+   0.3,
+   0.36,
+   0.52
+  ],
+  "keyColor": [
+   1,
+   0.86,
+   0.68
+  ],
+  "fillColor": [
+   1,
+   0.88,
+   0.72
+  ],
+  "keyIntensity": 125,
+  "fillIntensity": 65,
+  "envIntensity": 40,
+  "grain": 3.5,
+  "font": "Jost",
+  "weight": "SemiBold",
+  "depth": 40,
+  "bevel": 3,
+  "tilt": [
+   4,
+   -8
+  ],
+  "material": null,
+  "fillReach": 0,
+  "litCap": 0,
+  "rowDepth": 6,
+  "rowBevel": 0,
+  "typeLit": 0
+ }
+}
