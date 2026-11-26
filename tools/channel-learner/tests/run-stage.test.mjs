@@ -318,6 +318,20 @@ test('a build run is told its own script by name, never the 01 example that ever
   assert.ok(!runBlock.includes(`- Script: \`${path.join(scripts, '01-dotted-line.jsx')}\``), 'does not give the example as the script');
 });
 
+test('a build run is told the current script, never an earlier copy kept under a label (lesson 49)', async () => {
+  const dir = study(['01']);
+  fs.writeFileSync(path.join(dir, 'recipes', '01-zigzag.md'), '## Technique 01\n');
+  const scripts = path.join(dir, 'scripts');
+  fs.mkdirSync(scripts);
+  for (const f of ['01-zigzag.jsx', '01-zigzag-eighth.jsx', '01-zigzag-first.jsx', '01-zigzag-second-prior.jsx', '01-zigzag-2026-11-19a.jsx']) {
+    fs.writeFileSync(path.join(scripts, f), `// ${f}\n`);
+  }
+  const { claude, calls } = fakeClaude(() => {});
+  await runStage('prove-run', { study: dir, scripts }, { ...quiet, claude });
+  const runBlock = calls[0].input.slice(calls[0].input.indexOf('## This run'));
+  assert.ok(runBlock.includes(`- Script: \`${path.join(scripts, '01-zigzag.jsx')}\``), 'names the unlabelled script');
+});
+
 test('a build run reached through the study link is told the proof folder\'s real path too (lesson 46)', async () => {
   const dir = study(['01']);
   fs.writeFileSync(path.join(dir, 'recipes', '01-zigzag.md'), '## Technique 01\n');
@@ -350,4 +364,25 @@ test('a rebuild after a review that did not match is pointed at that review', as
   const runBlock = again.calls[0].input.slice(again.calls[0].input.indexOf('## This run'));
   assert.ok(runBlock.includes(`\`${path.join(dir, 'proof', '01', 'review.md')}\``), 'names the review');
   assert.match(runBlock, /to fix/);
+  assert.match(runBlock, /target against measured/, 'a rebuild measures each of its review\'s figures (lesson 47)');
+  assert.match(runBlock, /five rounds/, 'and keeps tuning past the first build\'s two or three rounds');
+  assert.match(runBlock, /what matches/, 'and keeps what its review already found matching');
+  assert.ok(fs.readFileSync(path.join(PROMPTS, 'prove-run.md'), 'utf8').includes('target against measured'), 'prove-run.md says so too');
+});
+
+test('committed proof scripts name no home folder; paths come from args or start with ~/ (lesson 48)', () => {
+  const root = path.join(HERE, '..', 'proofs');
+  const bad = [];
+  const walk = (d) => {
+    for (const e of fs.readdirSync(d, { withFileTypes: true })) {
+      const f = path.join(d, e.name);
+      if (e.isDirectory()) walk(f);
+      else if (/\.(jsx|js|mjs|md|json)$/.test(e.name) && /\/(Users|home)\/[^/\s"']+\//.test(fs.readFileSync(f, 'utf8'))) bad.push(path.relative(root, f));
+    }
+  };
+  walk(root);
+  assert.deepEqual(bad, [], 'scripts with a home folder spelled out');
+  for (const f of ['prove-author.md', 'prove-run.md']) {
+    assert.ok(fs.readFileSync(path.join(PROMPTS, f), 'utf8').includes('never a home folder spelled out'), `${f} says so`);
+  }
 });

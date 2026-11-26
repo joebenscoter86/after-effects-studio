@@ -219,6 +219,21 @@ The first video's 25 recipes all passed the check. Building them found three rec
 - **Why.** `prove-run.md` told a build to stop unless the open project was `PROOF/proofs.aep`, and nothing told it that the study link (lesson 21's move of studies to `~/Assets`) gives the same file a second path.
 - **Rule.** A build run behind the link is also given `PROOF's real path`, and `prove-run.md` counts the file opened from there as the proof project. `video-lead.md` step 6 says to open it by the PROOF path anyway. Test in `tests/run-stage.test.mjs`.
 
+### 47. Rebuilds judged by eye and stopped after one try (explainer piece 4, tYRvoI04pJk 05, 10, 12, 2026-11-26)
+- **What happened.** 02, 05, 10 and 12 took four builds each. Every review after the first gave figures to aim for: a halo's blue level at set distances, a stack depth per side, a body's median luma. Each rebuild ran in one to four minutes, rendered once and stopped. 12's fourth build notes say "result by eye" and "not measured", and its review found the lines at half the tutorial's brightness and the spread wandering 3–12 %. Some misses were the recipes' (sweep Centers given in the tutorial comp's pixels, no target for how far the orb's light reaches its edge). Those went back through lead checks; the rest were tuning a builder could have measured itself.
+- **Why.** `prove-run.md` capped every build at "two or three rounds" judged on one small picture, and the rebuild line only said to "measure your own render" in brackets. Nothing asked a rebuild to show it had met its review's figures before stopping.
+- **Rule.** A rebuild measures each figure in its review's `to fix` on its own render (`ae_render_frame` `sample` or `analyze`, or a crop), never by eye, writes each in `build-notes.md` as target against measured, and takes another round for any out of range, up to five rounds; one still out of range is named with both values. The runner's rebuild line says the same. Test in `tests/run-stage.test.mjs`.
+- **And what already matched.** With that rule, 05 and 12 matched on their fifth build. 10's sixth build met its review's new rim figures and lost the face colours the fifth had met: blue spread over the whole orb. A rebuild now also measures the figures its review's `what matches` line gives, so a fix does not undo them.
+
+### 48. Build runs wrote home folders into the published scripts (explainer piece 4, tYRvoI04pJk, 2026-11-26)
+- **What happened.** Before the commit, 17 of this video's build scripts held a path such as `/Users/<name>/Assets/...` or the worktree's full path as the default for their art folder. The proof scripts are committed to a public repository, and the owner's brief said to keep them free of such paths.
+- **Why.** `prove-author.md` and `prove-run.md` never said where a script's paths come from, so build runs pasted the paths they saw. No test looked.
+- **Rule.** Both prompts say paths come from `args` or start with `~/`, never a home folder spelled out. A test in `tests/run-stage.test.mjs` fails if any file under `tools/channel-learner/proofs/` names one. This video's scripts were rewritten to `~/Assets/comp-room-studies/channel-study/...`.
+
+### 49. The runner named an earlier copy as a rebuild's script (explainer piece 4, tYRvoI04pJk 10, 2026-11-26)
+- **What happened.** Lesson 42 had the runner tell each build run its script: the first `<n>-*.jsx` in sorted order. Rebuilds keep the script they replace as `<n>-<slug>-<label>.jsx`, and "-" sorts before ".", so once a copy existed every rebuild was told that a kept copy (`10-liquid-gradient-orb-fifth.jsx` at the eighth build) was its own. The builders' notes show they worked on the current file anyway. The bug came to light when a fresh script for 10 was written and the runner, checking the oldest copy, recorded "no script written".
+- **Rule.** The runner passes over a copy kept under a label (`-first` ... `-twentieth`, `-<label>-prior`, a dated label) when it names the script and when it checks one was written. Test in `tests/run-stage.test.mjs`.
+
 ## Still open
 - The 24 "matches" on the first video were given before the look line existed.
 - Nothing yet tests the prompts themselves. A cheap test: keep technique 11's first recipe as a fixture and confirm a fresh checker fails it on check 8.
