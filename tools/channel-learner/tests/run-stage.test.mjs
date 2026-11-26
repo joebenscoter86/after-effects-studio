@@ -244,7 +244,8 @@ test('material the author gave beside the video (extras.md) is named to writers 
   const write = ({ unit }) => fs.writeFileSync(path.join(dir, 'recipes', `${unit}-trick.md`), `## Technique ${unit}\n`);
   const without = fakeClaude(write);
   await runStage('distil', { study: dir }, { ...quiet, claude: without.claude });
-  assert.ok(!without.calls[0].input.includes('extras.md'), 'no extras note without the file');
+  const bareBlock = without.calls[0].input.slice(without.calls[0].input.indexOf('## This run'));
+  assert.ok(!bareBlock.includes('extras.md'), 'no extras note in the run block without the file');
 
   fs.writeFileSync(path.join(dir, 'extras.md'), '# Beside the video\n\nPinned comment: an expression.\n');
   for (const stage of ['distil', 'check']) {
@@ -435,4 +436,12 @@ test('the owner\'s proof requirements reach art and build runs through PROOF/lea
   assert.equal(await told('prove-run', false), false, 'no note file, no line');
   for (const stage of ['art', 'prove-author', 'prove-run']) assert.equal(await told(stage, true), true, `${stage} is told`);
   assert.equal(await told('prove-review', true), false, 'the review judges against the tutorial, not the brief');
+});
+
+test('code the author gave is quoted whole in the recipe, and the check compares it word for word (lesson 51)', () => {
+  const distil = fs.readFileSync(path.join(PROMPTS, 'distil.md'), 'utf8');
+  const check = fs.readFileSync(path.join(PROMPTS, 'check.md'), 'utf8');
+  assert.match(distil, /quote the whole text word for word in a fenced block/, 'writers quote it');
+  assert.match(check, /carries that text in full in a fenced block/, 'checkers ask for it');
+  assert.match(check, /word for word/, 'and compare it with extras.md');
 });

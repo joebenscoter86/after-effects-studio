@@ -8,9 +8,9 @@ Each step is marked `said` (narrated), `shown` (on screen; `fNNNNNN` is a frame 
 |---|---|---|---|---|
 | 01 | Frosted-glass pill built from three stacked shape layers | depth and finish; lines and shapes; glow and colour | 4 | unproven |
 | 02 | Null hierarchy: three group nulls under one master null | workflow; layout and repetition | 2 | unproven |
-| 03 | Two-key drop-in that settles with an expression bounce | energy and impact; workflow | 4 | unproven |
-| 04 | Offset the logo and text groups a few frames behind the card | energy and impact; layout and repetition | 4 | unproven |
-| 05 | Second notification arrives and the first one is pushed back | energy and impact; layout and repetition; depth and finish | 2 | unproven |
+| 03 | Two-key drop-in that settles with an expression bounce | energy and impact; workflow | 5 | unproven |
+| 04 | Offset the logo and text groups a few frames behind the card | energy and impact; layout and repetition | 5 | unproven |
+| 05 | Second notification arrives and the first one is pushed back | energy and impact; layout and repetition; depth and finish | 3 | unproven |
 
 ## Frosted-glass pill built from three stacked shape layers
 id: 01-frosted-glass-pill-from-adjustment-shape
@@ -120,6 +120,7 @@ id: 03-expression-bounce-drop-in
 status: unproven
 variant of: 03-step-icons-pop-with-bounce-in-sequence (nHh0NRo8G2U #03)
 differs: Shared: both Alt-click a stopwatch, paste an inertial-bounce expression (it reads the speed at the last key through nearestKey and velocityAtTime and adds a decaying sine, so the property overshoots and rings after its last key) and put it on Scale over two Scale keys, and both reach the other layers by copying the same expression (the parent step 5 copies it to the other five pictures; here step 8 repeats it on every remaining null). Differences: here the full expression is on screen only in part but its text is copied word for word from the description (amp .04, freq 1.8, decay 3, time_max 3, with a 3 s window); in the parent amp = .1 and freq = 2.0 are shown (f012940) and the rest, including decay 2.0 and a 1 s window (t < 1), is inferred by that recipe. Here the expression sits on Position as well as Scale; in the parent it is on Scale only (step 5). Here Position drops 150 comp px over 4 frames at 30 fps (the start key at 0.0, -150.0 shown f009039) and Scale runs 60 to 100 % (100 % inferred, the parent has 0 to full size); in the parent Scale grows 0 to full over 12 frames at 23.976 fps with the cubic-bezier 0.88, 0.14, 0.12, 0.86 ease, while here the keys are plain diamonds with no ease named. Here the keyed layers are nulls of a parent hierarchy (card, text group, logo), so the whole notification bounces as one; the parent keys the six picture layers directly and its steps name no parenting. Here nothing is staggered (no offset between nulls is given); the parent offsets each picture 10 frames after the last (step 6). Here the wobble is only computed from the expression and never played (the played stretch is the keys-only drop); the parent's bounce was measured on played frames (its layout lists overshoot about +2.5 % and settling within about 16 frames). Here the beat is a notification card with a logo and a title dropping in; the parent's is a row of process pictures under a phase bar.
+merge: confirmed (carried from checks/03-before-proof.md; the variant of and differs lines are unchanged)
 source: tYjqtArZtds 256.8–378 s
 jobs: energy and impact; workflow
 what it does for a beat: Reach for it when a card or group should drop into place and wobble a little before it rests, without hand-keying the overshoot. Two plain keys give the move; one pasted expression adds the settle on Position and on Scale.
@@ -136,6 +137,41 @@ steps:
 4. Back at frame 0, set the start Position above the rest point. (said "slightly above"; value shown f009039)
    - Position at frame 0: 0.0, -150.0 (shown f009039; -150 being typed f008757)
 5. Alt-click the Position stopwatch to open the expression field and paste the expression. (said; the tooltip "Alt-click: add or remove expression" is shown f009039; the pasted result is shown f011165 as "Expression: Position")
+   The expression text, word for word (said (description); the screen shows only its first line `amp = .04;` f011165 and the closing brace f010510):
+   ```
+   amp = .04;
+   freq = 1.8;
+   decay = 3;
+   n = 0;
+   time_max = 3;
+
+
+   if (numKeys > 0) {
+       n = nearestKey(time).index;
+       if (key(n).time > time) {
+           n--;
+       }
+   }
+
+
+   if (n == 0) {
+       t = 0;
+   } else {
+       t = time - key(n).time;
+   }
+
+
+   if (n > 0 && t < time_max) {
+       v = velocityAtTime(key(n).time - thisComp.frameDuration / 10);
+       
+       // Ease Out Factor (starts at 1, gradually reduces to 0)
+       easeFactor = easeOut(t, 0, time_max, 1, 0);
+       
+       value + v * amp * Math.sin(freq * t * 2 * Math.PI) / Math.exp(decay * t) * easeFactor;
+   } else {
+       value;
+   }
+   ```
 6. Go to the start and open Scale. Key at frame 0, then four frames on, repeat the same process as Position. (said)
    - Scale at frame 0 on the card null: 60.0, 60.0 % (shown f010172 and f010510)
    - Scale at the 4 f key: not typed on screen for this null; full size (100 %) inferred
@@ -149,7 +185,7 @@ timing and easing: Keys 4 frames apart at 30 fps, first at comp start (said four
 variations: none given
 pitfalls: none given
 longest on: Timed from frame numbers at 30 fps: the Scale keys and expression, f009528–f010440 (about 30 s), is the longest stretch; the repeat on the remaining nulls, f010467–f011352 (about 29.5 s), is next; the Position start key and four-frame key (f008021–f008822, about 26 s) and the Alt-click/paste of the Position expression (f008822–f009514, about 23 s, which also contains the played drop) are close behind. No part is stressed far more than another.
-build notes: Per null: transform.position.setValueAtTime(0, [x, y-150]) and setValueAtTime(4/30, [x, y]); scale 60 → 100 (card). Then `prop.expression = "<pasted expression>"` on both Position and Scale. Expression is exactly the description's: amp .04, freq 1.8, decay 3, time_max 3, uses nearestKey, velocityAtTime(key.time - frameDuration/10), easeOut(t,0,time_max,1,0). Keys are best set via script; expression text via script too. No interface-only step.
+build notes: Per null: transform.position.setValueAtTime(0, [x, y-150]) and setValueAtTime(4/30, [x, y]); scale 60 → 100 (card). Then `prop.expression = "<pasted expression>"` on both Position and Scale. Expression is the block quoted under step 5, pasted unchanged: amp .04, freq 1.8, decay 3, time_max 3, uses nearestKey, velocityAtTime(key.time - frameDuration/10), easeOut(t,0,time_max,1,0). Keys are best set via script; expression text via script too. No interface-only step.
 result: start=294.0 end=295.3 animated crop=555,131,960,540 frame=f008852
 before: f010510 (start pose of the card after the Scale keys, 60 % size, with the dashed layer outline and anchor handles still on it; not part of the played drop, not the finished picture). The window is the keys-only position drop, played in the viewer, cut from source.mp4: card at the high start pose, full width, at 294.30 s; mid-drop at 294.33 s; nearly down at 294.37 s; at rest from 294.40 s and through 295.3 s. So the drop itself is about 0.1 s of video (294.30–294.40 s). The high start pose returns from 295.4 to 295.9 s (anchor handles and small red boxes on it) and the next drop is under way at 296.0 s, at rest by 296.2 s (the preview loops). The comp time display stays frozen at 0:00:00:00 (read at f008822, f008852, f008882) during the preview, so the proof that it plays is the viewer's own redraws; no redraw count against the work area was taken, so speed in comp frames rests on the 4-frame key spacing alone. f008852 is the clean at-rest frame inside the crop: no mouse arrow, handles, dialog or panel edge. The expression is not yet on in this window, so the drop is plain and has no wobble; after the paste (302 s) to 378 s no bounce plays. Unlike the recipe's first version, f010510 is only the start-pose reference.
 unknowns: End scale value of the card null (100 % inferred); the text null's position start value; key ease type (plain diamonds, no ease shown); whether the bounce settles as computed (never played in this stretch; recipes 04 and 05 show it moving); whether the outer null gets the expression; why the logo shifts right at 84 % scale. The viewer's fast-forward icon (f011165/f011352) is an editing overlay, not part of the comp.
@@ -159,6 +195,7 @@ id: 04-staggered-element-offsets
 status: unproven
 variant of: 05-staggered-slide-in (Tf0EiCGOEYs #05)
 differs: Shared: the stagger is made by sliding whole layer bars later in the timeline so each layer's keys travel with it, the first element staying at frame 0 (the parent's step 6: "sliding whole layer bars along the timeline (keys travel with them)", headline at frame 0; its build notes shift each layer's `startTime`). Differences: here the parts are groups, each a null plus its child layers (logo with its null, three text layers with theirs), and the card's own layers stay at 0; in the parent step 1 lists three layers (headline, button precomp, web address) and no nulls. Here the offsets are about 2 f (logo) and about 4 f (text) at 30 fps; in the parent they are 5 f (button) and 10 f (address) at 60 fps (its step 6). Here every group does a drop and settle with a bounce expression (recipe 03) and the order is card, logo, text; in the parent each layer does a left-to-right slide of two Position keys 47 frames apart with 65 % influence easing (its steps 2 to 4), with no expression listed among its ingredients. Here the offsets were read off the timeline ruler (the narrator said two to three frames); the parent's 5 and 10 are measured on the zoomed ruler (its step 6).
+merge: confirmed (carried from checks/04-before-proof.md; the variant of and differs lines are unchanged)
 source: tYjqtArZtds 378.9–425 s
 jobs: energy and impact; layout and repetition
 what it does for a beat: Reach for it when several parts of one card all get the same drop-and-settle move and read as a single stiff block. Sliding the start of each part a couple of frames later makes the parts land one after another.
@@ -172,8 +209,44 @@ steps:
 2. Select the three text layers (title, subtitle, "NOW" label) with their text null and shift them the same way, a little further than the logo. (said "do the same for all the text layers")
    - Text layers and text null start: about 4 f after the card (shown f012250: bar edge x=771 is 3.9 f). The narrator said two to three frames; the screen shows about 2 and about 4 for the two groups, so the screen decides.
 3. Leave at frame 0 the master null at the top of the stack (all the group nulls are parented to it), the card's own null, and the card's layers: the stroke, the pill layer that carries the effect and the adjustment switch, and the depth layer. (shown f012250 and the timeline at f012380: their bars start at the ruler's 0)
-4. Scrub the first frames and check the order: card, then logo, then text. (shown f012291, viewer and timeline both at 3 f: card and logo in, text not yet; inferred that this is the intended read)
-5. Preview the first second or so; the arrival is played as a looping preview (shown f012350, f012380, f012410: the viewer's own time readout runs while the timeline's readout holds at 0). (shown)
+4. Make sure every null in the groups (and the card's null) carries the author's bounce expression on both Position and Scale, so the drop settles with a wobble; it reads each layer's own keys, so it moves with the layer when the bar is slid. Pasted earlier in the video (narration 259–353 s, recipe 03), not in this stretch. (said (description) for the text; said for where it goes, 259.0 s and 353.5 s per extras.md)
+   - Expression text, word for word (said (description)):
+   ```
+   amp = .04;
+   freq = 1.8;
+   decay = 3;
+   n = 0;
+   time_max = 3;
+
+
+   if (numKeys > 0) {
+       n = nearestKey(time).index;
+       if (key(n).time > time) {
+           n--;
+       }
+   }
+
+
+   if (n == 0) {
+       t = 0;
+   } else {
+       t = time - key(n).time;
+   }
+
+
+   if (n > 0 && t < time_max) {
+       v = velocityAtTime(key(n).time - thisComp.frameDuration / 10);
+       
+       // Ease Out Factor (starts at 1, gradually reduces to 0)
+       easeFactor = easeOut(t, 0, time_max, 1, 0);
+       
+       value + v * amp * Math.sin(freq * t * 2 * Math.PI) / Math.exp(decay * t) * easeFactor;
+   } else {
+       value;
+   }
+   ```
+5. Scrub the first frames and check the order: card, then logo, then text. (shown f012291, viewer and timeline both at 3 f: card and logo in, text not yet; inferred that this is the intended read)
+6. Preview the first second or so; the arrival is played as a looping preview (shown f012350, f012380, f012410: the viewer's own time readout runs while the timeline's readout holds at 0). (shown)
 layout: All figures measured on the 960×540 picture crop (crop origin 555,131 in the 1920×1080 frame; the picture is 1920×1080 comp px, so double them for comp px). Settled card (f012350, comp 13 f): width 667 px = 69.5 % of the picture width, height about 157 px = 29 % of the picture height (about 0.235 of its width), centred horizontally, centre at about 49 % of the height (266 px from the top). Logo disc: 94 px across = 0.60 of the card's height (0.14 of its width), centre 81 px (0.12 of the card width) in from the card's left edge and level with the card's centre. Title and subtitle left-aligned to the right of the disc, title about 26 px above the card's centre; "NOW" label small, grey, at the card's top right. Card light grey with a thin lighter stroke and a soft inner shade; ground near white. Not a different file: the finished example is the build the author made.
   Played arrival (source 412.5–413.2 s, redraws read from the video): the viewer redraws about once per comp frame on average (comp 1 f at 412.67 s, readout 13 f by about 413.1 s), a loop restart at 0 f, then a hold of about 0.6 s on the start pose before the drop plays. Comp frames are skipped now and then (the scrub at 3 f shows a card at 81 % width, which no played redraw shows), so the frame labels below are good to about ±1.
   - Start pose (0 f, no logo, no text): card 405 px wide = 61 % of its settled width, centre at 145 px from the top = 27 % of the picture height, 121 px (about 240 comp px) above the settled centre. Selection boxes of the nulls show here only (a small one at the card's centre, a larger one about 100 px below it).
@@ -210,7 +283,41 @@ steps:
 3. Slide the duplicated layers later in time by 15 to 20 frames (said). Their bars start at about frame 15 on the ruler (shown f014761, bars start under the playhead at 0:00:00:15; measured from the ruler, ≈ frame 15).
    - Result: the copy repeats the original's entrance, including its bounce, from that moment (inferred from the finished clip; frames 15919–15922 were cut from source.mp4, not kept frames). The copy's entrance is the one built in 03-expression-bounce-drop-in and 04-staggered-element-offsets: start 150 px above rest and at 60 % scale, 4 frames to rest, bounce expression amp 0.04, freq 1.8, decay 3; logo parts start 2 frames and text parts 4 frames after the card, so the copy's parts arrive one after another (at 15919 the logo is in while the card's text is still missing).
 4. Select the first notification's main null (the null at the top of its parent chain, with no parent itself — shown f014954, parent column "None") and add Position and Scale keyframes (said). First keys are set where the playhead stands, at time 15, with Position 960,540 and Scale 100,100 (shown f014761).
-5. Paste the bounce expression onto both Position and Scale of that null (said). The values go red, which marks an expression (shown f015263). Expression used is the one from the description, with amp 0.04, freq 1.8, decay 3, time_max 3 (said (description)).
+5. Paste the bounce expression onto both Position and Scale of that null (said). The values go red, which marks an expression (shown f015263). Expression used is the one from the description, with amp 0.04, freq 1.8, decay 3, time_max 3 (said (description)). Full text, word for word (said (description)):
+   ```
+amp = .04;
+freq = 1.8;
+decay = 3;
+n = 0;
+time_max = 3;
+
+
+if (numKeys > 0) {
+    n = nearestKey(time).index;
+    if (key(n).time > time) {
+        n--;
+    }
+}
+
+
+if (n == 0) {
+    t = 0;
+} else {
+    t = time - key(n).time;
+}
+
+
+if (n > 0 && t < time_max) {
+    v = velocityAtTime(key(n).time - thisComp.frameDuration / 10);
+    
+    // Ease Out Factor (starts at 1, gradually reduces to 0)
+    easeFactor = easeOut(t, 0, time_max, 1, 0);
+    
+    value + v * amp * Math.sin(freq * t * 2 * Math.PI) / Math.exp(decay * t) * easeFactor;
+} else {
+    value;
+}
+   ```
 6. Move the first key (and its Scale partner) from frame 15 back to about frame 13, two frames before the copy starts (said); the diamonds then sit at about 13 (inferred from diamond x position against the ruler, f014954). The 15 in step 4 is only where the keys were first made.
 7. Go about five frames on and lower both values slightly (said). The second key's time reads frame 19 on the time display (shown f015263), so the span is about 6 frames from key one by measure; the narrator's "five" is rounded.
    - Position (second key): Y first read 617, then 636, 652 along the way (617 and 636 read from the timeline panel text; 652 shown f015341) and finished at 960, 676 (shown f015516, f015568 — panel reads 960.0,676.0).
@@ -234,7 +341,7 @@ timing and easing: Copy starts at about frame 15 (shown f014761). First key abou
 variations: The narrator says the timing and values can be refined further (said).
 pitfalls: none given, apart from the need to start the first card's keys a couple of frames before the copy starts so the reaction is not late (said).
 longest on: Placing the two keyframes and typing the Position and Scale values on the first card's main null, with the bounce pasted on first: from about 7:40 to 8:41 (≈ 60 s of a 106 s technique); duplicating and shifting the copy took about 31 s (from the technique's 429 s start to 7:40.4).
-build notes: In a script: duplicate all layers, set the duplicates' startTime +15 frames (0.5 s at 30 fps), put them above the originals. On the main null: setValueAtTime(13/30, [960,540]) and (19/30, [960,676]) for Position; Scale [100,100] and [90,90] at the same times; then set both properties' expression to the description's bounce text verbatim. Turn on the comp's Motion Blur switch and the layers' switches (inferred, shutter about 180–200°). Keep the expression's `velocityAtTime(key(n).time - thisComp.frameDuration/10)` — it reads the move into the key. Keys are plain linear (inferred from diamond shape). Scale keys on a null need the link-dimensions switch on (the chain icon shows linked in f015516). If the cards are built differently from the original, 676 px is 12.5 % of a 1080 high comp: scale it to the card height (136 ≈ 0.43 × card height 315).
+build notes: In a script: duplicate all layers, set the duplicates' startTime +15 frames (0.5 s at 30 fps), put them above the originals. On the main null: setValueAtTime(13/30, [960,540]) and (19/30, [960,676]) for Position; Scale [100,100] and [90,90] at the same times; then set both properties' expression to the full text quoted in step 5, verbatim (including the easeOut factor). Turn on the comp's Motion Blur switch and the layers' switches (inferred, shutter about 180–200°). Keep the expression's `velocityAtTime(key(n).time - thisComp.frameDuration/10)` — it reads the move into the key. Keys are plain linear (inferred from diamond shape). Scale keys on a null need the link-dimensions switch on (the chain icon shows linked in f015516). If the cards are built differently from the original, 676 px is 12.5 % of a 1080 high comp: scale it to the card height (136 ≈ 0.43 × card height 315).
 result: start=530.3 end=531.2 animated crop=0,0,1920,1080 frame=f015967
   - Played window source seconds 530.3–531.2 (frames 15910–15935): full-screen picture, no overlay, the new card arrives and the first one sinks. Still reference: 531.3–532.5 (frames 15940–15975) holds the same layout; use f015967 (clean, no arrow or handles). The kept frame f015984 is blank, so the clip fades or cuts at ≈ 532.7. The comp's time display is not visible in the clip, so frames per redraw are not counted.
 before: f014761 (first card alone at centre, copy waiting above it, editor view)

@@ -43,7 +43,7 @@ export function recipeProblems(study) {
     }
     // A variant's merge lines are checked against its parent (check.md check 11; LESSONS 14).
     if (!reason && /^variant of:/m.test(fs.readFileSync(path.join(study, 'recipes', f), 'utf8'))
-      && !/^merge:\s*confirmed/m.test(check)) reason = 'variant without a confirmed merge';
+      && !/^(?:- )?merge:\s*confirmed\b/m.test(check)) reason = 'variant without a confirmed merge';
     if (reason) out.push({ recipe: f, reason });
   }
   return out;

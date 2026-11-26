@@ -92,7 +92,7 @@ test('assemble: proven recipes are counted, and proven needs a recorded acceptan
 });
 
 test('assemble: a variant needs its merge confirmed by the check (LESSONS 14)', () => {
-  const dir = study({ '01-a': { check: pass('01-a') }, '02-b': { check: pass('02-b') }, '03-c': { check: pass('03-c') } });
+  const dir = study({ '01-a': { check: pass('01-a') }, '02-b': { check: pass('02-b') }, '03-c': { check: pass('03-c') }, '05-e': { check: pass('05-e') } });
   const variant = (id, checkText) => {
     const p = path.join(dir, 'recipes', `${id}.md`);
     fs.writeFileSync(p, `## Technique ${id.slice(0, 2)}\nstatus: unproven\nvariant of: 04-parent (vid0 #04)\ndiffers: here x; in the parent y.\njobs: test\n`);
@@ -105,6 +105,8 @@ test('assemble: a variant needs its merge confirmed by the check (LESSONS 14)', 
     variant('01-a', `${pass('01-a')}merge: confirmed\n`);
     variant('02-b', `${pass('02-b')}merge: refused\nmerge failures:\n- wrong\n`);
     variant('03-c', pass('03-c'));
+    // A checker that writes the confirmation as a bullet under its failures still confirms it (lesson 51).
+    variant('05-e', `${pass('05-e')}- merge: confirmed (the merge lines are unchanged)\n`);
     assert.deepEqual(recipeProblems(dir), [
       { recipe: '02-b.md', reason: 'variant without a confirmed merge' },
       { recipe: '03-c.md', reason: 'variant without a confirmed merge' },

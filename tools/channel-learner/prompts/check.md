@@ -21,6 +21,8 @@ You check technique recipes written by someone else from a tutorial video. You d
 
 11. **The merge, when there is one.** A recipe with `variant of:` and `differs:` lines (`merge.md`) names a parent in `product/arsenal-drafts/<video>.md`. Read the parent's section and check every claim the `differs:` line makes about it and about this recipe: is it the same mechanism, is each "difference" really different, and does each parent figure come from the parent's own video or (as it must then say) from a proof build or another recipe? Add a line `merge: confirmed` or `merge: refused`, with the false claims under `merge failures:`. (On the second video both merge lines first written failed: an off-screen pivot that was the parent's opposite, a "still" parent wheel that turns, settings listed as differences that the parent shares.)
 
+12. **The author's code, quoted whole.** A step that runs on an expression or script text the author gave (in `STUDY/extras.md`, or readable on screen) carries that text in full in a fenced block. Compare it with `extras.md` (or the frame) word for word, line breaks and comments aside; a paraphrase, its values alone, or "exactly as given" without the text fails (`distil.md`, the author's code).
+
 A value you suggest is held to the same test as the recipe's: cite the frame where it has landed, never one taken while it is still being dragged or typed. (On nHh0NRo8G2U a checker's round-1 suggestion was a speed-graph tooltip read mid-drag; it cost a round.)
 
 Look at no more than 8 small frames per recipe, plus the result crop; crop for detail.
@@ -36,6 +38,9 @@ failures:
 - <which check, what is wrong, the evidence (sentence time or frame)>
 suggestions:
 - <optional, smaller points>
+merge: confirmed | refused   (only for a recipe with `variant of:`, on its own line, never as a bullet)
+merge failures:              (only when refused)
+- <each false claim>
 ```
 
 Write only inside `STUDY/checks/` and `STUDY/scratch/`. Do not edit the recipes. Do not use After Effects. Finish with one line per recipe: verdict and the main reason.
