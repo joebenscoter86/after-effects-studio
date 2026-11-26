@@ -198,6 +198,22 @@ The first video's 25 recipes all passed the check. Building them found three rec
 - **Why.** "One technique, one entry" let the parent stand for its variants, which holds only when the parent answers the same ask. A merge is decided by mechanism (`merge.md` step 2), so the variant's job can differ from the parent's. The drafts catalog was built by a separate command that the run steps never named.
 - **Rule.** The plugin's `find` (by job, and by provides or words) and `browse` still put a variant behind a parent that answers the same ask. A variant that alone answers it now stands on its own, with `variant_of` and a fit line naming the parent. The dev mirror in `catalog.mjs` follows the same rule. A shipped-catalog test checks that every variant is found for each of its jobs. `arsenal.mjs` now rewrites the drafts `catalog.json` in the same run. `merge.md` step 4 says to tag a variant for its own beat. Tests are in `plugin/runtime/tests/arsenal.test.ts`, `tests/catalog.test.mjs` and `tests/arsenal.test.mjs`.
 
+### 44. Sizes that held only in the tutorial's 16:9 frame (explainer piece 4, tYRvoI04pJk 03, 05, 07, 10, 11, 12, 2026-11-25)
+- **What happened.** All 13 recipes passed their checks, but 11 of the 13 first builds came back "partly", and six of those for one reason: a size given against the 16:9 picture or in the tutorial comp's pixels.
+  - 03's curve was a share of the frame's width and height, so in a 9:16 frame it hung almost straight down; the tutorial's sweeps at about 55°.
+  - 05's Glow radii (50, 100, 150) were set on 1206 px buttons; at the shown values on a 408 px button the halo was four times too wide.
+  - 07's corner radius was "2.8 % of the picture width"; the builder read it against the card and drew the corners too tight.
+  - 10's orb was 37 % of the width, and the build made a small ball in a tall frame where the shot is one orb filling the screen.
+  - 11's orb was sized at a mid-swell frame as a share of the width and came out half size.
+  - 12's ring came out small.
+- **Why.** `distil.md` asked for sizes "as shares of the picture" and every check confirmed them on the tutorial's own frame. Nothing asked whether a share would carry to the 9:16 frame every proof is built in (lesson 38), or said that an effect value in pixels belongs to the size of the object it was set on. Lesson 34 had covered framing a scene, not sizing one object.
+- **Rule.** `distil.md`: give each part against its own object (corners, strokes, glow reach, a curve's run and lean), and the main object against the frame's short side as well. An effect value in pixels comes with the object size it was set for. `check.md` item 9 fails a recipe that does not. `prove-run.md`: one object that fills the shot fills the same share of the tall frame's width. Test in `tests/run-stage.test.mjs`.
+- **And the route back.** The fixes went to writers through a lead check (`checks/<n>.md`, verdict fail, the review's figures to verify on the tutorial's frames), with the passed check kept beside it. The last video's lead had edited recipes by hand instead. `video-lead.md` step 7 now says how to do it.
+
+### 45. A motion technique proved on a still (explainer piece 4, tYRvoI04pJk 02, 2026-11-25)
+- **What happened.** 02 is a bounce pop-in with a letter-by-letter rise. Its round-1 check refused the result crop, which had a layer gizmo in it. In the fix round, the writer withdrew the animated result and named a settled still. The check passed, and the proof review could only say "cannot be judged": a still shows where things land, not the overshoot or the stagger that are the technique. A played window (440.72–441.52 s) did exist and was found when the recipe went back after the review.
+- **Rule.** `distil.md` (result windows) and `check.md` item 7: a technique that is a move needs a played window. A still result for it fails unless the recipe shows that none exists. A checker does not ask for that trade, and a writer does not make it to get a clean crop: the played window is given with its overlays named, and a clean still can go beside it. Test in `tests/run-stage.test.mjs`.
+
 ## Still open
 - The 24 "matches" on the first video were given before the look line existed.
 - Nothing yet tests the prompts themselves. A cheap test: keep technique 11's first recipe as a fixture and confirm a fresh checker fails it on check 8.

@@ -279,6 +279,24 @@ test('proofs are built at 9:16, the phone frame the owner reviews on: the art, s
   }
 });
 
+test('sizes carry to a 9:16 proof: writers, checkers and builders size parts by their object and objects by the short side (lesson 44)', () => {
+  for (const f of ['distil.md', 'check.md', 'prove-run.md']) {
+    const text = fs.readFileSync(path.join(PROMPTS, f), 'utf8');
+    assert.ok(text.includes('short side'), `${f} sizes the main object against the frame's short side`);
+  }
+  for (const f of ['distil.md', 'check.md']) {
+    const text = fs.readFileSync(path.join(PROMPTS, f), 'utf8');
+    assert.ok(/pixel value|value in pixels/.test(text) && text.includes('object size it was set for'), `${f} gives a pixel effect value with the object size it was set for`);
+  }
+});
+
+test('a technique that is a move keeps a played result window; a still is not traded for it (lesson 45)', () => {
+  for (const f of ['distil.md', 'check.md']) {
+    const text = fs.readFileSync(path.join(PROMPTS, f), 'utf8');
+    assert.ok(text.includes('played window'), `${f} asks for a played window when the technique is a move`);
+  }
+});
+
 test('art runs may call the image generator under the name a headless run gives it', () => {
   const args = claudeArgs('art');
   const allowed = args[args.indexOf('--allowedTools') + 1].split(',');
