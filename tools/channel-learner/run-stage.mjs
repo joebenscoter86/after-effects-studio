@@ -310,6 +310,21 @@ export function uncoveredSpeech(timeline, techniques, { minWords = 10, joinGap =
   return out;
 }
 
+/**
+ * A check run that printed its check as its last message instead of writing the file (LESSONS.md
+ * lesson 52): save that check, when it is one, for this recipe, with a verdict. Returns true if saved.
+ */
+export function savePrintedCheck(text, file, unit) {
+  const t = String(text || '');
+  const i = t.search(/^round:/m);
+  if (i < 0) return false;
+  const body = t.slice(i).split('\n').filter((l) => !/^\s*RESULT:/i.test(l)).join('\n').trim();
+  const rid = (body.match(/^recipe:\s*(\S+)/m) || [])[1];
+  if (!rid || !rid.startsWith(`${unit}-`) || !/^verdict:\s*(pass|fail)\b/m.test(body)) return false;
+  fs.writeFileSync(file, `${body}\nnote: saved by the runner from the run's last message; the run printed its check instead of writing it (LESSONS.md lesson 52).\n`);
+  return true;
+}
+
 export function buildPrompt(stage, unit, ctx) {
   return `${fs.readFileSync(path.join(PROMPTS, `${stage}.md`), 'utf8').trimEnd()}\n${runBlock(stage, unit, ctx)}\n`;
 }
@@ -445,10 +460,12 @@ async function runOne(stage, unit, ctx, deps, runUsd) {
     else if (!r.subtype) rec.note = `claude exited ${out.code} with no result: ${String(out.stderr || '').trim().split('\n').slice(-2).join(' | ')}`;
     else if (r.isError) rec.note = `run error (${r.subtype}): ${r.text.slice(0, 120)}`;
     else {
+      const saved = stage === 'check' && !freshSince(checkFile(ctx, unit), started)
+        && savePrintedCheck(r.text, checkFile(ctx, unit), unit);
       const j = judgeOutput(stage, unit, ctx, started);
       const said = r.verdict;
       rec.pass = j.ok && (!said || said.pass);
-      rec.note = [j.note, said ? said.note : 'no RESULT line'].filter(Boolean).join('; ');
+      rec.note = [j.note, saved ? 'saved from the run\'s message' : '', said ? said.note : 'no RESULT line'].filter(Boolean).join('; ');
     }
   }
   fs.mkdirSync(path.dirname(ctx.results), { recursive: true });

@@ -245,6 +245,11 @@ The first video's 25 recipes all passed the check. Building them found three rec
 - **Rule.** `distil.md`: code the author gave is quoted whole, word for word, in a fenced block under the step that uses it (it is the author's shared code and may ship). `check.md` item 12 compares it with `extras.md`. 03, 04 and 05 went back through lead checks and now quote it; the three scripts take that text (a noted lead correction). Test in `tests/run-stage.test.mjs`.
 - **And the merge line.** The changed-lines checks of 03 and 04 confirmed their merges as a bullet (`- merge: confirmed ...`) under `failures`, and `assemble.mjs` refused both as variants without a confirmed merge. `check.md`'s output form now shows the `merge:` line on its own, and `assemble.mjs` accepts the bulleted form too (test in `tests/assemble.test.mjs`).
 
+### 52. A check run printed its check and never wrote it (explainer piece 11, tYjqtArZtds 02, 2026-11-26)
+- **What happened.** After a lead check on 02's layout line, two changed-lines check runs in a row confirmed the fix and ended with the whole check (`round: 3`, `recipe:`, `verdict: pass`, failures, suggestions) as their last message, but neither called Write. The lead check's `verdict: fail` stayed in `checks/02.md`, the runner recorded "no checks/02.md written", and `assemble.mjs` refused 02. A third run wrote the file.
+- **Why.** `check.md` says to write `STUDY/checks/<n>.md`, and a short changed-lines check can end by printing what it would have written. Nothing caught a well-formed check left only in the message.
+- **Rule.** `run-stage.mjs` (`savePrintedCheck`): when a check run leaves no fresh check file and its last message holds a check for its own recipe, with a verdict, the runner saves it, notes that it did, and judges it as usual. Test in `tests/run-stage.test.mjs`.
+
 ## Still open
 - The 24 "matches" on the first video were given before the look line existed.
 - Nothing yet tests the prompts themselves. A cheap test: keep technique 11's first recipe as a fixture and confirm a fresh checker fails it on check 8.

@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
-  STAGES, claudeArgs, parseStream, runStage, runVideo, readResults, uncoveredSpeech,
+  STAGES, claudeArgs, parseStream, runStage, runVideo, readResults, uncoveredSpeech, savePrintedCheck,
 } from '../run-stage.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -444,4 +444,23 @@ test('code the author gave is quoted whole in the recipe, and the check compares
   assert.match(distil, /quote the whole text word for word in a fenced block/, 'writers quote it');
   assert.match(check, /carries that text in full in a fenced block/, 'checkers ask for it');
   assert.match(check, /word for word/, 'and compare it with extras.md');
+});
+
+test('a check run that prints its check instead of writing it has the check saved, for its own recipe only (lesson 52)', async () => {
+  const dir = study(['01']);
+  fs.writeFileSync(path.join(dir, 'recipes', '01-trick-01.md'), '## Technique 01\n');
+  const printed = 'Done.\n\nround: 3 (changed lines only)\nrecipe: 01-trick-01\nverdict: pass\nfailures:\n- none\n\nRESULT: pass — fixed';
+  const { claude } = fakeClaude(() => ({ text: printed }));
+  await runStage('check', { study: dir, only: ['01'] }, { ...quiet, claude });
+  const saved = fs.readFileSync(path.join(dir, 'checks', '01.md'), 'utf8');
+  assert.match(saved, /^round: 3 \(changed lines only\)\nrecipe: 01-trick-01\nverdict: pass/);
+  assert.ok(!/RESULT:/.test(saved), 'the RESULT line is not part of the check');
+  const [r] = readResults(path.join(dir, 'runs.jsonl'));
+  assert.ok(r.pass, 'counts as a passed check');
+  assert.match(r.note, /saved from the run's message/);
+
+  const other = path.join(dir, 'checks', '02.md');
+  assert.equal(savePrintedCheck('round: 1\nrecipe: 03-else\nverdict: pass\n', other, '02'), false, 'another recipe\'s check is not saved');
+  assert.equal(savePrintedCheck('round: 1\nrecipe: 02-x\n', other, '02'), false, 'no verdict, no check');
+  assert.ok(!fs.existsSync(other));
 });
