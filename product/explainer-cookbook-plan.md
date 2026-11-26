@@ -41,13 +41,15 @@ The picks were chosen from titles, chapter lists and descriptions. Nobody has wa
 | 4 | TomsProject, [SaaS Motion Graphics Masterclass](https://www.youtube.com/watch?v=tYRvoI04pJk) | make-concrete (not introduce-tool or flag-a-problem) | 52 min | medium | done: 13 written, 13 proven (accepted by Joe 2026-11-26), 0 held |
 | 5 | Move Shapes, [Simple Before & After Transition](https://www.youtube.com/watch?v=SSAsTdXmKl0) | before-after | 3 min | low | not started |
 | 6 | Flat Pack FX, [Stylized Timeline Animation](https://www.youtube.com/watch?v=9AtjrBHF560) | step-through-process | 14 min | low | not started |
-| 7 | SonduckFilm, [5 Trendy SaaS Motion Graphics](https://www.youtube.com/watch?v=qe8_xGizSF0) | probably introduce-tool | 7 min | unknown | not started |
+| 7 | SonduckFilm, [5 Trendy SaaS Motion Graphics](https://www.youtube.com/watch?v=qe8_xGizSF0) | introduce-tool, flag-a-problem (the captions suggest neither) | 7 min | low | not started |
 | 8 | SonduckFilm, [Create Explainer Video Animations](https://www.youtube.com/watch?v=lAUAVwYWFdI) | make-concrete | 13 min | medium | not started |
 | 9 | SonduckFilm, [Create Callout Titles](https://www.youtube.com/watch?v=VZuHQVaC7oA) | flag-a-problem | 8 min | high | not started |
-| 10 | fail-then-fix, built from pieces 4, 5 and 9 | fail-then-fix | none | none | not started |
-| 11 | Zuyns, [How to Animate Notifications Like Apple](https://www.youtube.com/watch?v=tYjqtArZtds) | introduce-tool (flag-a-problem, fail-then-fix as support) | 9 min | low | in progress |
+| 10 | fail-then-fix, built from pieces 5, 9 and 11 | fail-then-fix | none | none | not started |
+| 11 | Zuyns, [How to Animate Notifications Like Apple](https://www.youtube.com/watch?v=tYjqtArZtds) | introduce-tool (flag-a-problem, fail-then-fix as support) | 9 min | low | in progress (picked 2026-11-26; proofs with Joe) |
 
 **After piece 4, no empty job was filled: introduce-tool and flag-a-problem are still empty (make-concrete gained a second recipe).** **After piece 3, 7 of the 11 empty jobs were still empty (step-through-process is filled; show-proof and compare gained recipes).** **After piece 2, 8 of the 11 empty jobs were still empty (call-to-action is filled).** **After piece 1, 9 of the 11 empty jobs were still empty.** **The plan expected only before-after and fail-then-fix to be empty after pieces 1–4; that did not hold, so pieces 7 and 9 are still needed for introduce-tool and flag-a-problem.** If you only have time for a few, do those four.
+
+**Next (picked 2026-11-26): piece 11.** After piece 4, six jobs have no proven technique: count-things, show-time, before-after, fail-then-fix, introduce-tool and flag-a-problem (before-after and fail-then-fix have only paper pieces). Piece 7's captions show five finishing looks, none for these jobs. Piece 11 puts an app's logo and name on a notification card, which is introduce-tool as the job list defines it. The same card can carry a warning, and its second notification pushing the first aside is the shape fail-then-fix needs. It is 9 minutes, narrated and needs no plugins.
 
 **Off the plan (2026-11-25):** Bart_VFX, [5 Editing Ideas You Should Try](https://www.youtube.com/watch?v=201iywIy74c), learned at Joe's request: 5 written, 5 proven (accepted by Joe 2026-11-25), 0 held. The new recipes serve reveal-headline, fill-the-backdrop and add-depth, so no empty job is filled. The run record is `quality/reports/2026-11-25-channel-learner-201iywIy74c/report.md`.
 
@@ -134,6 +136,15 @@ The picks were chosen from titles, chapter lists and descriptions. Nobody has wa
 
 - **Why:** posted 2026-11-16, same channel, product-launch style. Its chapters are only named "Technique 1" to "Technique 5", so we don't know what it teaches yet.
 - **Do first:** gather and align, then read `timeline.md` and list the five techniques. If none fills an empty job, stop there and mark it "skipped, no explainer jobs".
+- **Now also for (2026-11-26): introduce-tool and flag-a-problem,** which piece 4 did not fill.
+- **Captions read (2026-11-26).** The five techniques:
+  1. a radial-blur shadow under a shape with a thin Bevel and Emboss (the same mechanism as 201iywIy74c 03);
+  2. blueprint lines from a Repeater, drawn on with Trim Paths set to Individually and rolled in on a parent null;
+  3. multicoloured letters traced by a matted stroke, with a small leading block;
+  4. a glass plate from Bevel and Emboss at 0 % fill opacity with a white Outer Glow;
+  5. a PNG made 3D under a point light, casting a soft shadow on a shadow-only floor.
+
+  None puts a named product on screen or marks something as wrong, so this piece is unlikely to fill either job. Gather and align only to confirm, then mark it skipped if the timeline agrees.
 
 ### 8. SonduckFilm, explainer video animations
 
@@ -147,13 +158,27 @@ The picks were chosen from titles, chapter lists and descriptions. Nobody has wa
 
 ### 10. fail-then-fix, from pieces we already have
 
-- No tutorial teaches it as one thing. Once flag-a-problem (piece 4 or 9) and before-after (piece 5) are proven, write one worked scene that chains them: the problem marked as wrong, then the change, then the fixed state. File it as a build aid that names those recipes, or as a worked scene in the library.
+- No tutorial teaches it as one thing. Once flag-a-problem (piece 9 or 11) and before-after (piece 5) are proven, write one worked scene that chains them: the problem marked as wrong, then the change, then the fixed state. File it as a build aid that names those recipes, or as a worked scene in the library.
 
-### 11. Zuyns, notifications like Apple
+### 11. Zuyns, Apple-style notifications
 
-- **Why (added 2026-11-26):** no proven technique serves introduce-tool ("the app's name with its real logo"). Piece 7's captions turned out to show only finishing looks, so this short, plugin-free tutorial was picked instead. A notification card that drops in carrying an app's mark and name is introduce-tool; the same card as a warning gives flag-a-problem and fail-then-fix something to stand on.
-- **What the captions say it teaches:** a 1350 × 350 rounded card (roundness 110) with a depth copy at 5 % opacity and a stroke copy at 4 px; the card itself made an adjustment layer with Fast Box Blur 30 for a frosted look; nulls for the card, the text and the logo under one main null, each dropping in over 4 frames of Position and Scale keys with a bounce expression; logo and text staggered 2–3 frames behind the card; a second notification 15–20 frames later, the first stepping down and shrinking as it lands.
-- **Watch for:** the expression is in a Google Doc linked from the description, not on screen: copy it word for word into `extras.md` during gather (lesson 36). It may match the inertial bounce of nHh0NRo8G2U #03, 201iywIy74c 01 and tYRvoI04pJk 02; the merge step decides. The font is SF Pro: prove with a free stand-in such as Inter and say so. Generate an app mark that looks real but is no real brand. Prove one card as a warning too, so flag-a-problem and fail-then-fix (support) can be judged.
+- **Why (picked 2026-11-26):** an iOS-style notification card that carries an app's logo and name. That is introduce-tool ("the app's name with its real logo"). The same card reads as a warning when its text says something went wrong. A second notification that pushes the first down is the shape of fail-then-fix ("the first upload fails red, the retry goes through green"). Posted 2026-05, 9 minutes, narrated, no plugins.
+- **What it teaches (from the captions):**
+  - The card is a 1350 × 350 rectangle at roundness 110, with a depth copy at 5 % opacity and a stroke copy at 4 px.
+  - The card itself becomes an adjustment layer with Fast Box Blur 30, which gives the frosted look.
+  - Nulls hold the card, the text and the logo, all under one main null.
+  - Each null drops in over four frames of position and scale keys, with a bounce expression.
+  - The logo and text are staggered 2–3 frames behind the card.
+  - A second notification arrives 15–20 frames later, and the first steps down and shrinks slightly as it lands.
+- **Watch for:**
+  - The bounce expression is in a Google Doc linked from the description, not on screen. Copy it word for word into `extras.md` during gather (lesson 36). It may be the same inertial bounce as nHh0NRo8G2U #03 and 201iywIy74c 01; the merge step decides.
+  - The font is SF Pro, whose licence covers mock-ups for Apple's own platforms. Prove with a free stand-in such as Inter, and say so in the build notes.
+  - The proof's art needs an app mark that looks real but is no real brand. Generate one.
+  - Expect two to four recipes: the frosted card, the bounce-and-stagger entrance (probably a variant) and the stack that reacts. Tag the card for the beat it serves in the proof, and prove one card as a warning so flag-a-problem can be judged too.
+- **Also found while picking (2026-11-26):**
+  - show-time: Smertimba Graphics, [Countdown Timer Tutorial](https://www.youtube.com/watch?v=99FUeOo4fiQ), 2 min, a countdown from one expression. It is the cheapest fill left after piece 5.
+  - flag-a-problem: AEffecto, [How To Edit Viral Documentaries Like VOX](https://www.youtube.com/watch?v=Ii3MVHwECys), 63 min. It has a red marker circle (from a supplied PNG, keyed) and red thread lines between photos. That is too long for one flag-a-problem recipe, unless show-proof or relate-things need more.
+  - count-things: searches for icon arrays, pictogram grids and unit charts found only templates, no tutorial.
 - **Done so far (2026-11-26):** the video teaches what its captions say. Five recipes, all passed, none held:
   - 01 frosted card (add-depth; a variant of 201iywIy74c #05);
   - 02 null grouping (build aid);
