@@ -2,6 +2,64 @@
 
 Generated from the recipe drafts; do not edit by hand. Recipes whose primary job is in this group. Find candidates for a beat with ae_arsenal find; read one with ae_arsenal get, or a section here by its heading.
 
+## Hand-traced script word that draws itself and glows
+id: 04-echo-stroke-text-reveal
+revision: e51aa5c0
+job: reveal-headline; support: light-the-hero, add-impact
+status: proven (accepted 2026-11-25)
+what it does for a beat: A designer reaches for this when a short word (a greeting, a title) should look written by a glowing line on a dark ground.
+what it looks like: A thin single-line script word, centred on black, is drawn stroke by stroke. Strokes have a pale, near-white hot core inside a gold halo; no brighter head or visible trail is seen in the played frames. A wide soft halo of the stroke's colour surrounds the word. The lines then un-draw in the same order, so for a moment the whole word is visible. The author shows gold first and later swaps to violet and mint green.
+
+ingredients:
+- Type tool plus a script-style font — built-in; font name and weight not shown (said that a different font is picked; script look is inferred from the result)
+- Pen tool, shape layer with several separate stroke-only paths — built-in
+- Trim Paths on the shape layer — built-in; Add menu of the shape layer's Contents (said)
+- Echo — stock; effect on the shape layer (said; Effect Controls shown)
+- Deep Glow — paid (third-party plug-in); shown in Effect Controls
+- A bezier-curve preset panel (curve-preset panel) for key easing — extension (third-party); shown
+
+steps:
+1. Make a comp of 1920×1080 with a black ground (shown : layer position 960,540; the viewer at 100 % spans 960 of the 1920 small-frame px, i.e. 1920 full-frame px; picture pure black). Black ground itself is inferred, not said.
+2. Type a short word with the Type tool and choose a flowing script font (said only that a different font is picked; "flowing script" and the weight are inferred from the result picture). The word here is a two-letter greeting. Centre it (inferred from the later result).
+3. Select the Pen tool and draw over the letters as separate open paths, one path per pen stroke (said). Click for a corner point, click-and-drag for a curve point (said). Before the first path, turn Fill off and Stroke on (said; toolbar shown). Stroke colour white, width 2.9 px (shown toolbar "2.9 px", white swatch in Shape 1's Stroke).
+   - Each path must be started as a new shape inside the same layer: deselect the path (or click the layer) before the next first point (said, "within the same layer… start another shape"). Result: five shapes in one layer (shown).
+   - Paths run in natural writing order; the author mentions they will be re-ordered next.
+4. Delete the text layer's text but keep the shape layer (said; the text is gone).
+5. With the shape layer open, Add > Trim Paths (said that trim paths is added; menu not on screen, so the path "Add > Trim Paths" is inferred). One Trim Paths 1 sits below the five shapes (shown).
+6. Keyframe End (said): the narrator says to set a key somewhere later and change the first value to zero. Result: End 0 % at the first key (shown, reads 0.0 %) and 100 % at the playhead after the second key (shown). The reveal therefore runs 0 → 100 %.
+7. Set Trim Multiple Shapes to Individually (said; shown), so the five strokes draw one after the other and not all at once.
+8. Re-order the five shapes in the stack so the strokes draw in writing order. The author's final stack is Shape 1 at the top … Shape 5 at the bottom (shown); before it was Shape 5 at the top (shown). Narrated reason: the reveal was running from the wrong end. The top shape draws first: Shape 1 (the first path drawn) is on top, and the played loop (cut from source every 0.25 s) shows the first letter's curl, then its body, then the i last; on un-draw the first letter goes first and the i is last.
+9. Key Start too (said): 0 % at the beginning, 100 % at the end. Move both Start keys later than the End keys by about 0.34 s (said "drag them forward"; spacing measured from keys: Start keys at 0.34 s and 1.69 s, End keys at 0 s and 1.35 s). While the Start and End keys were still lined up the layer showed nothing (said).
+10. Ease the keys with a bezier curve with handle values 0.33, 0, 0, 1 (preset picked, shown, readout; the narrator only says to apply a graph and that this one looks smooth). That it went onto all four keys is inferred: no frame shows which keys were selected or the Apply press. A 0.76, 0, 0.24, 1 curve is highlighted in the panel before any Trim Paths exists; whether it was ever tried on these keys is not shown. The values 85.9 % and 97.0 % at about 48 % / 73 % through the spans match this curve, so it is on at least the keys that showed them (inferred).
+11. Pick the stroke colour: select all five shapes with Shift (said), change the stroke colour; the author starts at gold (typed value not shown; the swatch reads about 253,195,74 in the recording, a saturated mid-tone from a screen recording that may be over-saturated from a wide-gamut display, so not a target).
+12. Add Echo to the shape layer (said; shown):
+   - Echo Time: −0.013 s (shown; the sign's meaning as trailing is inferred; it is under one frame of 0.033 s) — the author's earlier trials (−0.033, 0.333, 1.033) are passed-through values.
+   - Number Of Echoes: 10 (said; shown)
+   - Starting Intensity: 0.15 (shown; it was 1.00, then 1.08 on the way, the author says "decrease it so it's more subtle"; said)
+   - Decay: 1.00 (shown; untouched)
+   - Echo Operator: Maximum (said; shown)
+13. Add Deep Glow on top of Echo (said; shown, order Echo then Deep Glow in Effect Controls):
+   - Radius: 500 first (shown); later raised to 857 (shown, readout 857.00).
+   - Exposure: 1.00 first (shown); later 1.10 (shown).
+   - Blend Mode (Style): Screen first (shown); then "Add" (shown). The narrator says to play with the blend mode; the final list shows Add.
+   - Other settings left at default (shown : Source Opacity 100 %, Unmult on, View Final Render).
+14. The author floats sliding the key set later so the full word shows longer, then drops it ("this is perfect"); the keys do not move (show the same positions). Not a step.
+15. Optional restyle at the end (said): other colours — violet typed as hex C34CFF (R195 G76 B255) (shown dialog), then a mint green (typed value not shown; recording swatch ≈ 74,252,171, wide-gamut caution as above, not a target). The stroke width was dragged to 11 px and 5.4 px as tests (shown, s645) and ended back at 2.9 px (shown source frame, panel reads 2.9).
+
+layout: Comp 1920×1080 (inferred from layer position 960,540, shown). Measured (viewer at 158.2 %, 1 comp px ≈ 0.79 px of the 1920-wide frame): the word's selection box is about 233 px wide and 152 px high (12 % of picture width × 14 % of height; measured); centred in the picture (box centre within 1 % of picture centre; measured). Stroke width 2.9 px (shown). The word is built of five open paths in one layer, one per pen stroke; the crossbar of the first letter and the i are separate strokes (measured: the i is drawn last and is the last to vanish).
+  Each stroke carries the effect: all five are in one layer, so Echo and Deep Glow act on the group as one.
+  Glow: a soft round halo of the stroke colour, centred on the word, visible out to about 190–240 px from the word's centre (about 18–22 % of picture height; measured with Radius 500 and Exposure 1.00); at Radius 857 / Exposure 1.10 it is wider and brighter. The ground outside it is flat black. No shadows, no grain.
+  Stroke core: the line itself reads pale yellow-white with a darker gold glow around it. The stroke colour is the typed gold; the light core is inferred to come from Deep Glow adding light over the thin gold line (Exposure 1.00, Screen), not from a different stroke colour.
+  Brightness: strokes read even in brightness in frames; no bright head, no visible trail (echo spacing is under a frame). Echo settings are as shown; their visible effect is slight.
+  Motion: the top shape draws first: the first letter's curl, then its body, then the i; strokes overlap somewhat in time (part of the i while the first letter's legs still draw), so it is not strictly one after another. On un-draw the first letter goes first and the i is last (whole word, first letter partly gone, only the i left). The Start trim follows 0.34 s behind the End trim, so a line of constant length travels, then the word is all there for a short moment. Speed per second is not given.
+  The finished example on screen is the author's own build, the same layer; later colour swaps are in the same layer. Gold with Radius 500 is the version in the result window; the Radius 857, Exposure 1.10, Add version is seen only with selection handles. The word in the result window is the author's own build.
+
+timing and easing: Four keys. End: 0 s (0 %) → about 1.35 s (100 %). Start: about 0.34 s (0 %) → about 1.69 s (100 %). Times measured from the key marker positions, start-to-end spans equal (1.35 s ≈ 40 frames at 29.97 fps). The curve with handles 0.33, 0, 0, 1 is shown; all four keys carrying it is inferred: a fast start and a long soft landing. The author mentions but does not do a later move of the keys.
+variations: Another colour, stroke width, blend mode (said), glow radius/exposure (said), (timing was floated, not done). The author calls out the order of strokes as something to get right.
+pitfalls: Strokes that start in the same shape will trim together; start each path as a new shape (said). If Trim Multiple Shapes stays on Simultaneously all strokes draw at once, and with Individually the stack order decides who draws first (said). If Start and End keys line up, nothing shows (said).
+build notes: Create a shape layer; add five Path groups (Shape 1–5), each with a Stroke (white, 2.9) and no fill; add Trim Paths to the layer's Contents (Trim Paths sits below the groups) and set Trim Multiple Shapes to Individually (property "Trim Multiple Shapes" = 2). Keyframe Trim Paths 1 "Start" and "End". Apply Echo (property names: Echo Time (seconds), Number Of Echoes, Starting Intensity, Decay, Echo Operator) then Deep Glow (Radius, Exposure, Style > Blend Mode). Paths must be hand-drawn; scripted, build them from the traced point lists (not given). The Flow easing is set by hand; use a temporal ease for the 0.33, 0, 0, 1 curve (see easing).
+unknowns: Font name; the exact path points; typed gold stroke value; timing figures between the keys beyond measured marker positions; whether Trim Paths direction was 100→0 or 0→100 for the Start keys (only the reading from the preview was used); the exact keys' frames after the later "move forward" step; the stroke colour of the white pre-colour paths in the result window is gold (not white).
+
 ## Counter driven by one slider on a control null
 id: 01-value-driven-counter
 revision: bec7b246
@@ -1252,83 +1310,3 @@ variations: Instead of a matte, the labels can sit underneath the bar layers in 
 pitfalls: Without the invert the word shows only inside the bar, the reverse of what is wanted. (said)
 build notes: `textLayer.setTrackMatte(segmentLayer, TrackMatteType.ALPHA_INVERTED)` (After Effects 2023 and later; it leaves the matte layer visible, which is what is wanted). In older versions place the label directly under a duplicate of the segment and set trackMatteType = ALPHA_INVERTED. Position is spatial: one KeyframeEase per key side, e.g. out `[new KeyframeEase(1430, 4)]` on the first key, in `[new KeyframeEase(18, 47)]` on the second; set the layer's inPoint to the first key time. Since the matte is the trimmed stroke, the mask grows with the fill: a word over a part of its segment not yet drawn would show early, so time each label after its segment's front has passed the word.
 unknowns: Whether After Effects' own ease would be re-tuned by Flow for a spatial property (the conversion in step 4 is inferred).
-
-## Step pictures that pop in one after another with a small bounce
-id: 03-step-icons-pop-with-bounce-in-sequence
-revision: 326c36ad
-job: step-through-process; support: list-items
-status: proven (accepted 2026-11-21)
-what it does for a beat: Brings in a row of step pictures under a timeline one by one, each growing from nothing with a slight overshoot and settle, so the eye walks the process left to right.
-what it looks like: Under a lime-and-blue phase bar on black, six cut-out pictures of a process appear left to right, each growing from a point at its centre to full size in half a second, swelling a few percent past full size and settling back.
-ingredients:
-- Scale keyframes on each picture layer — built-in
-- An "inertial bounce" expression on Scale (a widely shared expression; only its first two lines are on screen) — built-in expressions
-- Flow (keyframe-easing extension) — paid; only used to apply the ease, given below as numbers
-- Motion Tools (free extension), Sequence with offset — only used to stagger; given below as frame offsets
-- Six cut-out PNG step pictures (art, not technique)
-steps:
-1. Start from the phase-bar layout (recipe 01): 1920 x 1080 comp at 23.976 fps (narrator says 24; screen shows 23.976), black. A 60 px stroke from x 365 to 1556 at y 540, split by Trim Paths into a lime segment (#BFF06C, 0–70 %) and a pale blue one (renders #8FD3E0, 71–100 %), drawing on at frames 0–24 and 20–44. Two white labels rise above the segments (recipe 02, frames 10–22 and 32–44). (from recipes 01 and 02, where each value is cited)
-2. Place six cut-out pictures in a row under the bar, each scaled so they look alike in size, anchor at the picture's centre (default). (said in recipe 01's span; scales 26, 14, 7, 7, 8, 7 % shown; centre anchor inferred from the measured growth staying centred)
-3. Select all six, key Scale at their full size, and 12 frames earlier key Scale 0 %. (said "12 frame animation"; 0 % shown; full values shown)
-4. Ease all Scale keys with cubic-bezier 0.88, 0.14, 0.12, 0.86 (the same S-curve as the bar). (said by its preset name; numbers shown)
-   - In After Effects terms (converted, inferred): Influence 88 % on both keys, speed 0.159 x the average speed, i.e. 0.159 x (full scale ÷ 0.5 s). For a picture at 26 %: 8.3 %/s; at 7 %: 2.2 %/s.
-5. Alt/Option-click Scale's stopwatch on one picture and paste the bounce expression; then right-click Scale > Copy Expression Only and paste it onto the other five. (said; the expression's first lines shown; that all six bounce is shown by the played frames, see layout)
-   - Shown lines: `amp = .1;` and `freq = 2.0;` (shown)
-   - The rest is not on screen. The standard form of this expression, consistent with the measured bounce (inferred, decay 2.0 inferred from the measured overshoot ratio):
-     ```
-     amp = .1;
-     freq = 2.0;
-     decay = 2.0;
-     n = 0;
-     if (numKeys > 0){ n = nearestKey(time).index; if (key(n).time > time){ n--; } }
-     if (n == 0){ t = 0; } else { t = time - key(n).time; }
-     if (n > 0 && t < 1){
-       v = velocityAtTime(key(n).time - thisComp.frameDuration/10);
-       value + v*amp*Math.sin(freq*t*2*Math.PI)/Math.exp(decay*t);
-     } else { value; }
-     ```
-6. Stagger the six so the leftmost starts first and each next one 10 frames later (Motion Tools: offset 10, step 1, Sequence with the top layer first), then slide the whole group earlier. (offset 10 said and shown; still shows 1 with the cursor in the field; order said)
-   - Resulting keys: picture 1 frames 22–34, picture 2 32–44, picture 3 42–54, picture 4 52–64, picture 5 62–74, picture 6 72–84. (read from key positions, ±1 frame)
-layout: Measured on the settled result frame (comp 1920 x 1080 calibrated on the picture's borders, 1804 x 1015 px in the recording). measured: six pictures with centres at x 440, 635, 838, 1074, 1294, 1497 (22.9, 33.1, 43.7, 55.9, 67.4, 78.0 % of the width), centred about y 673–684 (62.5–63.3 % of the height); heights 131, 103, 144, 139, 129, 134 px (9.6–13.3 % of the height), widths 119, 104, 93, 160, 128, 85 px; their tops 32–60 px below the bar's bottom edge (y 570). The row spans x 380–1540, just inside the bar's ends (365–1556); the last two sit under the blue segment. The bar (thickness 5.7 % of the height, 62 % of the width, centred) and the two labels (baselines at 45.7 % of the height, about 3 % of the height tall) come from recipes 01 and 02. Background pure black; the only shadow is one baked into a packaging cut-out's PNG. Motion, measured on played frames (comp frame = recording frame − 12855, ±1; the preview plays at about real time, the pictures starting 10 recording frames apart): each picture grows about its own centre (picture 3's centre holds within 3 px at x 835–838, y 674–676). Growth for picture 1: 3 % of its height at 2 frames in, 20 % at 5, 49 % at 6, 77 % at 7, 87 % at 8, 92 % at 9, 98 % at 11, 100 % at 12. Bounce: peak overshoot about +2.5 % of the final size (picture 3: 148 against 144 px; picture 4: 164 against 160 px wide; picture 6: 137 against 134 px tall) 1–3 frames after the last key; an undershoot of about −1.5 % around 7 frames after; a second swell of about +1 % around 12–14 frames after; settled within about 16 frames. The period (about 12 frames, 0.5 s) matches freq 2. The overshoot is proportional to the speed at the last key: with this ease that speed is only 0.159 of the average, which is why the bounce is small; a different ease changes it (predicted from the expression with decay 2: +2.5 %, −1.5 %, +0.9 % at 3, 9 and 15 frames, matching the measurement).
-timing and easing: Scale 0 → full over 12 frames per picture, pictures 10 frames apart, first at frame 22 (as the lime segment finishes at 24), last settled by about frame 100. Ease cubic-bezier(0.88, 0.14, 0.12, 0.86) plus the bounce expression (amp 0.1, freq 2, decay 2 inferred). Motion blur off: the switch column is empty for all six picture layers (shown).
-variations: none given
-pitfalls: Sequence direction matters: the layer order sets which picture comes first, so put the first step on top. (said)
-build notes: Scale keys by script: `scale.setValueAtTime(t0, [0,0,0]); scale.setValueAtTime(t0 + 12*fd, [s,s,100])` (2D layers still take three values); ease with `scale.setTemporalEaseAtKey(k, [e,e,e], [e,e,e])` where `e = new KeyframeEase(0.159*s/0.5005, 88)` (one ease per dimension). Set `scale.expression` to the text in step 5. Stagger by adding 10 frames × index to each layer's key times (Motion Tools not needed). The pictures are any six cut-out PNGs of a process, scaled to the measured heights.
-unknowns: The expression's lines after `freq = 2.0;` (form and decay 2.0 inferred from the measured overshoot). The pictures' exact positions as typed values (only measured).
-
-## Small swept-head arrow that draws itself between steps
-id: 04-curved-arrow-draws-between-steps
-revision: 71fe9a82
-job: step-through-process; support: relate-things
-status: proven (accepted 2026-11-21)
-what it does for a beat: Ties a row of step images into a process: a tiny arrow draws itself between each pair just as the next step appears, so the eye is led left to right one step at a time.
-what it looks like: On a black ground, a row of six cut-out photos sits under a two-colour phase bar; between each pair a small thin white arrow (a straight shaft and a two-barb head whose barbs curl outward) draws on, shaft first, then the head flicks out from the tip. Five identical arrows appear one after another as the images pop in.
-ingredients:
-- Shape layers drawn with the Pen tool (stroke only, no fill) — built-in
-- Trim Paths (shape layer Add > Trim Paths) — built-in
-- A keyframe-easing panel extension used to apply a saved cubic curve — paid (any way of setting the same bezier ease works; see timing)
-- Pre-compose and Duplicate — built-in
-steps:
-1. With no layer selected (inferred for the shaft; said only for the head), pick the Pen tool and set fill to none and a white stroke (shown; white swatch, matching the white labels — said). Zoom the viewer to 400 % to draw (said "four"; shown reads 400%).
-   - Stroke width: 5 px first (said; shows 5 being typed into the toolbar field), then lowered to 3 px (said; shown toolbar "3 px")
-2. Draw the shaft: click once at the left, Shift-click to the right to make a straight horizontal line, in the gap between the first two images (said; shown). This makes its own shape layer.
-   - Shaft length: about 40 px in a 1920×1080 comp (measured on the result, 45 screen px at 1.127 px per comp px; 2.1 % of the picture width)
-3. Deselect, and draw the head as two more separate shape layers, one upper barb and one lower barb, each a two-point path that starts at the shaft's right end (the tip) and is bent by dragging a handle so it curls (said: a bent arrow; shown, second barb being drawn with handles out). The arrow is then three shape layers (shown layer list).
-   - Barb shape on the result: each leaves the tip at about 45° back from the shaft and curls outward so its free end points nearly straight up (upper) or down (lower); each spans about 13 px back and 13 px out from the tip; the whole head is about 26 px tall (measured)
-   - Stroke on every part: white, 3 px, butt cap, miter join, fill none (shown, Properties panel of a barb layer)
-4. On the shaft layer add Trim Paths and key Start from 100 % to 0 % over 12 frames (said; shown Start 100 % at 0:00:04:00 with nothing drawn; the full shaft at 0:00:04:12). Because the shaft was drawn left to right, this grows the shaft from the tip backwards towards the tail (shown on the played result, the line starts as a dot at the tip end and lengthens leftward).
-   - Ease both keys with the cubic curve 0.88, 0.14, 0.12, 0.86 (shown : the easing panel's curve readout; applied as "add the saved curve" — said). In After Effects terms (inferred, converted from the curve): influence 88 % on both keys, and speed at each key 0.14 ÷ 0.88 ≈ 0.16 times the average rate, not zero — for the shaft's 100 % in 12 frames that is about 32 %/s at each key. A sharp ease-in-out that still creeps at the ends; most of the move happens in the middle third
-5. On each barb layer add Trim Paths and key End from 0 % to 100 %, starting about one frame after the shaft starts and lasting about 13 frames; ease with the same curve (said: key End, move forward, add the same curve; shown two End keys on a barb, End reads 100 % after them; the 0 % start value is inferred from the played frames, where each barb grows from the tip outward). The narration and the picture disagree here: the words read as End being keyed down to zero a little later, and the head's first click as being at a barb's free end; the played frames show each barb growing out from the tip, so the picture wins — key End 0 → 100 on a path whose first vertex is the tip. Copy the Trim Paths from the first barb to the second so both open together (said).
-   - Final key times inside the arrow's own timeline (measured on the timeline, ±1 frame): shaft Start 100→0 at frames 35→47; both barbs End 0→100 at frames 36→49
-   - The author first keyed the head about 6 frames after the shaft start, then dragged it earlier "to be snappier" and then slid all keys to just before the second image's pop (said; shown versus)
-6. Select the three arrow layers and pre-compose them into one arrow comp (said; shown : the project holds a new arrow comp and the three shape layers are gone from the main comp).
-7. Duplicate the arrow precomp four times (five in all), move each copy right with Shift + arrow keys to sit in the next gap, and slide each copy later in time so it draws as the image it points to pops in (said; shown : five arrow precomp layers, staggered in-points).
-   - In-point offsets of the five copies, left to right (measured's timeline at 7.0 px per frame, ±1 frame): 0, 8, 17, 29, 39 frames
-   - So the arrows draw at about frames 35, 43, 52, 64 and 74 of the main comp (inferred from the offsets plus step 5's keys), each starting within a few frames of the pop of the image to its right (shown on the played result)
-layout: Measured on the clean result frame (crop below; comp calibrated on the black picture's own edges: 2164×1216 screen px for 1920×1080, 1.127 px per comp px). Five arrows, all the same size: length about 40 px (2.1 % of the width), head about 26 px tall (2.4 % of the height), stroke about 3.5 px rendered (3 px set), plain white (renders about 215 grey at its thin core, no glow, no shadow). All sit on one horizontal line at 63 % of the picture height (comp y about 682), the line of the image centres. Arrow centres at 28.2 %, 38.6 %, 49.0 %, 61.9 % and 73.0 % of the width — each centred in the gap between two neighbouring images, so the spacing is uneven (200, 199, 249, 213 px) because the images are unevenly spaced. Each image is roughly 100 px across (about 5 % of the width); arrows leave a clear margin of roughly 25–40 px to each image. Background flat black; nothing else in the comp affects the arrows. The phase bar, its labels and the images' pop are made outside this recipe; only the arrows are this recipe's. What the result shows of them (measured on the same crop): the bar runs from 47.4 % to 52.8 % of the height (about 5.5 % thick, centred at 50 %, so its centre is 13 % of the height above the arrows' row), lime (renders about 187, 236, 101) from 19.1 % to 62.5 % of the width and pale blue (renders about 144, 211, 223) from 63.1 % to 81.0 %, with a thin black gap between (colour warning: these two are recording colours, and a wide-gamut screen recording shows mid-tone greens and blues more saturated than the render; the lime's typed value, #BFF06C according to the check of the bar's own recipe, not shown in this window, comes through almost unchanged, while the pale blue's typed value was never shown, so treat its reading as approximate and match lightness rather than hue). Above it sit two one-word white labels in a bold sans, each left-aligned with its segment's left edge, about 3.0 % of the height tall (cap top to baseline) with their tops at 42.8 %.
-  Motion: each arrow draws left-to-right in reading order of the row, but each arrow itself grows from its tip backwards (shaft) and then its head opens from the tip outward (barbs); the shaft takes 12 frames and the head 13, overlapping almost entirely, with a sharp ease so each part creeps at both ends (about a sixth of its average speed) and snaps through the middle. No motion blur.
-timing and easing: Shaft Trim Start 100→0 % over 12 frames; barb Trim End 0→100 % over 13 frames starting 1 frame after the shaft; cubic ease 0.88, 0.14, 0.12, 0.86 on all keys (inferred conversion: 88 % influence each side, speed ≈ 0.16 × the average rate — about 32 %/s for the shaft, 29 %/s for the barbs). Copies offset 0, 8, 17, 29, 39 frames. Comp 23.976 fps on screen (the narrator calls it 24).
-variations: The shaft can be drawn to grow either way (the author picks one, said); the head can be straight barbs (click with Shift for straight) instead of curled ones (said). Copies can be placed wherever a new element appears (said).
-pitfalls: Draw the head with nothing selected so each barb is its own path/layer (said). Keep the stroke thin (3 px) so the arrow does not look heavy (said).
-build notes: Three shape layers each with one Path, one Stroke ("ADBE Vector Graphic - Stroke", width 3, colour white, Line Cap Butt, Line Join Miter) and one Trim Paths ("ADBE Vector Filter - Trim"); shaft path vertices (−20, 0) → (20, 0); barbs from (20, 0) with a curved handle to about (7, −13) and (7, 13) (inferred from the measured shape). Set ease (inferred conversion of the shown curve) with KeyframeEase(speed, 88) on both sides of each key, speed = 0.159 × 100 % ÷ the move's duration in seconds: about 31.8 for the shaft (12 frames) and 29.3 for the barbs (13 frames). KeyframeEase(0, 88) would give a harder ease than the one shown. Pre-compose the three layers at comp size, duplicate the precomp and set each copy's startTime to 0, 8, 17, 29, 39 frames and its position to the gap centres. In a later step of this video the background turns pale (06) and the arrows, still white, disappear there — change their stroke to the label colour if you use a pale ground.
-unknowns: The barbs' exact vertex and handle positions (only their drawn result is measured); the arrow precomp's size and duration (it keeps the comp's 23.976 fps, shown in the project panel); the exact first value of the barbs' End key (0 % inferred from the played draw); the exact image-pop frames each copy was aligned to (aligned by eye).

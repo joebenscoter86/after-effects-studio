@@ -238,3 +238,82 @@ test('dry run prints the plan and starts nothing', async () => {
   assert.ok(logs.some((l) => l.includes('01') && l.includes('sonnet')));
   assert.ok(!fs.existsSync(path.join(dir, 'runs.jsonl')));
 });
+
+test('material the author gave beside the video (extras.md) is named to writers and checkers, and only when it exists', async () => {
+  const dir = study(['01']);
+  const write = ({ unit }) => fs.writeFileSync(path.join(dir, 'recipes', `${unit}-trick.md`), `## Technique ${unit}\n`);
+  const without = fakeClaude(write);
+  await runStage('distil', { study: dir }, { ...quiet, claude: without.claude });
+  assert.ok(!without.calls[0].input.includes('extras.md'), 'no extras note without the file');
+
+  fs.writeFileSync(path.join(dir, 'extras.md'), '# Beside the video\n\nPinned comment: an expression.\n');
+  for (const stage of ['distil', 'check']) {
+    const { claude, calls } = fakeClaude(write);
+    await runStage(stage, { study: dir, only: ['01'] }, { ...quiet, claude });
+    const runBlock = calls[0].input.slice(calls[0].input.indexOf('## This run'));
+    assert.ok(runBlock.includes(`\`${path.join(dir, 'extras.md')}\``), `${stage} run names extras.md`);
+    assert.ok(/said \(pinned comment\)/.test(runBlock), `${stage} run says how to mark a step taken from it`);
+  }
+});
+
+test('every check after round 2 looks only at the lines changed since the check before it', async () => {
+  const dir = study(['01']);
+  fs.writeFileSync(path.join(dir, 'recipes', '01-trick.md'), '## Technique 01\n');
+  for (const [prev, round] of [[2, 3], [3, 4], [4, 5]]) {
+    fs.writeFileSync(path.join(dir, 'checks', '01.md'), `round: ${prev}\nverdict: fail\n`);
+    const t = Date.now() / 1000 + 5;
+    fs.utimesSync(path.join(dir, 'recipes', '01-trick.md'), t, t);
+    const { claude, calls } = fakeClaude(() => {});
+    await runStage('check', { study: dir, only: ['01'] }, { ...quiet, claude });
+    const runBlock = calls[0].input.slice(calls[0].input.indexOf('## This run'));
+    assert.ok(runBlock.includes(`\`round: ${round} (changed lines only)\``), `round ${round} is marked changed lines only`);
+    assert.ok(runBlock.includes(`Check only the lines changed since round ${prev}.`), `round ${round} checks the lines changed since round ${prev}`);
+  }
+});
+
+test('proofs are built at 9:16, the phone frame the owner reviews on: the art, script and comp rules all say so', () => {
+  for (const f of ['prove-author.md', 'prove.md', 'art.md']) {
+    const text = fs.readFileSync(path.join(PROMPTS, f), 'utf8');
+    assert.ok(text.includes('1080 by 1920'), `${f} names the 1080 by 1920 frame`);
+    assert.ok(!text.includes('1920 by 1080'), `${f} no longer asks for 1920 by 1080`);
+  }
+});
+
+test('art runs may call the image generator under the name a headless run gives it', () => {
+  const args = claudeArgs('art');
+  const allowed = args[args.indexOf('--allowedTools') + 1].split(',');
+  assert.ok(allowed.includes('mcp__claude_ai_Higgsfield'), 'headless name of the Higgsfield connector is allowed');
+  assert.ok(!args.includes('--strict-mcp-config'), 'connected tools are loaded for art');
+});
+
+test('a build run is told its own script by name, never the 01 example that every scripts folder holds', async () => {
+  const dir = study(['01']);
+  fs.writeFileSync(path.join(dir, 'recipes', '01-zigzag.md'), '## Technique 01\n');
+  const scripts = path.join(dir, 'scripts');
+  fs.mkdirSync(scripts);
+  fs.writeFileSync(path.join(scripts, '01-dotted-line.jsx'), '// the finished example\n');
+  fs.writeFileSync(path.join(scripts, '01-zigzag.jsx'), '// technique 01\n');
+  const { claude, calls } = fakeClaude(() => {});
+  await runStage('prove-run', { study: dir, scripts }, { ...quiet, claude });
+  const runBlock = calls[0].input.slice(calls[0].input.indexOf('## This run'));
+  assert.ok(runBlock.includes(`- Script: \`${path.join(scripts, '01-zigzag.jsx')}\``), 'names the technique script');
+  assert.ok(!runBlock.includes(`- Script: \`${path.join(scripts, '01-dotted-line.jsx')}\``), 'does not give the example as the script');
+});
+
+test('a rebuild after a review that did not match is pointed at that review', async () => {
+  const dir = study(['01']);
+  fs.writeFileSync(path.join(dir, 'recipes', '01-zigzag.md'), '## Technique 01\n');
+  const scripts = path.join(dir, 'scripts');
+  fs.mkdirSync(scripts);
+  fs.writeFileSync(path.join(scripts, '01-zigzag.jsx'), '// technique 01\n');
+  const { claude, calls } = fakeClaude(() => {});
+  await runStage('prove-run', { study: dir, scripts }, { ...quiet, claude });
+  assert.ok(!calls[0].input.includes('review.md'), 'a first build is not sent to a review');
+  fs.mkdirSync(path.join(dir, 'proof', '01'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'proof', '01', 'review.md'), 'verdict: partly\nto fix: thinner line\n');
+  const again = fakeClaude(() => {});
+  await runStage('prove-run', { study: dir, scripts, only: ['01'] }, { ...quiet, claude: again.claude });
+  const runBlock = again.calls[0].input.slice(again.calls[0].input.indexOf('## This run'));
+  assert.ok(runBlock.includes(`\`${path.join(dir, 'proof', '01', 'review.md')}\``), 'names the review');
+  assert.match(runBlock, /to fix/);
+});

@@ -160,6 +160,21 @@ describe("findTechniques: the rules of catalog.mjs", () => {
     expect(out.results[0].fit).toMatch(/taught 2 times/);
     expect(findTechniques(cat, ask({ exclude: ["01-a"] })).results.map((r) => r.id)).toEqual(["03-plain"]);
   });
+
+  // A variant can be learned for another beat than its parent (a bounce on step pictures, then the same bounce on a
+  // title): it is found for its own job when its parent does not serve that job, and says whose variant it is.
+  it("a variant whose job its parent does not serve is a candidate on its own, naming its parent", () => {
+    const cat = catalogOf([
+      { slug: "a", ...P, job: "point-at-detail", variants: ["02-v", "03-w"] },
+      { slug: "v", ...P, variant_of: "01-a" },
+      { slug: "w", ...P, job: "point-at-detail", support: ["before-after"], variant_of: "01-a" },
+    ]);
+    const out = findTechniques(cat, ask());
+    expect(out.results.map((r) => r.id)).toEqual(["02-v", "03-w"]);
+    expect(out.results[0].variant_of).toBe("01-a");
+    expect(out.results[0].fit).toMatch(/variant of 01-a/);
+    expect(findTechniques(cat, ask({ job: "point-at-detail" })).results.map((r) => r.id)).toEqual(["01-a"]);
+  });
 });
 
 describe("the shipped arsenal", () => {
@@ -184,6 +199,19 @@ describe("the shipped arsenal", () => {
   // explainer cookbook piece 1 filled land-number; move this to another empty job when it fills.
   it("count-things returns none", () => {
     expect(findTechniques(loadCatalog(LIB), { vocab: "jobs-v1", job: "count-things" }).results).toEqual([]);
+  });
+
+  it("every variant can be found for each of its jobs, as itself or through its parent", () => {
+    const cat = loadCatalog(LIB);
+    const variants = cat.entries.filter((r) => r.variant_of && r.kind === "technique");
+    expect(variants.length).toBeGreaterThan(0);
+    for (const v of variants) {
+      for (const job of [v.job!, ...v.support]) {
+        const got = findTechniques(cat, { vocab: "jobs-v1", job, constraints: { status: "any" }, limit: 500 }).results.map((r) => r.id);
+        expect(got.includes(v.id) || got.includes(v.variant_of!), `${v.id} for ${job}`).toBe(true);
+      }
+    }
+    expect(findTechniques(cat, { vocab: "jobs-v1", job: "reveal-headline", limit: 500 }).results.map((r) => r.id)).toContain("01-bounce-keyframes-word-stagger");
   });
 
   it("make-it-pop is refused with the valid job ids", () => {
@@ -385,6 +413,21 @@ describe("across levels: the rules", () => {
   it("browse with no level shows every level, styles first, each entry once; provides filters", () => {
     expect(browseCatalog(catalog()).tiles.map((t) => t.id)).toEqual(["style-glassworld", "style-poster", "01-glassrecipe", "02-paper"]);
     expect(browseCatalog(catalog(), { provides: ["material: paper"] }).tiles.map((t) => t.id)).toEqual(["style-poster", "02-paper"]);
+  });
+
+  it("a variant stands behind its parent unless it alone gives what was asked; then it is found and browsed, naming its parent", () => {
+    const cat = catalog();
+    cat.entries[0].variants = ["07-varpaper"];
+    cat.entries.push(rec(7, "varpaper", { status: "proven", provides: ["material: paper", "material: glass"], variant_of: "01-glassrecipe", still: { path: "c.jpg", sha256: "x" } }));
+    expect(findByProvides(cat, { provides: ["material: glass"] }).results.map((r) => r.id)).not.toContain("07-varpaper");
+    const paper = findByProvides(cat, { provides: ["material: paper"], level: "recipe" });
+    expect(paper.results.map((r) => r.id)).toEqual(["02-paper", "07-varpaper"]);
+    expect(paper.results[1].variant_of).toBe("01-glassrecipe");
+    expect(paper.results[1].fit).toMatch(/variant of 01-glassrecipe/);
+    expect(browseCatalog(cat).tiles.map((t) => t.id)).not.toContain("07-varpaper");
+    const tiles = browseCatalog(cat, { provides: ["material: paper"] }).tiles;
+    expect(tiles.map((t) => t.id)).toEqual(["style-poster", "02-paper", "07-varpaper"]);
+    expect(tiles[2].variant_of).toBe("01-glassrecipe");
   });
 
   it("browse pages: page size, numbering across pages, the last page when asked past it", () => {

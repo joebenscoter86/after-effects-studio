@@ -1,6 +1,6 @@
 {
   "vocab": "jobs-v1",
-  "tagged": "2026-11-21",
+  "tagged": "2026-11-25",
   "recipes": {
     "YBeMmC43Q1U#01": {
       "id": "01-dotted-stroke",
@@ -2165,6 +2165,119 @@
       "difficulty": 3,
       "group": "trim paths draw-on",
       "why": "points at a region on an old map with Multiply washes that look printed in and draws a country outline on cue, for \"here is where it happened\" beats"
+    },
+    "201iywIy74c#01": {
+      "id": "01-bounce-keyframes-word-stagger",
+      "kind": "technique",
+      "job": "reveal-headline",
+      "support": [
+        "add-impact"
+      ],
+      "mood": [
+        "clean",
+        "bold",
+        "playful"
+      ],
+      "needs": [
+        "type"
+      ],
+      "duration": 3,
+      "motion": "one-shot",
+      "difficulty": 3,
+      "group": "time stagger",
+      "why": "'words that snap in quickly, spring slightly past their rest spot, and swap out for the next word': a word drops in with an inertial bounce on Position, then a second and third word follow a frame apart",
+      "variant_of": "nHh0NRo8G2U#03"
+    },
+    "201iywIy74c#02": {
+      "id": "02-repeater-hypnotic-background",
+      "kind": "technique",
+      "job": "fill-the-backdrop",
+      "support": [
+        "keep-it-alive",
+        "reveal-headline"
+      ],
+      "mood": [
+        "hypnotic",
+        "abstract",
+        "soft"
+      ],
+      "needs": [
+        "shapes"
+      ],
+      "duration": 6,
+      "motion": "one-shot",
+      "difficulty": 3,
+      "group": "duplicate-and-step ring",
+      "why": "'A calm, minimal animated backdrop for a title or explainer': one gradient disc copied by a Repeater whose own scale and rotation are keyed, so the rings swell and twist behind text that pops in"
+    },
+    "201iywIy74c#03": {
+      "id": "03-radial-blur-long-shadow",
+      "kind": "technique",
+      "job": "add-depth",
+      "support": [
+        "finish-the-look"
+      ],
+      "mood": [
+        "light",
+        "editorial",
+        "calm"
+      ],
+      "needs": [
+        "shapes"
+      ],
+      "duration": 4,
+      "motion": "still",
+      "difficulty": 2,
+      "group": "radial-blur shadow",
+      "why": "'lift off the page with a long, soft, directional shadow, as a stronger and softer alternative to the stock drop shadow'",
+      "variant_of": "YBeMmC43Q1U#12"
+    },
+    "201iywIy74c#04": {
+      "id": "04-echo-stroke-text-reveal",
+      "kind": "technique",
+      "job": "reveal-headline",
+      "support": [
+        "light-the-hero",
+        "add-impact"
+      ],
+      "mood": [
+        "glow",
+        "dark",
+        "sleek"
+      ],
+      "needs": [
+        "type",
+        "shapes"
+      ],
+      "duration": 2,
+      "motion": "one-shot",
+      "difficulty": 3,
+      "group": "trim paths draw-on",
+      "why": "'a short word (a greeting, a title) should look written by a glowing line on a dark ground': pen-traced strokes in one layer drawn on and off one at a time with Trim Paths set to Individually, under Echo and a deep glow"
+    },
+    "201iywIy74c#05": {
+      "id": "05-glass-bar-refraction",
+      "kind": "technique",
+      "job": "fill-the-backdrop",
+      "support": [
+        "add-depth",
+        "reveal-headline"
+      ],
+      "mood": [
+        "premium",
+        "soft",
+        "dark",
+        "glow"
+      ],
+      "needs": [
+        "shapes",
+        "type"
+      ],
+      "duration": 6,
+      "motion": "one-shot",
+      "difficulty": 3,
+      "group": "frosted-glass refraction",
+      "why": "'A premium title or UI backdrop: a pill-shaped pane of frosted glass sits over a soft, flowing colour field and bends what lies behind it': a spinning blurred, wave-warped gradient star seen through an adjustment-layer bar that blurs, brightens and displaces it using a hidden inner-glow copy as the map"
     }
   }
 }

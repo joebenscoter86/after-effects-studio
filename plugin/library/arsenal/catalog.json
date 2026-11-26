@@ -1,6 +1,6 @@
 {
  "vocab": "jobs-v1",
- "version": "48668ceb",
+ "version": "3829f9f5",
  "jobs": [
   "land-number",
   "count-things",
@@ -1784,6 +1784,231 @@
    }
   },
   {
+   "id": "01-bounce-keyframes-word-stagger",
+   "revision": "d073f30e",
+   "level": "recipe",
+   "name": "Overshoot bounce on a word's drop-in, with a second word staggered behind it",
+   "line": "Reach for it when a title or intro line needs words that snap in quickly, spring slightly past their rest spot, and swap out for the next word without a gap. It is a cheap way to get a lively, smooth text intro with only a few keys.",
+   "status": "proven",
+   "kind": "technique",
+   "job": "reveal-headline",
+   "support": [
+    "add-impact"
+   ],
+   "mood": [
+    "clean",
+    "bold",
+    "playful"
+   ],
+   "needs": [
+    "type"
+   ],
+   "duration": 3,
+   "motion": "one-shot",
+   "difficulty": 3,
+   "taught_by": 6,
+   "variant_of": "03-step-icons-pop-with-bounce-in-sequence",
+   "variants": [],
+   "provides": [
+    "motion: bounce",
+    "motion: stagger",
+    "type: reveal"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
+   "section": {
+    "document": "arsenal-line-2",
+    "heading": "Overshoot bounce on a word's drop-in, with a second word staggered behind it"
+   },
+   "still": {
+    "path": "arsenal/stills/01-bounce-keyframes-word-stagger.jpg",
+    "sha256": "07754aaf134863f7e84b6c070b2431148e10a8f5931de898d3bc674bc0346bc9"
+   }
+  },
+  {
+   "id": "02-repeater-hypnotic-background",
+   "revision": "004bb5ad",
+   "level": "recipe",
+   "name": "Concentric gradient discs from a Repeater with eased scale and rotation",
+   "line": "A calm, minimal animated backdrop for a title or explainer; it sits behind text that pops in with an overshoot bounce.",
+   "status": "proven",
+   "kind": "technique",
+   "job": "fill-the-backdrop",
+   "support": [
+    "keep-it-alive",
+    "reveal-headline"
+   ],
+   "mood": [
+    "hypnotic",
+    "abstract",
+    "soft"
+   ],
+   "needs": [
+    "shapes"
+   ],
+   "duration": 6,
+   "motion": "one-shot",
+   "difficulty": 3,
+   "taught_by": 7,
+   "variants": [],
+   "provides": [
+    "backdrop: shapes",
+    "backdrop: pattern"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
+   "section": {
+    "document": "arsenal-picture",
+    "heading": "Concentric gradient discs from a Repeater with eased scale and rotation"
+   },
+   "still": {
+    "path": "arsenal/stills/02-repeater-hypnotic-background.jpg",
+    "sha256": "5dde5ad909794518439625a719184a6d05090919a00f1bd640e998298f8757ef"
+   }
+  },
+  {
+   "id": "03-radial-blur-long-shadow",
+   "revision": "7b76003e",
+   "level": "recipe",
+   "name": "Long soft shadow from a blacked-out copy and a radial blur",
+   "line": "Reach for it when a card, thumbnail or panel on a plain light ground needs to lift off the page with a long, soft, directional shadow, as a stronger and softer alternative to the stock drop shadow.",
+   "status": "proven",
+   "kind": "technique",
+   "job": "add-depth",
+   "support": [
+    "finish-the-look"
+   ],
+   "mood": [
+    "light",
+    "editorial",
+    "calm"
+   ],
+   "needs": [
+    "shapes"
+   ],
+   "duration": 4,
+   "motion": "still",
+   "difficulty": 2,
+   "taught_by": 3,
+   "variant_of": "12-long-soft-shadow",
+   "variants": [],
+   "provides": [
+    "depth: shadow"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
+   "section": {
+    "document": "arsenal-picture",
+    "heading": "Long soft shadow from a blacked-out copy and a radial blur"
+   },
+   "still": {
+    "path": "arsenal/stills/03-radial-blur-long-shadow.jpg",
+    "sha256": "89530a7aa41b7ad1f988e97541c49514a790f8ab0d3f0bd89e06f163efefc09f"
+   }
+  },
+  {
+   "id": "04-echo-stroke-text-reveal",
+   "revision": "e51aa5c0",
+   "level": "recipe",
+   "name": "Hand-traced script word that draws itself and glows",
+   "line": "A designer reaches for this when a short word (a greeting, a title) should look written by a glowing line on a dark ground.",
+   "status": "proven",
+   "kind": "technique",
+   "job": "reveal-headline",
+   "support": [
+    "light-the-hero",
+    "add-impact"
+   ],
+   "mood": [
+    "glow",
+    "dark",
+    "sleek"
+   ],
+   "needs": [
+    "type",
+    "shapes"
+   ],
+   "duration": 2,
+   "motion": "one-shot",
+   "difficulty": 3,
+   "taught_by": 7,
+   "variants": [],
+   "provides": [
+    "motion: draw-on",
+    "type: handwritten",
+    "finish: glow"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
+   "section": {
+    "document": "arsenal-line",
+    "heading": "Hand-traced script word that draws itself and glows"
+   },
+   "still": {
+    "path": "arsenal/stills/04-echo-stroke-text-reveal.jpg",
+    "sha256": "2414db998137c788fdc63a9f9efcf08d64f790738b53f88e32827f074e8ad4dd"
+   }
+  },
+  {
+   "id": "05-glass-bar-refraction",
+   "revision": "31249974",
+   "level": "recipe",
+   "name": "Frosted glass bar refracting a smeared gradient star",
+   "line": "A premium title or UI backdrop: a pill-shaped pane of frosted glass sits over a soft, flowing colour field and bends what lies behind it. Reach for it when text needs a rich, calm, frosted-glass ground.",
+   "status": "proven",
+   "kind": "technique",
+   "job": "fill-the-backdrop",
+   "support": [
+    "add-depth",
+    "reveal-headline"
+   ],
+   "mood": [
+    "premium",
+    "soft",
+    "dark",
+    "glow"
+   ],
+   "needs": [
+    "shapes",
+    "type"
+   ],
+   "duration": 6,
+   "motion": "one-shot",
+   "difficulty": 3,
+   "taught_by": 1,
+   "variants": [],
+   "provides": [
+    "material: glass",
+    "backdrop: shapes",
+    "finish: blur"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
+   "section": {
+    "document": "arsenal-picture",
+    "heading": "Frosted glass bar refracting a smeared gradient star"
+   },
+   "still": {
+    "path": "arsenal/stills/05-glass-bar-refraction.jpg",
+    "sha256": "48b3613cb167d34be747693c5e62df9c491b1389b310a3187f6a66e27ee7f493"
+   }
+  },
+  {
    "id": "01-shadow-map-overlay",
    "revision": "73f75aaa",
    "level": "recipe",
@@ -1894,7 +2119,7 @@
    "duration": 6,
    "motion": "loop",
    "difficulty": 3,
-   "taught_by": 6,
+   "taught_by": 7,
    "variant_of": "04-carousel-by-rotation",
    "variants": [],
    "provides": [
@@ -2924,7 +3149,7 @@
    "duration": 1,
    "motion": "one-shot",
    "difficulty": 2,
-   "taught_by": 5,
+   "taught_by": 6,
    "variants": [],
    "provides": [
     "motion: stagger",
@@ -3055,7 +3280,7 @@
    "duration": 1,
    "motion": "one-shot",
    "difficulty": 3,
-   "taught_by": 5,
+   "taught_by": 6,
    "variants": [],
    "provides": [
     "transition: slide",
@@ -3225,7 +3450,7 @@
    "duration": 4,
    "motion": "one-shot",
    "difficulty": 2,
-   "taught_by": 6,
+   "taught_by": 7,
    "variants": [
     "03-graphics-orbit-a-real-object",
     "04-duplicate-cards-round-the-pivot"
@@ -3268,7 +3493,7 @@
    "duration": 0,
    "motion": "one-shot",
    "difficulty": 1,
-   "taught_by": 5,
+   "taught_by": 6,
    "variants": [],
    "provides": [
     "motion: stagger"
@@ -3309,7 +3534,7 @@
    "duration": 5,
    "motion": "loop",
    "difficulty": 2,
-   "taught_by": 6,
+   "taught_by": 7,
    "variants": [
     "07-3d-spinning-box-of-cards",
     "10-inner-ring-carousel"
@@ -3562,8 +3787,10 @@
    "duration": 4,
    "motion": "still",
    "difficulty": 2,
-   "taught_by": 2,
-   "variants": [],
+   "taught_by": 3,
+   "variants": [
+    "03-radial-blur-long-shadow"
+   ],
    "provides": [
     "depth: shadow"
    ],
@@ -3689,7 +3916,7 @@
    "duration": 0,
    "motion": "still",
    "difficulty": 1,
-   "taught_by": 2,
+   "taught_by": 3,
    "variants": [],
    "provides": [],
    "cost": {
@@ -4271,7 +4498,7 @@
    "duration": 6,
    "motion": "loop",
    "difficulty": 3,
-   "taught_by": 6,
+   "taught_by": 7,
    "variant_of": "04-carousel-by-rotation",
    "variants": [],
    "provides": [
@@ -4400,7 +4627,7 @@
    "duration": 5,
    "motion": "loop",
    "difficulty": 3,
-   "taught_by": 6,
+   "taught_by": 7,
    "variant_of": "06-3d-orbit-rings",
    "variants": [],
    "provides": [
@@ -4532,7 +4759,7 @@
    "duration": 6,
    "motion": "loop",
    "difficulty": 2,
-   "taught_by": 6,
+   "taught_by": 7,
    "variant_of": "06-3d-orbit-rings",
    "variants": [],
    "provides": [
@@ -5307,7 +5534,7 @@
    "composes": [],
    "shelf": "shipped",
    "section": {
-    "document": "arsenal-picture",
+    "document": "arsenal-picture-2",
     "heading": "Rain slanted to match the wind"
    },
    "still": {
@@ -5348,7 +5575,7 @@
    "composes": [],
    "shelf": "shipped",
    "section": {
-    "document": "arsenal-picture",
+    "document": "arsenal-picture-2",
     "heading": "Film-stock grain and mood finish on a top adjustment layer"
    },
    "still": {
@@ -5434,7 +5661,7 @@
    "composes": [],
    "shelf": "shipped",
    "section": {
-    "document": "arsenal-picture",
+    "document": "arsenal-picture-2",
     "heading": "Side-light a face with a matted Curves layer"
    },
    "still": {
@@ -5466,7 +5693,7 @@
    "duration": 2,
    "motion": "one-shot",
    "difficulty": 3,
-   "taught_by": 6,
+   "taught_by": 7,
    "variants": [],
    "provides": [
     "motion: draw-on",
@@ -5552,8 +5779,10 @@
    "duration": 4,
    "motion": "one-shot",
    "difficulty": 2,
-   "taught_by": 5,
-   "variants": [],
+   "taught_by": 6,
+   "variants": [
+    "01-bounce-keyframes-word-stagger"
+   ],
    "provides": [
     "motion: bounce",
     "motion: stagger"
@@ -5564,7 +5793,7 @@
    "composes": [],
    "shelf": "shipped",
    "section": {
-    "document": "arsenal-line",
+    "document": "arsenal-line-2",
     "heading": "Step pictures that pop in one after another with a small bounce"
    },
    "still": {
@@ -5595,7 +5824,7 @@
    "duration": 3,
    "motion": "one-shot",
    "difficulty": 2,
-   "taught_by": 6,
+   "taught_by": 7,
    "variants": [],
    "provides": [
     "motion: draw-on"
@@ -5606,7 +5835,7 @@
    "composes": [],
    "shelf": "shipped",
    "section": {
-    "document": "arsenal-line",
+    "document": "arsenal-line-2",
     "heading": "Small swept-head arrow that draws itself between steps"
    },
    "still": {
@@ -5724,7 +5953,7 @@
    "duration": 3,
    "motion": "one-shot",
    "difficulty": 2,
-   "taught_by": 6,
+   "taught_by": 7,
    "variants": [],
    "provides": [
     "motion: chart",
@@ -5767,7 +5996,7 @@
    "duration": 1,
    "motion": "one-shot",
    "difficulty": 1,
-   "taught_by": 6,
+   "taught_by": 7,
    "variants": [],
    "provides": [
     "motion: draw-on",
@@ -5855,7 +6084,7 @@
    "duration": 2,
    "motion": "one-shot",
    "difficulty": 3,
-   "taught_by": 6,
+   "taught_by": 7,
    "variants": [],
    "provides": [
     "motion: chart"
@@ -5897,7 +6126,7 @@
    "duration": 3,
    "motion": "one-shot",
    "difficulty": 2,
-   "taught_by": 5,
+   "taught_by": 6,
    "variants": [],
    "provides": [
     "type: label",
@@ -6072,7 +6301,7 @@
    "duration": 3,
    "motion": "one-shot",
    "difficulty": 3,
-   "taught_by": 6,
+   "taught_by": 7,
    "variants": [],
    "provides": [
     "environment: map",

@@ -1,6 +1,6 @@
 {
   "vocab": "jobs-v1",
-  "version": "e9551509",
+  "version": "11551809",
   "jobs": [
     "land-number",
     "count-things",
@@ -31,6 +31,184 @@
     "keep-it-alive"
   ],
   "recipes": [
+    {
+      "id": "01-bounce-keyframes-word-stagger",
+      "video": "201iywIy74c",
+      "n": 1,
+      "name": "Overshoot bounce on a word's drop-in, with a second word staggered behind it",
+      "line": "Reach for it when a title or intro line needs words that snap in quickly, spring slightly past their rest spot, and swap out for the next word without a gap. It is a cheap way to get a lively, smooth text intro with only a few keys.",
+      "status": "proven",
+      "kind": "technique",
+      "job": "reveal-headline",
+      "support": [
+        "add-impact"
+      ],
+      "mood": [
+        "clean",
+        "bold",
+        "playful"
+      ],
+      "needs": [
+        "type"
+      ],
+      "duration": 3,
+      "motion": "one-shot",
+      "difficulty": 3,
+      "group": "time stagger",
+      "why": "'words that snap in quickly, spring slightly past their rest spot, and swap out for the next word': a word drops in with an inertial bounce on Position, then a second and third word follow a frame apart",
+      "section": {
+        "file": "201iywIy74c.md",
+        "heading": "Overshoot bounce on a word's drop-in, with a second word staggered behind it"
+      },
+      "revision": "d073f30e",
+      "still": "quality/renders/channel-study/201iywIy74c/proof/01/build.png",
+      "taught_by": 6,
+      "variant_of": "03-step-icons-pop-with-bounce-in-sequence",
+      "variants": []
+    },
+    {
+      "id": "02-repeater-hypnotic-background",
+      "video": "201iywIy74c",
+      "n": 2,
+      "name": "Concentric gradient discs from a Repeater with eased scale and rotation",
+      "line": "A calm, minimal animated backdrop for a title or explainer; it sits behind text that pops in with an overshoot bounce.",
+      "status": "proven",
+      "kind": "technique",
+      "job": "fill-the-backdrop",
+      "support": [
+        "keep-it-alive",
+        "reveal-headline"
+      ],
+      "mood": [
+        "hypnotic",
+        "abstract",
+        "soft"
+      ],
+      "needs": [
+        "shapes"
+      ],
+      "duration": 6,
+      "motion": "one-shot",
+      "difficulty": 3,
+      "group": "duplicate-and-step ring",
+      "why": "'A calm, minimal animated backdrop for a title or explainer': one gradient disc copied by a Repeater whose own scale and rotation are keyed, so the rings swell and twist behind text that pops in",
+      "section": {
+        "file": "201iywIy74c.md",
+        "heading": "Concentric gradient discs from a Repeater with eased scale and rotation"
+      },
+      "revision": "004bb5ad",
+      "still": "quality/renders/channel-study/201iywIy74c/proof/02/build.png",
+      "taught_by": 7,
+      "variants": []
+    },
+    {
+      "id": "03-radial-blur-long-shadow",
+      "video": "201iywIy74c",
+      "n": 3,
+      "name": "Long soft shadow from a blacked-out copy and a radial blur",
+      "line": "Reach for it when a card, thumbnail or panel on a plain light ground needs to lift off the page with a long, soft, directional shadow, as a stronger and softer alternative to the stock drop shadow.",
+      "status": "proven",
+      "kind": "technique",
+      "job": "add-depth",
+      "support": [
+        "finish-the-look"
+      ],
+      "mood": [
+        "light",
+        "editorial",
+        "calm"
+      ],
+      "needs": [
+        "shapes"
+      ],
+      "duration": 4,
+      "motion": "still",
+      "difficulty": 2,
+      "group": "radial-blur shadow",
+      "why": "'lift off the page with a long, soft, directional shadow, as a stronger and softer alternative to the stock drop shadow'",
+      "section": {
+        "file": "201iywIy74c.md",
+        "heading": "Long soft shadow from a blacked-out copy and a radial blur"
+      },
+      "revision": "7b76003e",
+      "still": "quality/renders/channel-study/201iywIy74c/proof/03/build.png",
+      "taught_by": 3,
+      "variant_of": "12-long-soft-shadow",
+      "variants": []
+    },
+    {
+      "id": "04-echo-stroke-text-reveal",
+      "video": "201iywIy74c",
+      "n": 4,
+      "name": "Hand-traced script word that draws itself and glows",
+      "line": "A designer reaches for this when a short word (a greeting, a title) should look written by a glowing line on a dark ground.",
+      "status": "proven",
+      "kind": "technique",
+      "job": "reveal-headline",
+      "support": [
+        "light-the-hero",
+        "add-impact"
+      ],
+      "mood": [
+        "glow",
+        "dark",
+        "sleek"
+      ],
+      "needs": [
+        "type",
+        "shapes"
+      ],
+      "duration": 2,
+      "motion": "one-shot",
+      "difficulty": 3,
+      "group": "trim paths draw-on",
+      "why": "'a short word (a greeting, a title) should look written by a glowing line on a dark ground': pen-traced strokes in one layer drawn on and off one at a time with Trim Paths set to Individually, under Echo and a deep glow",
+      "section": {
+        "file": "201iywIy74c.md",
+        "heading": "Hand-traced script word that draws itself and glows"
+      },
+      "revision": "e51aa5c0",
+      "still": "quality/renders/channel-study/201iywIy74c/proof/04/build.png",
+      "taught_by": 7,
+      "variants": []
+    },
+    {
+      "id": "05-glass-bar-refraction",
+      "video": "201iywIy74c",
+      "n": 5,
+      "name": "Frosted glass bar refracting a smeared gradient star",
+      "line": "A premium title or UI backdrop: a pill-shaped pane of frosted glass sits over a soft, flowing colour field and bends what lies behind it. Reach for it when text needs a rich, calm, frosted-glass ground.",
+      "status": "proven",
+      "kind": "technique",
+      "job": "fill-the-backdrop",
+      "support": [
+        "add-depth",
+        "reveal-headline"
+      ],
+      "mood": [
+        "premium",
+        "soft",
+        "dark",
+        "glow"
+      ],
+      "needs": [
+        "shapes",
+        "type"
+      ],
+      "duration": 6,
+      "motion": "one-shot",
+      "difficulty": 3,
+      "group": "frosted-glass refraction",
+      "why": "'A premium title or UI backdrop: a pill-shaped pane of frosted glass sits over a soft, flowing colour field and bends what lies behind it': a spinning blurred, wave-warped gradient star seen through an adjustment-layer bar that blurs, brightens and displaces it using a hidden inner-glow copy as the map",
+      "section": {
+        "file": "201iywIy74c.md",
+        "heading": "Frosted glass bar refracting a smeared gradient star"
+      },
+      "revision": "31249974",
+      "still": "quality/renders/channel-study/201iywIy74c/proof/05/build.png",
+      "taught_by": 1,
+      "variants": []
+    },
     {
       "id": "01-shadow-map-overlay",
       "video": "7pgDb6NKEXM",
@@ -132,7 +310,7 @@
       },
       "revision": "aa669c47",
       "still": "quality/renders/channel-study/7pgDb6NKEXM/proof/03/build.png",
-      "taught_by": 6,
+      "taught_by": 7,
       "variant_of": "04-carousel-by-rotation",
       "variants": []
     },
@@ -965,7 +1143,7 @@
       },
       "revision": "3e9d01cb",
       "still": "quality/renders/channel-study/Tf0EiCGOEYs/proof/05/build.png",
-      "taught_by": 3,
+      "taught_by": 6,
       "variants": []
     },
     {
@@ -1070,7 +1248,7 @@
       },
       "revision": "b061556e",
       "still": "quality/renders/channel-study/Tf0EiCGOEYs/proof/08/build.png",
-      "taught_by": 3,
+      "taught_by": 6,
       "variants": []
     },
     {
@@ -1207,7 +1385,7 @@
       },
       "revision": "3a03f5d0",
       "still": "quality/renders/channel-study/YBeMmC43Q1U/proof/04/build.png",
-      "taught_by": 6,
+      "taught_by": 7,
       "variants": [
         "03-graphics-orbit-a-real-object",
         "04-duplicate-cards-round-the-pivot"
@@ -1241,7 +1419,7 @@
       },
       "revision": "9201d48e",
       "still": "quality/renders/channel-study/YBeMmC43Q1U/proof/05/build.png",
-      "taught_by": 3,
+      "taught_by": 6,
       "variants": []
     },
     {
@@ -1276,7 +1454,7 @@
       },
       "revision": "55063a18",
       "still": "quality/renders/channel-study/YBeMmC43Q1U/proof/06/build.png",
-      "taught_by": 6,
+      "taught_by": 7,
       "variants": [
         "07-3d-spinning-box-of-cards",
         "10-inner-ring-carousel"
@@ -1483,8 +1661,10 @@
       },
       "revision": "5b8fb6a4",
       "still": "quality/renders/channel-study/YBeMmC43Q1U/proof/12/build.png",
-      "taught_by": 2,
-      "variants": []
+      "taught_by": 3,
+      "variants": [
+        "03-radial-blur-long-shadow"
+      ]
     },
     {
       "id": "13-dot-grid-texture",
@@ -1585,7 +1765,7 @@
       },
       "revision": "8e648131",
       "still": "quality/renders/channel-study/YBeMmC43Q1U/proof/15/build.png",
-      "taught_by": 2,
+      "taught_by": 3,
       "variants": []
     },
     {
@@ -2065,7 +2245,7 @@
       },
       "revision": "fafb7596",
       "still": null,
-      "taught_by": 6,
+      "taught_by": 7,
       "variant_of": "04-carousel-by-rotation",
       "variants": []
     },
@@ -2171,7 +2351,7 @@
       },
       "revision": "218a6bac",
       "still": null,
-      "taught_by": 6,
+      "taught_by": 7,
       "variant_of": "06-3d-orbit-rings",
       "variants": []
     },
@@ -2279,7 +2459,7 @@
       },
       "revision": "f6e85b1b",
       "still": null,
-      "taught_by": 6,
+      "taught_by": 7,
       "variant_of": "06-3d-orbit-rings",
       "variants": []
     },
@@ -3010,6 +3190,528 @@
       "revision": "7dc05162",
       "still": "quality/renders/channel-study/il_OcNyqDOE/proof/13/build.png",
       "taught_by": 2,
+      "variants": []
+    },
+    {
+      "id": "01-segmented-progress-bar-draws-in-order",
+      "video": "nHh0NRo8G2U",
+      "n": 1,
+      "name": "Two-colour phase bar that draws on segment after segment",
+      "line": "A process or timeline beat (\"first this phase, then that one\"): one straight bar split into coloured phases that fill left to right, the second phase starting just as the first slows down, with step pictures lined up underneath.",
+      "status": "proven",
+      "kind": "technique",
+      "job": "step-through-process",
+      "support": [
+        "show-time"
+      ],
+      "mood": [
+        "dark",
+        "bold",
+        "clean"
+      ],
+      "needs": [
+        "shapes",
+        "type"
+      ],
+      "duration": 2,
+      "motion": "one-shot",
+      "difficulty": 3,
+      "group": "trim paths draw-on",
+      "why": "'a process or timeline beat (\"first this phase, then that one\")': one bar split into coloured phases that fill left to right, the second starting as the first slows",
+      "section": {
+        "file": "nHh0NRo8G2U.md",
+        "heading": "Two-colour phase bar that draws on segment after segment"
+      },
+      "revision": "aa3d7518",
+      "still": "quality/renders/channel-study/nHh0NRo8G2U/proof/01/build.png",
+      "taught_by": 7,
+      "variants": []
+    },
+    {
+      "id": "02-labels-rise-from-behind-the-bar",
+      "video": "nHh0NRo8G2U",
+      "n": 2,
+      "name": "Labels that rise out of their own bar segment",
+      "line": "Names each phase of a progress bar as that phase fills: the word slides up out of the bar as if it was tucked behind it, timed to its segment.",
+      "status": "proven",
+      "kind": "technique",
+      "job": "step-through-process",
+      "support": [
+        "reveal-headline"
+      ],
+      "mood": [
+        "dark",
+        "bold",
+        "clean"
+      ],
+      "needs": [
+        "shapes",
+        "type"
+      ],
+      "duration": 2,
+      "motion": "one-shot",
+      "difficulty": 2,
+      "group": null,
+      "why": "'names each phase of a progress bar as that phase fills': the word rises out of its own segment through an inverted track matte",
+      "section": {
+        "file": "nHh0NRo8G2U.md",
+        "heading": "Labels that rise out of their own bar segment"
+      },
+      "revision": "2d62f2fa",
+      "still": "quality/renders/channel-study/nHh0NRo8G2U/proof/02/build.png",
+      "taught_by": 1,
+      "variants": []
+    },
+    {
+      "id": "03-step-icons-pop-with-bounce-in-sequence",
+      "video": "nHh0NRo8G2U",
+      "n": 3,
+      "name": "Step pictures that pop in one after another with a small bounce",
+      "line": "Brings in a row of step pictures under a timeline one by one, each growing from nothing with a slight overshoot and settle, so the eye walks the process left to right.",
+      "status": "proven",
+      "kind": "technique",
+      "job": "step-through-process",
+      "support": [
+        "list-items"
+      ],
+      "mood": [
+        "dark",
+        "playful",
+        "clean"
+      ],
+      "needs": [
+        "photo"
+      ],
+      "duration": 4,
+      "motion": "one-shot",
+      "difficulty": 2,
+      "group": "time stagger",
+      "why": "'brings in a row of step pictures ... one by one ... so the eye walks the process left to right': scale pops with a small inertial bounce, 10 frames apart",
+      "section": {
+        "file": "nHh0NRo8G2U.md",
+        "heading": "Step pictures that pop in one after another with a small bounce"
+      },
+      "revision": "326c36ad",
+      "still": "quality/renders/channel-study/nHh0NRo8G2U/proof/03/build.png",
+      "taught_by": 6,
+      "variants": [
+        "01-bounce-keyframes-word-stagger"
+      ]
+    },
+    {
+      "id": "04-curved-arrow-draws-between-steps",
+      "video": "nHh0NRo8G2U",
+      "n": 4,
+      "name": "Small swept-head arrow that draws itself between steps",
+      "line": "Ties a row of step images into a process: a tiny arrow draws itself between each pair just as the next step appears, so the eye is led left to right one step at a time.",
+      "status": "proven",
+      "kind": "technique",
+      "job": "step-through-process",
+      "support": [
+        "relate-things"
+      ],
+      "mood": [
+        "dark",
+        "minimal",
+        "clean"
+      ],
+      "needs": [
+        "shapes"
+      ],
+      "duration": 3,
+      "motion": "one-shot",
+      "difficulty": 2,
+      "group": "trim paths draw-on",
+      "why": "'ties a row of step images into a process': a small arrow draws itself between each pair as the next step appears",
+      "section": {
+        "file": "nHh0NRo8G2U.md",
+        "heading": "Small swept-head arrow that draws itself between steps"
+      },
+      "revision": "71fe9a82",
+      "still": "quality/renders/channel-study/nHh0NRo8G2U/proof/04/build.png",
+      "taught_by": 7,
+      "variants": []
+    },
+    {
+      "id": "05-stop-motion-jitter-and-mono-finish",
+      "video": "nHh0NRo8G2U",
+      "n": 5,
+      "name": "Stepped jitter and black-and-white photos for a hand-made finish",
+      "line": "Takes a clean, flat infographic and gives it a cut-out, stop-motion feel: photos go monochrome, each one twitches on its own a few times a second, the whole frame shakes slightly and all motion steps at a low frame rate. Reach for it when a data beat looks too slick or digital.",
+      "status": "proven",
+      "kind": "technique",
+      "job": "finish-the-look",
+      "support": [
+        "keep-it-alive"
+      ],
+      "mood": [
+        "textured",
+        "retro",
+        "playful"
+      ],
+      "needs": [
+        "photo"
+      ],
+      "duration": 4,
+      "motion": "loop",
+      "difficulty": 2,
+      "group": "stop-motion jitter",
+      "why": "'gives a clean, flat infographic a cut-out, stop-motion feel': grey photos, each twitching on its own, a whole-frame shake and everything stepped to 12 fps",
+      "section": {
+        "file": "nHh0NRo8G2U.md",
+        "heading": "Stepped jitter and black-and-white photos for a hand-made finish"
+      },
+      "revision": "3f58811c",
+      "still": "quality/renders/channel-study/nHh0NRo8G2U/proof/05/build.png",
+      "taught_by": 1,
+      "variants": []
+    },
+    {
+      "id": "06-faint-graph-paper-backdrop",
+      "video": "nHh0NRo8G2U",
+      "n": 6,
+      "name": "Faint graph-paper backdrop",
+      "line": "Swaps a plain black ground for an off-white sheet ruled with tiny pale-blue squares, like school exercise paper, so a flat infographic reads as hand-made and educational rather than digital.",
+      "status": "proven",
+      "kind": "technique",
+      "job": "fill-the-backdrop",
+      "support": [
+        "finish-the-look"
+      ],
+      "mood": [
+        "light",
+        "paper",
+        "textured"
+      ],
+      "needs": [
+        "none"
+      ],
+      "duration": 4,
+      "motion": "still",
+      "difficulty": 2,
+      "group": "graph-paper grid",
+      "why": "'an off-white sheet ruled with tiny pale-blue squares, like school exercise paper', so a flat infographic reads as hand-made and educational",
+      "section": {
+        "file": "nHh0NRo8G2U.md",
+        "heading": "Faint graph-paper backdrop"
+      },
+      "revision": "089b44ae",
+      "still": "quality/renders/channel-study/nHh0NRo8G2U/proof/06/build.png",
+      "taught_by": 2,
+      "variants": []
+    },
+    {
+      "id": "07-stroked-bars-grow-in-stagger-with-value-labels",
+      "video": "nHh0NRo8G2U",
+      "n": 7,
+      "name": "Bar chart of thick strokes that grow up in a ladder, with value labels sliding in beside them",
+      "line": "A quick \"how big is each one\" moment: four bars rise one after another from a shared baseline, left to right, tallest first, while each value label slides in from the left. Use it when a narrated figure needs a chart that builds as the voice lists the numbers.",
+      "status": "proven",
+      "kind": "technique",
+      "job": "compare",
+      "support": [
+        "show-proof",
+        "list-items"
+      ],
+      "mood": [
+        "dark",
+        "bold",
+        "clean"
+      ],
+      "needs": [
+        "shapes",
+        "type"
+      ],
+      "duration": 3,
+      "motion": "one-shot",
+      "difficulty": 2,
+      "group": "trim paths draw-on",
+      "why": "'a quick \"how big is each one\" moment': four bars rise one after another from a shared baseline while each value label slides in",
+      "section": {
+        "file": "nHh0NRo8G2U.md",
+        "heading": "Bar chart of thick strokes that grow up in a ladder, with value labels sliding in beside them"
+      },
+      "revision": "4731c114",
+      "still": "quality/renders/channel-study/nHh0NRo8G2U/proof/07/build.png",
+      "taught_by": 7,
+      "variants": []
+    },
+    {
+      "id": "08-baseline-draws-out-from-centre",
+      "video": "nHh0NRo8G2U",
+      "n": 8,
+      "name": "Chart baseline that draws outward from its middle",
+      "line": "Opens a chart (or any divider) with a line that grows out to both ends at once from its centre, a calm, balanced first move before the data arrives.",
+      "status": "proven",
+      "kind": "technique",
+      "job": "show-proof",
+      "support": [
+        "compare"
+      ],
+      "mood": [
+        "dark",
+        "minimal",
+        "calm"
+      ],
+      "needs": [
+        "shapes"
+      ],
+      "duration": 1,
+      "motion": "one-shot",
+      "difficulty": 1,
+      "group": "trim paths draw-on",
+      "why": "'opens a chart (or any divider) with a line that grows out to both ends at once from its centre', a calm first move before the data arrives",
+      "section": {
+        "file": "nHh0NRo8G2U.md",
+        "heading": "Chart baseline that draws outward from its middle"
+      },
+      "revision": "24d327a4",
+      "still": "quality/renders/channel-study/nHh0NRo8G2U/proof/08/build.png",
+      "taught_by": 7,
+      "variants": []
+    },
+    {
+      "id": "09-grid-clipped-to-the-chart-area",
+      "video": "nHh0NRo8G2U",
+      "n": 9,
+      "name": "Faint grid held inside the chart's box, and the whole chart stepped to 12 fps",
+      "line": "Gives a bar chart a quiet graph-paper backing that stops at the chart's edges, and a slightly hand-made, stepped motion, so a plain data beat reads as designed rather than default.",
+      "status": "proven",
+      "kind": "technique",
+      "job": "fill-the-backdrop",
+      "support": [
+        "show-proof",
+        "finish-the-look"
+      ],
+      "mood": [
+        "dark",
+        "minimal",
+        "textured"
+      ],
+      "needs": [
+        "shapes"
+      ],
+      "duration": 3,
+      "motion": "still",
+      "difficulty": 2,
+      "group": "graph-paper grid",
+      "why": "'gives a bar chart a quiet graph-paper backing that stops at the chart's edges', with the chart's motion stepped to 12 fps so a plain data beat reads as designed",
+      "section": {
+        "file": "nHh0NRo8G2U.md",
+        "heading": "Faint grid held inside the chart's box, and the whole chart stepped to 12 fps"
+      },
+      "revision": "6216762b",
+      "still": "quality/renders/channel-study/nHh0NRo8G2U/proof/09/build.png",
+      "taught_by": 2,
+      "variants": []
+    },
+    {
+      "id": "10-pie-slice-from-a-stroked-ring",
+      "video": "nHh0NRo8G2U",
+      "n": 10,
+      "name": "Pie chart from one fat stroke, with the share pushed out",
+      "line": "A single-statistic beat (\"X % of all ...\"): a pie sweeps round from twelve o'clock, then the highlighted share slides out from the centre so the number has a piece to point at.",
+      "status": "proven",
+      "kind": "technique",
+      "job": "show-proof",
+      "support": [
+        "land-number",
+        "compare"
+      ],
+      "mood": [
+        "dark",
+        "bold",
+        "clean"
+      ],
+      "needs": [
+        "shapes"
+      ],
+      "duration": 2,
+      "motion": "one-shot",
+      "difficulty": 3,
+      "group": "trim paths draw-on",
+      "why": "a single-statistic beat (\"X % of all ...\"): the pie sweeps on and the 18 % wedge slides out \"so the number has a piece to point at\"",
+      "section": {
+        "file": "nHh0NRo8G2U.md",
+        "heading": "Pie chart from one fat stroke, with the share pushed out"
+      },
+      "revision": "e2f0e818",
+      "still": "quality/renders/channel-study/nHh0NRo8G2U/proof/10/build.png",
+      "taught_by": 7,
+      "variants": []
+    },
+    {
+      "id": "11-label-rises-word-by-word",
+      "video": "nHh0NRo8G2U",
+      "n": 11,
+      "name": "Value label that rises in one word at a time",
+      "line": "Puts a short stat sentence next to a chart's highlighted piece (\"18% of all ...\"). The words pop up one after another two frames apart, so the line reads as it lands.",
+      "status": "proven",
+      "kind": "technique",
+      "job": "land-number",
+      "support": [
+        "reveal-headline"
+      ],
+      "mood": [
+        "dark",
+        "bold",
+        "clean"
+      ],
+      "needs": [
+        "type"
+      ],
+      "duration": 3,
+      "motion": "one-shot",
+      "difficulty": 2,
+      "group": "time stagger",
+      "why": "puts a short stat sentence (\"18% of all ...\") beside the chart piece, number first, each word rising 2 frames after the last so the line reads as it lands",
+      "section": {
+        "file": "nHh0NRo8G2U.md",
+        "heading": "Value label that rises in one word at a time"
+      },
+      "revision": "6464b2db",
+      "still": "quality/renders/channel-study/nHh0NRo8G2U/proof/11/build.png",
+      "taught_by": 6,
+      "variants": []
+    },
+    {
+      "id": "12-pyramid-tiers-spread-to-reveal-labels",
+      "video": "nHh0NRo8G2U",
+      "n": 12,
+      "name": "Photo pyramid that dips, then splits into tiers to reveal labels",
+      "line": "A hierarchy or \"levels\" beat. A real-looking pyramid sits whole, gathers itself, then pulls apart into three tiers, and a label appears in each opening gap.",
+      "status": "proven",
+      "kind": "technique",
+      "job": "make-concrete",
+      "support": [
+        "add-impact"
+      ],
+      "mood": [
+        "photo",
+        "dark",
+        "bold"
+      ],
+      "needs": [
+        "photo",
+        "type"
+      ],
+      "duration": 2,
+      "motion": "one-shot",
+      "difficulty": 3,
+      "group": null,
+      "why": "a hierarchy or \"levels\" beat acted out by a real pyramid that gathers itself, bursts into three tiers and shows a label in each opening gap",
+      "section": {
+        "file": "nHh0NRo8G2U.md",
+        "heading": "Photo pyramid that dips, then splits into tiers to reveal labels"
+      },
+      "revision": "8f0a59ee",
+      "still": "quality/renders/channel-study/nHh0NRo8G2U/proof/12/build.png",
+      "taught_by": 1,
+      "variants": []
+    },
+    {
+      "id": "13-match-cut-carried-by-movement",
+      "video": "nHh0NRo8G2U",
+      "n": 13,
+      "name": "Cut mid-move to a close-up, carried by a shared upward drift",
+      "line": "Moves from an overview to a detail without a visible transition. At the fastest moment of an animation, the shot cuts to a doubled-size view of the same animation. Both shots drift upward through the cut, so the eye reads one continuous move. A later slide down then visits the next detail.",
+      "status": "proven",
+      "kind": "technique",
+      "job": "hand-over",
+      "support": [
+        "move-camera",
+        "point-at-detail"
+      ],
+      "mood": [
+        "dark",
+        "cinematic"
+      ],
+      "needs": [
+        "none"
+      ],
+      "duration": 4,
+      "motion": "transition",
+      "difficulty": 2,
+      "group": null,
+      "why": "moves from an overview to a detail \"without a visible transition\": cut at the fastest moment to a doubled-size view, both shots drifting up so the eye reads one move",
+      "section": {
+        "file": "nHh0NRo8G2U.md",
+        "heading": "Cut mid-move to a close-up, carried by a shared upward drift"
+      },
+      "revision": "e19a4084",
+      "still": "quality/renders/channel-study/nHh0NRo8G2U/proof/13/build.png",
+      "taught_by": 1,
+      "variants": []
+    },
+    {
+      "id": "14-pinned-photos-swaying-on-a-map",
+      "video": "nHh0NRo8G2U",
+      "n": 14,
+      "name": "Pinned instant photos swaying on a grey map",
+      "line": "Marks a few places on a map with small pinned instant photos that hang and sway a little, so a travel or \"where it happened\" beat feels hand-made and alive while the camera holds or moves over it.",
+      "status": "proven",
+      "kind": "technique",
+      "job": "point-at-detail",
+      "support": [
+        "keep-it-alive",
+        "establish-place"
+      ],
+      "mood": [
+        "paper",
+        "textured",
+        "calm"
+      ],
+      "needs": [
+        "photo",
+        "texture"
+      ],
+      "duration": 5,
+      "motion": "loop",
+      "difficulty": 3,
+      "group": null,
+      "why": "marks a few places on a map with pinned instant photos that rock gently round their pins, for a travel or \"where it happened\" beat",
+      "section": {
+        "file": "nHh0NRo8G2U.md",
+        "heading": "Pinned instant photos swaying on a grey map"
+      },
+      "revision": "8c3d0093",
+      "still": "quality/renders/channel-study/nHh0NRo8G2U/proof/14/build.png",
+      "taught_by": 1,
+      "variants": []
+    },
+    {
+      "id": "15-map-highlights-and-border-trace",
+      "video": "nHh0NRo8G2U",
+      "n": 15,
+      "name": "Ink-blend place highlights and a self-drawing border on a grey map",
+      "line": "Points at a region on an old map with soft coloured blobs that look printed into the paper, and draws a country's outline on cue, for \"here is where it happened\" beats in a travel or history piece.",
+      "status": "proven",
+      "kind": "technique",
+      "job": "point-at-detail",
+      "support": [
+        "establish-place"
+      ],
+      "mood": [
+        "paper",
+        "textured",
+        "editorial"
+      ],
+      "needs": [
+        "shapes",
+        "texture"
+      ],
+      "duration": 3,
+      "motion": "one-shot",
+      "difficulty": 3,
+      "group": "trim paths draw-on",
+      "why": "points at a region on an old map with Multiply washes that look printed in and draws a country outline on cue, for \"here is where it happened\" beats",
+      "section": {
+        "file": "nHh0NRo8G2U.md",
+        "heading": "Ink-blend place highlights and a self-drawing border on a grey map"
+      },
+      "revision": "7eb6b455",
+      "still": "quality/renders/channel-study/nHh0NRo8G2U/proof/15/build.png",
+      "taught_by": 7,
       "variants": []
     }
   ]

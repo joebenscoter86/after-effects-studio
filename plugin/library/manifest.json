@@ -748,14 +748,14 @@
       "title": "Technique arsenal index: documents, vocabulary and counts",
       "path": "arsenal/index.json",
       "kind": "catalog",
-      "sha256": "a111772c5403a19626b754d02024eb3caf912ebaf936396ca8bcaf952c37312f"
+      "sha256": "7f1cabde8bb905adab4b927741397e4ca2cd5486428b5f02c5a608e520541c36"
     },
     {
       "id": "arsenal-catalog",
       "title": "Library catalog: one record per style, world, recipe and piece, queried by ae_arsenal",
       "path": "arsenal/catalog.json",
       "kind": "catalog",
-      "sha256": "7e57efdb710e6d5c033947be46fc03666c5b4025d044c305dcc17009b070ec0c"
+      "sha256": "41ba141a332d1dd12fb52360c6195c4335a2a46dca95ca15a64525ace2a9bd24"
     },
     {
       "id": "arsenal-jobs",
@@ -769,28 +769,28 @@
       "title": "Arsenal recipes: line jobs: what the viewer must get from this line (part 1 of 2)",
       "path": "arsenal/recipes-line.md",
       "kind": "recipes",
-      "sha256": "6fc7519d4912bda0efb22567d993c61d27dfa1ddd2b94259a8fd9f394e873959"
+      "sha256": "109423a0a2f96cd995fa2adcce32a26564982c3f133e6573785b667c6e32abb3"
     },
     {
       "id": "arsenal-line-2",
       "title": "Arsenal recipes: line jobs: what the viewer must get from this line (part 2 of 2)",
       "path": "arsenal/recipes-line-2.md",
       "kind": "recipes",
-      "sha256": "bd84e5b2d81659e3c693dc87daf5f16bf35e18841a8791c01e637c36d28aae25"
+      "sha256": "a3a061390099ee1d9b722a0ea5e95d0e3c302a9e745e9cf49c0fec03f37c2689"
     },
     {
       "id": "arsenal-picture",
       "title": "Arsenal recipes: picture jobs: how the picture has to read, whatever the line says (part 1 of 2)",
       "path": "arsenal/recipes-picture.md",
       "kind": "recipes",
-      "sha256": "ded27fdd3715a58ecbfbfdccfd1fba621c93e7379b3a7da76623b6f8e07f5089"
+      "sha256": "a87dd3185f4e1c7ff11f308225ca5e5401ec3e9c1da212f36452e47e7f6f4845"
     },
     {
       "id": "arsenal-picture-2",
       "title": "Arsenal recipes: picture jobs: how the picture has to read, whatever the line says (part 2 of 2)",
       "path": "arsenal/recipes-picture-2.md",
       "kind": "recipes",
-      "sha256": "cf8747631a7ab6ab9bf5765cd80800e5394f5a36ac948c1ba4fbe3344d2e96a1"
+      "sha256": "3a97383936fa09170ac9ce26deb33f76aa3fdeef6d1de3bb248fa8bd59b7cfdf"
     },
     {
       "id": "arsenal-connective",

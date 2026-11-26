@@ -4,7 +4,8 @@ import { ACCESSIBILITY_HINT, SCRIPT_RUNNING_HINT, buildInstanceLaunchPlan, descr
 import { init_layer, init_layout, init_look_sheet, init_marker, init_mask, init_pref, init_project, init_property, init_render } from "./operations-3.js";
 import { COMP_INFO_FN, LAYER_FULL_FN, LIST_MISSING_FONTS_FN, LIST_MISSING_FOOTAGE_FN, RENDER_FRAME_FN, init_sample, init_shape, init_shape_contents, init_snippets, init_text, init_timeline, init_transform, init_video, init_viewer } from "./operations-4.js";
 import { EDGE_DEFAULTS, compareReferences, compareWithSheet, composeContactSheet, cutoutRegions, decodePng, encodePngSrgb8, flattenOver, init_look, init_matte, init_png16, init_sheet, isPiece, isSheet, referenceReader, resample } from "./color-1.js";
-import { iccManagedReason, init_capture_shared, init_render_frame, renderFrameTool } from "./tools-1.js";
+import { iccManagedReason, init_capture_shared } from "./tools-1.js";
+import { init_render_frame, renderFrameTool } from "./tools-2.js";
 import { init_keying, init_layer_advanced } from "./operations-2.js";
 import { init_decode, init_movie_rgb, init_rhythm, measureRhythm, movieColour, movieFrames, probeVideo } from "./video-1.js";
 import { execFile, spawn } from "node:child_process";

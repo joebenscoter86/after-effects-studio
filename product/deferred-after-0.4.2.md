@@ -19,6 +19,7 @@ Written 2026-11-19. Joe's plan: ship 0.4.2 (the 57 proven cookbook recipes plus 
    - status auto-loosening;
    - honest pinning.
 5. **Minors parked by the 0.4.1 final review** (in the 0.4.1 hand-over notes).
+6. **Gradient fill colours.** A shape's Gradient Fill colours cannot be set by script (`ADBE Vector Grad Colors` is NO_VALUE), so builds recolour the default white-to-black ramp with Tint or CC Toner (channel-learner lesson 41). An operation that sets the stops, perhaps by pasting a gradient fill from a library file as the material library does, would remove that substitute. Found on 201iywIy74c 02 and 05 (2026-11-25).
 
 ## Cookbook proofs
 

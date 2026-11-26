@@ -111,3 +111,19 @@ test('assemble: a variant needs its merge confirmed by the check (LESSONS 14)', 
     ]);
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 });
+
+test('assemble: a title or channel holding a pipe keeps its credits row to three cells, and the creator still reads back', async () => {
+  const { creatorsOf } = await import('../arsenal.mjs');
+  const dir = study({ '01-a': { check: pass('01-a') } });
+  fs.writeFileSync(path.join(dir, 'source.info.json'), JSON.stringify({
+    id: 'vid9', title: '5 Ideas You Should Try | After Effects', channel: 'Some|Body', channel_url: 'https://example.invalid/c',
+  }));
+  try {
+    assemble(dir, path.join(dir, 'out'));
+    const credits = fs.readFileSync(path.join(dir, 'out', 'CREDITS.md'), 'utf8');
+    const row = credits.split('\n').find((l) => l.includes('`vid9.md`'));
+    assert.equal(row.split(/(?<!\\)\|/).length - 2, 3, `three cells: ${row}`);
+    assert.match(row, /5 Ideas You Should Try \\\| After Effects/);
+    assert.deepEqual(creatorsOf(credits), ['Some|Body']);
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});

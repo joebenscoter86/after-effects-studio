@@ -158,8 +158,11 @@ export function findTechniques(catalog, ask) {
 
   // Job match tier: 0 primary job, 1 the asked job is one of its supports, 2 it serves one of the beat's support jobs.
   const tier = (r) => (r.job === ask.job ? 0 : r.support.includes(ask.job) ? 1 : [r.job, ...r.support].some((j) => support.includes(j)) ? 2 : null);
-  // A variant is never a candidate on its own: its parent stands for it and lists it (variants).
-  const byJob = catalog.recipes.filter((r) => r.kind === 'technique' && !r.variant_of && tier(r) !== null && !exclude.has(r.id));
+  // A variant stands behind its parent, which lists it (variants), whenever the parent serves the asked jobs too, even
+  // when the parent is excluded. A variant learned for a job its parent does not serve is a candidate on its own.
+  const serves = catalog.recipes.filter((r) => r.kind === 'technique' && tier(r) !== null);
+  const servingIds = new Set(serves.map((r) => r.id));
+  const byJob = serves.filter((r) => (!r.variant_of || !servingIds.has(r.variant_of)) && !exclude.has(r.id));
 
   const pass = (r, loose) =>
     (loose.includes('status') || ask.constraints?.status === 'any' || r.status === 'proven')
@@ -186,7 +189,7 @@ export function findTechniques(catalog, ask) {
       : missing.length ? `needs ${missing.join(', ')}, not on hand`
         : have === null ? `needs ${r.needs.join(', ')}` : `needs met: ${r.needs.join(', ')}`;
     const m = overlap(r);
-    const parts = [job, needs, m.length ? `mood: ${m.join(', ')}` : mood.length ? 'no mood overlap' : null,
+    const parts = [job, r.variant_of ? `variant of ${r.variant_of}, found here on its own` : null, needs, m.length ? `mood: ${m.join(', ')}` : mood.length ? 'no mood overlap' : null,
       r.taught_by > 1 ? `taught ${r.taught_by} times` : null, r.status === 'proven' ? 'proven' : 'unproven, needs a test build first'];
     return parts.filter(Boolean).join('; ');
   };
@@ -197,6 +200,7 @@ export function findTechniques(catalog, ask) {
       id: r.id, revision: r.revision, name: r.name, line: r.line, status: r.status, needs: r.needs,
       duration: r.duration, motion: r.motion, still: r.still, section: r.section, fit: fit(r),
       ...(r.variants?.length ? { variants: r.variants } : {}),
+      ...(r.variant_of ? { variant_of: r.variant_of } : {}),
     })),
   };
   if (relaxed.length && out.results.length) out.relaxed = relaxed;
