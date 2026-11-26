@@ -397,6 +397,19 @@ test('find: never returns a variant on its own; its parent carries the variant i
   });
 });
 
+test('find: a variant whose job its parent does not serve is a candidate on its own, naming its parent', () => {
+  withDir({ 'vidA.md': [recipe(1, 'a', { status: ACCEPTED }), recipe(2, 'v', { status: variantLines('01-a', 'vidA #1', { status: ACCEPTED }) })] }, (dir) => {
+    const cat = buildCatalog({ draftsDir: dir, jobs: JOBS, tags: tagsOf({
+      'vidA#1': tag('01-a', { job: 'point-at-detail' }), 'vidA#2': tag('02-v', { variant_of: 'vidA#1' }),
+    }) });
+    const out = findTechniques(cat, ask({}));
+    assert.deepEqual(out.results.map((r) => r.id), ['02-v']);
+    assert.equal(out.results[0].variant_of, '01-a');
+    assert.match(out.results[0].fit, /variant of 01-a/);
+    assert.deepEqual(findTechniques(cat, ask({ job: 'point-at-detail' })).results.map((r) => r.id), ['01-a']);
+  });
+});
+
 // ---------- CLI ----------
 
 const run = (...args) => spawnSync(process.execPath, [CLI, ...args], { encoding: 'utf8' });

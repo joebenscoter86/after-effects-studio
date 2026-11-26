@@ -48,6 +48,8 @@ The picks were chosen from titles, chapter lists and descriptions. Nobody has wa
 
 **After piece 3, 7 of the 11 empty jobs are still empty (step-through-process is filled; show-proof and compare gained recipes).** **After piece 2, 8 of the 11 empty jobs were still empty (call-to-action is filled).** **After piece 1, 9 of the 11 empty jobs were still empty. After pieces 1–4, only before-after and fail-then-fix are.** If you only have time for a few, do those four.
 
+**Off the plan (2026-11-25):** Bart_VFX, [5 Editing Ideas You Should Try](https://www.youtube.com/watch?v=201iywIy74c), learned at Joe's request: 5 written, 5 proven (accepted by Joe 2026-11-25), 0 held. The new recipes serve reveal-headline, fill-the-backdrop and add-depth, so no empty job is filled. The run record is `quality/reports/2026-11-25-channel-learner-201iywIy74c/report.md`.
+
 ## The pieces
 
 ### 1. SonduckFilm, 5 Infographic Edits
@@ -147,6 +149,7 @@ The steps:
 2. **Gather and align:** `node tools/channel-learner/learn.mjs gather <url> --out quality/renders/channel-study/<video id>`, then `learn.mjs align` on the same folder.
    - Exit code 3 means YouTube's bot check stopped it. Try again later, and don't retry in a loop.
    - Transcribe with local whisper; the learner does this itself.
+   - If the narration sends viewers to a comment or the description for an expression or settings, copy it word for word into `<study folder>/extras.md` (`yt-dlp --write-comments` gives the pinned comment). Writers and checkers are told to read it (lesson 36).
 3. **Check the video is what the plan says.** Read `timeline.md`. If it doesn't teach the jobs listed for the piece, update this plan and stop.
 4. **Recipes:** follow `tools/channel-learner/prompts/video-lead.md` to write, check and match the recipes. It ends with `node tools/channel-learner/assemble.mjs <study folder>`.
 5. **Proofs:**

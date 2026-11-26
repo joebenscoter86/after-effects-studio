@@ -2,6 +2,178 @@
 
 Generated from the recipe drafts; do not edit by hand. Recipes whose primary job is in this group. Find candidates for a beat with ae_arsenal find; read one with ae_arsenal get, or a section here by its heading.
 
+## Step pictures that pop in one after another with a small bounce
+id: 03-step-icons-pop-with-bounce-in-sequence
+revision: 326c36ad
+job: step-through-process; support: list-items
+status: proven (accepted 2026-11-21)
+what it does for a beat: Brings in a row of step pictures under a timeline one by one, each growing from nothing with a slight overshoot and settle, so the eye walks the process left to right.
+what it looks like: Under a lime-and-blue phase bar on black, six cut-out pictures of a process appear left to right, each growing from a point at its centre to full size in half a second, swelling a few percent past full size and settling back.
+ingredients:
+- Scale keyframes on each picture layer — built-in
+- An "inertial bounce" expression on Scale (a widely shared expression; only its first two lines are on screen) — built-in expressions
+- Flow (keyframe-easing extension) — paid; only used to apply the ease, given below as numbers
+- Motion Tools (free extension), Sequence with offset — only used to stagger; given below as frame offsets
+- Six cut-out PNG step pictures (art, not technique)
+steps:
+1. Start from the phase-bar layout (recipe 01): 1920 x 1080 comp at 23.976 fps (narrator says 24; screen shows 23.976), black. A 60 px stroke from x 365 to 1556 at y 540, split by Trim Paths into a lime segment (#BFF06C, 0–70 %) and a pale blue one (renders #8FD3E0, 71–100 %), drawing on at frames 0–24 and 20–44. Two white labels rise above the segments (recipe 02, frames 10–22 and 32–44). (from recipes 01 and 02, where each value is cited)
+2. Place six cut-out pictures in a row under the bar, each scaled so they look alike in size, anchor at the picture's centre (default). (said in recipe 01's span; scales 26, 14, 7, 7, 8, 7 % shown; centre anchor inferred from the measured growth staying centred)
+3. Select all six, key Scale at their full size, and 12 frames earlier key Scale 0 %. (said "12 frame animation"; 0 % shown; full values shown)
+4. Ease all Scale keys with cubic-bezier 0.88, 0.14, 0.12, 0.86 (the same S-curve as the bar). (said by its preset name; numbers shown)
+   - In After Effects terms (converted, inferred): Influence 88 % on both keys, speed 0.159 x the average speed, i.e. 0.159 x (full scale ÷ 0.5 s). For a picture at 26 %: 8.3 %/s; at 7 %: 2.2 %/s.
+5. Alt/Option-click Scale's stopwatch on one picture and paste the bounce expression; then right-click Scale > Copy Expression Only and paste it onto the other five. (said; the expression's first lines shown; that all six bounce is shown by the played frames, see layout)
+   - Shown lines: `amp = .1;` and `freq = 2.0;` (shown)
+   - The rest is not on screen. The standard form of this expression, consistent with the measured bounce (inferred, decay 2.0 inferred from the measured overshoot ratio):
+     ```
+     amp = .1;
+     freq = 2.0;
+     decay = 2.0;
+     n = 0;
+     if (numKeys > 0){ n = nearestKey(time).index; if (key(n).time > time){ n--; } }
+     if (n == 0){ t = 0; } else { t = time - key(n).time; }
+     if (n > 0 && t < 1){
+       v = velocityAtTime(key(n).time - thisComp.frameDuration/10);
+       value + v*amp*Math.sin(freq*t*2*Math.PI)/Math.exp(decay*t);
+     } else { value; }
+     ```
+6. Stagger the six so the leftmost starts first and each next one 10 frames later (Motion Tools: offset 10, step 1, Sequence with the top layer first), then slide the whole group earlier. (offset 10 said and shown; still shows 1 with the cursor in the field; order said)
+   - Resulting keys: picture 1 frames 22–34, picture 2 32–44, picture 3 42–54, picture 4 52–64, picture 5 62–74, picture 6 72–84. (read from key positions, ±1 frame)
+layout: Measured on the settled result frame (comp 1920 x 1080 calibrated on the picture's borders, 1804 x 1015 px in the recording). measured: six pictures with centres at x 440, 635, 838, 1074, 1294, 1497 (22.9, 33.1, 43.7, 55.9, 67.4, 78.0 % of the width), centred about y 673–684 (62.5–63.3 % of the height); heights 131, 103, 144, 139, 129, 134 px (9.6–13.3 % of the height), widths 119, 104, 93, 160, 128, 85 px; their tops 32–60 px below the bar's bottom edge (y 570). The row spans x 380–1540, just inside the bar's ends (365–1556); the last two sit under the blue segment. The bar (thickness 5.7 % of the height, 62 % of the width, centred) and the two labels (baselines at 45.7 % of the height, about 3 % of the height tall) come from recipes 01 and 02. Background pure black; the only shadow is one baked into a packaging cut-out's PNG. Motion, measured on played frames (comp frame = recording frame − 12855, ±1; the preview plays at about real time, the pictures starting 10 recording frames apart): each picture grows about its own centre (picture 3's centre holds within 3 px at x 835–838, y 674–676). Growth for picture 1: 3 % of its height at 2 frames in, 20 % at 5, 49 % at 6, 77 % at 7, 87 % at 8, 92 % at 9, 98 % at 11, 100 % at 12. Bounce: peak overshoot about +2.5 % of the final size (picture 3: 148 against 144 px; picture 4: 164 against 160 px wide; picture 6: 137 against 134 px tall) 1–3 frames after the last key; an undershoot of about −1.5 % around 7 frames after; a second swell of about +1 % around 12–14 frames after; settled within about 16 frames. The period (about 12 frames, 0.5 s) matches freq 2. The overshoot is proportional to the speed at the last key: with this ease that speed is only 0.159 of the average, which is why the bounce is small; a different ease changes it (predicted from the expression with decay 2: +2.5 %, −1.5 %, +0.9 % at 3, 9 and 15 frames, matching the measurement).
+timing and easing: Scale 0 → full over 12 frames per picture, pictures 10 frames apart, first at frame 22 (as the lime segment finishes at 24), last settled by about frame 100. Ease cubic-bezier(0.88, 0.14, 0.12, 0.86) plus the bounce expression (amp 0.1, freq 2, decay 2 inferred). Motion blur off: the switch column is empty for all six picture layers (shown).
+variations: none given
+pitfalls: Sequence direction matters: the layer order sets which picture comes first, so put the first step on top. (said)
+build notes: Scale keys by script: `scale.setValueAtTime(t0, [0,0,0]); scale.setValueAtTime(t0 + 12*fd, [s,s,100])` (2D layers still take three values); ease with `scale.setTemporalEaseAtKey(k, [e,e,e], [e,e,e])` where `e = new KeyframeEase(0.159*s/0.5005, 88)` (one ease per dimension). Set `scale.expression` to the text in step 5. Stagger by adding 10 frames × index to each layer's key times (Motion Tools not needed). The pictures are any six cut-out PNGs of a process, scaled to the measured heights.
+unknowns: The expression's lines after `freq = 2.0;` (form and decay 2.0 inferred from the measured overshoot). The pictures' exact positions as typed values (only measured).
+
+## Overshoot bounce on a word's drop-in, with a second word staggered behind it
+id: 01-bounce-keyframes-word-stagger
+revision: d073f30e
+job: reveal-headline; support: add-impact
+status: proven (accepted 2026-11-25)
+variant of: 03-step-icons-pop-with-bounce-in-sequence
+differs: Shared: both put an inertial-bounce expression on an animated property of several layers whose keys are eased, so each layer overshoots and settles after its last key, and both bring the layers in one after another by offsetting their keys in time; the parent says the size of the overshoot follows the speed at the last key, which here step 6 sets with the raised handle. Differences: here the expression is on Position and the words drop in from above; in the parent it is on Scale and the pictures grow from 0 % (shown). Here the expression text is the author's pinned comment, with amp 0.06, freq 1.8, decay 5 and a guard for the first key; in the parent only the first two lines are on screen (amp = .1, freq = 2.0) and the parent infers the rest, including decay 2.0. Here the ease is F9 Easy Ease followed by lifting the incoming handle in the Graph Editor to about 1,350 px/s (about 0.3 x the average speed, inferred), with the move over 3 to 4 frames; in the parent the ease is the cubic-bezier 0.88, 0.14, 0.12, 0.86 set by a paid easing extension (the parent converts it, inferred, to influence 88 % with arrival speed 0.159 x average) over 12 frames. Here the stagger is one frame between the pair, done by dragging copied keys, with a first word that also exits through the bottom with three further keys; in the parent six pictures start 10 frames apart (sequenced with an offset helper, shown) and none exits. Here Motion Blur is switched on (said; the switch itself is not shown); in the parent it is off (the switch column is empty, shown). Here the items are point-text words in one style; in the parent they are six cut-out PNG pictures of a process.
+what it does for a beat: Reach for it when a title or intro line needs words that snap in quickly, spring slightly past their rest spot, and swap out for the next word without a gap. It is a cheap way to get a lively, smooth text intro with only a few keys.
+what it looks like: Bold dark-grey sans-serif words on a pale grey, flat ground. A word drops fast from near the top of the frame to the middle, wobbles once or twice and settles; later it falls out through the bottom while the next word is already dropping in. With two words the second follows the first by one frame, so the pair reads as one smooth line. Motion blur smears the letters vertically while they move.
+
+ingredients:
+- Type tool, one point-text layer per word — built-in
+- Expression on Position (overshoot that reads the arriving speed of the key before it) — built-in expression; the author supplies it in a pinned comment (full text under build notes)
+- Keyframe Position + Easy Ease (F9) + Graph Editor speed graph — built-in; F9 is said, Graph Editor is shown
+- Motion Blur layer switch (and comp switch) — built-in; named by the narrator, the switch itself is not shown
+- Layer duplication, U (show keyed properties), in-point trim — built-in; said, no menu shown
+- A bezier-curve helper panel is open in every frame (a curve box reading 0.33, 0.00, 0.00, 1.00, a smooth-looking curve preset highlighted) — paid third-party; whether it was used on these keys is not said or shown (see unknowns)
+
+steps:
+1. Start from a pale grey 1920×1080 comp (its creation is not shown; inferred from the picture), with the Type tool, click and type one word in a bold sans-serif at about 103 px, dark grey fill, no stroke (said: type tool, word; shown : 103.2 px, Bold, Fill on, Stroke off; fill and ground colours inferred from pixels).
+   - Comp size: 1920×1080 (inferred: the centred position reads 960,540)
+   - Ground colour: about 242 on all three channels (measured)
+2. Re-centre the text layer so its anchor sits in the middle of the word, and the layer sits at frame centre (said "recenter the layer"; shown anchor −0.6, −36.3, which is the middle of the glyph block; the command used is inferred, for example Align or Pan Behind).
+   - Position at rest: 960, 540 (shown)
+3. Paste the bounce expression onto Position: press P, Alt-click the Position stopwatch, paste (said). Expression text: see build notes (said, pinned comment). The layer's position field turns red once an expression is on (shown).
+4. Set up the entrance with two keys (said). First key at the layer's start, where Position y is moved well above rest; second key a few frames later at rest. Order as spoken (said, 0:47.9-0:55.9): set the first key at the start, move forward 3 or 4 frames, then change Y at the start. The first key is made at frame 0 at rest, 960,540 (shown : one key at 0f, playhead 0;00;00;00). Which frame the second (540) key was created at is not visible; that it ends up as a rest key at frame 3 or 4 is inferred.
+   - Second key: 3 to 4 frames after the first (said "three or four"; shown playhead on the second key at 0;03, graph label 03f)
+   - Second key value: 960, 540 (shown as the reference value)
+   - First key value: dragged from 540 up to 375, then 97 (shown). Later frames read 102 (shown), so the author nudged it; either lands the word a little under the top edge (inferred: about 9–10 % of picture height from the top).
+5. Select both keys and press F9 (Easy Ease) (said). Open the Graph Editor and fit the graph (said). The speed graph then shows a bell that falls to zero at the second key (shown). The bounce is dead at that point, because the expression takes its swing size from the speed the word has on arrival (said that it stops working, frames in motion; the cause is inferred from the expression).
+6. In the Graph Editor, select the second key and drag its incoming handle left to lengthen it, then drag it upward so the speed at the second key is above zero (said both moves). On the way the handle passes a high setting, about 4,650 px/s (shown), a stronger bounce with a softer landing, as the author says of any raised handle (said); that this setting is too high is inferred from the later, lower reading, not stated.
+   - Final speed at the arrival key: about 1,350 px/s (shown : handle y≈913 where the axis reads 1000 at y≈923 and 2000 at y≈893), about 0.3 × the average speed over the move (average about 4,380 px/s, 438 px in 3 frames; inferred from those two numbers).
+   - Incoming influence at key 2: about 50 % of the 3-frame segment (measured; inferred)
+   - Outgoing influence at key 1: about 16 % (measured : 21 px of 131; inferred)
+7. Judge by eye how high to lift the handle: higher gives a stronger bounce but a softer landing impact (said). The author settles on a low point, "the sweet spot", at about 1,350 px/s (said at 1:41; shown after the graph is closed). Close the Graph Editor.
+8. Trim the layer start by one frame (said "trim it by one frame"; direction shown : the first word's bar starts about 1 frame after its first key, bar edge x≈71 against key x≈48 at 25 px per frame, so the in-point moved later and the frame-0 key sits before the bar; the next word's bar likewise starts a frame after its first key; in the 1920-wide frame the gap is about 10 px, about 1 frame). Switch on Motion Blur (said only as "turn on the motion blur"; the layer switch and the comp switch are inferred, neither is shown).
+9. Add the exit. With the playhead where the bounce has settled, set a Position key at rest (said); go forward and lift the word slightly (said "a little bit, not a lot"); go forward again and drag it down off the bottom (said; shown y 764 mid-drag, final readings 1290.4 and 1272.8; these two figures are values read at different playhead times, not one setting). Select the three keys and press F9 (said).
+   - Key times on the first word's layer, read from the timeline (25.4 px per frame at full size): about 0, 3, 25, 30, 34 f (measured ruler: 0f at x 47, 25f at 681, 30f at 808, 35f at 935, 25.4 px per frame at full size)
+   - Lift: a small lift, height not given. 535.4 is read by the text reader (a blurred transition frame, unreadable on screen) and 543.3 at 2:09.6, so neither is shown; see unknowns.
+10. Play and adjust the three exit keys by eye (said "play around with the key frames").
+11. First duplicate (the left word): duplicate the first word's layer, press U to reveal the keys, delete the three exit keys on the copy, and slide the copy's entrance keys so it starts as the first word falls out (said; final offsets in step 13). Change the copy's text to a different word (said "swap it with something different"; shows the copy with an auto-numbered name). Put the playhead on one of its keys, select both of its keys and drag them left in X, so the rest X goes 960 -> 726 -> 688 (said "select both of them and drag it to the left", 2:41.0; 726 shown in the 2:41.0 readout, 688 in the 2:44.3 readout).
+12. Second duplicate (the right word): duplicate that left-hand copy (said, 2:44.3), press U (said), select its entrance keys and drag them to the right in X (said "this time ... to the right"). Replace its word with a third word (said, 2:51.2). Its rest X reads 1073 at 2:53.2, then 1085.9 after adjusting (shown). Result: three layers, the first word (keeps the exit, falls out through the bottom, rest X 960), the left word (rest X 688) and the right word (rest X 1085.9). The Position expression stays on all three (shown).
+   - Rest X for the left word: 688; for the right word: 1085.9 (shown properties panel and layer rows)
+   - What those two numbers achieve, for other words: the pair reads as one centred title line, one ordinary word space apart. On the result frame the left word's ink spans about 581–795 px and the right word's about 832–1343 px of the 1920-wide comp, a gap of about 37 px (about 0.36 of the 103 px type size) with the line's centre at about 962 px, the frame's centre (measured on the result frame; the rule is our reading, inferred). With other words, place them by that rule (ink gap about 0.36 of the type size, line centred), not by 688 and 1085.9.
+   - All rest at y 540 (inferred; shown text centred vertically)
+13. Offset the right word's keys one frame later than the left word's (said "to the right by one frame"; measured : the left word has keys at 32 and 35 f, the right word at 33 and 36 f; ruler 25.4 px per frame).
+14. Preview (said). The result frame shows the word pair at rest with a neat dark line (shown).
+
+layout:
+- Comp is 1920×1080 (inferred from the layer centre at 960,540). At the picture runs from x 930 to 2850 and y 270 to 1350 of the full-size frame (measured; edges of the pale comp against the dark panel).
+- Rest line of the pair: about 39.9 % of the picture width wide (measured, 383 of 960 px in the small frame), centred at about 50 % across and 50.4 % down (measured). Letter height: capital T about 6.9 % of the picture height (measured; matches 103 px type at 1080).
+- Text colour: near black with a slight grey cast, about 34 on each channel (read by eye, not sampled; inferred). Ground: flat, no vignette or grain visible (measured: sampled 242, 242, 242 at one spot).
+- Every word in the example is styled alike: same face, same size, same colour. The example has three word layers: a first word that falls through the bottom, then a pair side by side (shown). In the example the bounce layers are all the same layer type, with one Position expression each.
+- Bounce size from the expression's numbers (inferred): swing at the arrival key = arrival speed × 0.06, so with about 1,350 px/s about 80 px; the first swing peaks about 0.14 s after the key at about half that, about 40 px (about 4 % of picture height) below rest, then back above it; one wobble lasts about 0.56 s (about 17 frames) and the size has fallen to a few percent by then. Check against the picture: (comp time 1;06) the pair sits 30 px below rest (position field 570.1 against 540), and a sheet shows offsets of about 40–50 comp px. A 4,650 px/s build would overshoot about 3.5 times too far.
+- Direction: the first word comes from above and drops to the middle; it falls down out of the bottom on exit (shown with the start key above rest, with exit values above 1080). The overshoot goes below rest first (inferred from the sign of the speed).
+- Motion blur: seen only while moving; the letters are smeared vertically, glyph edges run about 20–26 px beyond a letter's own top and bottom in comp pixels (measured). The entrance's speed curve peaks above about 5,000 px/s (about 167 px per frame) mid-move, but the speed is not known, so no shutter angle can be derived from it; start at the default 180° and compare (inferred). The peak speed, not the arrival speed, sets the smear.
+- The result frame is one still at rest, so smear and bounce are not visible in it; the preview loop around it is described under result.
+
+timing and easing: Entrance: two keys 3–4 frames apart (said), easy ease with the incoming handle at the second key raised so arrival speed is above zero, final about 1,350 px/s (said; shown). Exit: from the settled position, hold, then a small lift, then a drop through the bottom, three keys with easy ease (said F9); the five-key layout on the first word's layer is about 0, 3, 25, 30, 34 frames (measured). The pair's keys sit at 32 and 35 f (first) and 33 and 36 f (second). Two-word stagger: one frame (said, measured). Bounce numbers from the expression: amplitude 0.06, 1.8 cycles a second, decay 5 (said pinned comment; screen shows the expression is on Position).
+
+variations: The sweet spot of the handle height is a taste call: higher gives a stronger bounce but softer impact (said). The same set-up works on objects and characters, not only words (said). Two or more words can be offset by a frame (said).
+
+pitfalls: With a plain easy ease, the bounce stops, because the speed at the end of the move is zero (said, shown where the graph falls to zero at the second key). Trim the layer start by one frame so motion blur is already on at the first visible frame (said).
+
+
+build notes: In After Effects, add a Position expression to each text layer (Alt-click the stopwatch). The pinned expression, copied word for word from the author's pinned comment (the description holds only an advert link):
+
+```
+n = 0;
+if (numKeys > 0) {
+  n = nearestKey(time).index;
+  if (key(n).time > time) { n--; }
+}
+t = (n == 0) ? 0 : time - key(n).time;
+if (n > 0) {
+  v = velocityAtTime(key(n).time - thisComp.frameDuration / 10);
+  amp = 0.06; freq = 1.8; decay = 5;
+  value + v * amp * Math.sin(freq * t * 2 * Math.PI) / Math.exp(decay * t);
+} else { value; }
+```
+
+(said, pinned comment). By script: `layer.property("Position").setValueAtTime(...)`, then `setTemporalEaseAtKey(k, [new KeyframeEase(speed, influence)], [new KeyframeEase(speed, influence)])`; Easy Ease is influence 33.33 with speed 0, and the raised handle is a non-zero speed on the incoming ease of the second key (units are px/s; use about 1,350 with influence about 50 as a start, inferred). Set `layer.motionBlur = true` and `comp.motionBlur = true`. Duplicate with `layer.duplicate()`, delete keys with `removeKey`. Position expressions need the keys to exist; with only one key the expression returns plain value. The curve-helper panel is a third-party panel and cannot be scripted from here. In-point trim: `layer.inPoint = layer.inPoint + comp.frameDuration` (inferred direction).
+
+unknowns:
+- Whether the bezier helper panel's smooth-looking curve (0.33, 0.00, 0.00, 1.00) was applied to these keys: it is highlighted on screen from the first frames but the narrator names only F9 (Easy Ease) and handle dragging.
+- Text and ground colour values as typed in the app (only read from pixels).
+- Font size is shown as 103.2 px; the name of the typeface is a paid-font name shown in the Character panel (not copied here).
+- The exact final handle influence (read from the graph only; the speed of about 1,350 px/s is read).
+- The final y value of the exit key (1272.8 and 1290.4 appear at different playhead times) and the exact lift height (535.4 and 543.3 are text-reader readings only; shows 960.0,540.0 on the 25f key).
+- Whether the comp's Motion Blur switch and the shutter angle were set (not shown); the shutter, speed and smear cannot be tied together from one frame.
+- Whether the played preview at the result window is the final pair or the first word alone: the preview time display held at 1;21 while the picture changed, and the viewer shows both. Only the crop's position, which held from 186.0 on four cuts, is measured.
+
+## Small swept-head arrow that draws itself between steps
+id: 04-curved-arrow-draws-between-steps
+revision: 71fe9a82
+job: step-through-process; support: relate-things
+status: proven (accepted 2026-11-21)
+what it does for a beat: Ties a row of step images into a process: a tiny arrow draws itself between each pair just as the next step appears, so the eye is led left to right one step at a time.
+what it looks like: On a black ground, a row of six cut-out photos sits under a two-colour phase bar; between each pair a small thin white arrow (a straight shaft and a two-barb head whose barbs curl outward) draws on, shaft first, then the head flicks out from the tip. Five identical arrows appear one after another as the images pop in.
+ingredients:
+- Shape layers drawn with the Pen tool (stroke only, no fill) — built-in
+- Trim Paths (shape layer Add > Trim Paths) — built-in
+- A keyframe-easing panel extension used to apply a saved cubic curve — paid (any way of setting the same bezier ease works; see timing)
+- Pre-compose and Duplicate — built-in
+steps:
+1. With no layer selected (inferred for the shaft; said only for the head), pick the Pen tool and set fill to none and a white stroke (shown; white swatch, matching the white labels — said). Zoom the viewer to 400 % to draw (said "four"; shown reads 400%).
+   - Stroke width: 5 px first (said; shows 5 being typed into the toolbar field), then lowered to 3 px (said; shown toolbar "3 px")
+2. Draw the shaft: click once at the left, Shift-click to the right to make a straight horizontal line, in the gap between the first two images (said; shown). This makes its own shape layer.
+   - Shaft length: about 40 px in a 1920×1080 comp (measured on the result, 45 screen px at 1.127 px per comp px; 2.1 % of the picture width)
+3. Deselect, and draw the head as two more separate shape layers, one upper barb and one lower barb, each a two-point path that starts at the shaft's right end (the tip) and is bent by dragging a handle so it curls (said: a bent arrow; shown, second barb being drawn with handles out). The arrow is then three shape layers (shown layer list).
+   - Barb shape on the result: each leaves the tip at about 45° back from the shaft and curls outward so its free end points nearly straight up (upper) or down (lower); each spans about 13 px back and 13 px out from the tip; the whole head is about 26 px tall (measured)
+   - Stroke on every part: white, 3 px, butt cap, miter join, fill none (shown, Properties panel of a barb layer)
+4. On the shaft layer add Trim Paths and key Start from 100 % to 0 % over 12 frames (said; shown Start 100 % at 0:00:04:00 with nothing drawn; the full shaft at 0:00:04:12). Because the shaft was drawn left to right, this grows the shaft from the tip backwards towards the tail (shown on the played result, the line starts as a dot at the tip end and lengthens leftward).
+   - Ease both keys with the cubic curve 0.88, 0.14, 0.12, 0.86 (shown : the easing panel's curve readout; applied as "add the saved curve" — said). In After Effects terms (inferred, converted from the curve): influence 88 % on both keys, and speed at each key 0.14 ÷ 0.88 ≈ 0.16 times the average rate, not zero — for the shaft's 100 % in 12 frames that is about 32 %/s at each key. A sharp ease-in-out that still creeps at the ends; most of the move happens in the middle third
+5. On each barb layer add Trim Paths and key End from 0 % to 100 %, starting about one frame after the shaft starts and lasting about 13 frames; ease with the same curve (said: key End, move forward, add the same curve; shown two End keys on a barb, End reads 100 % after them; the 0 % start value is inferred from the played frames, where each barb grows from the tip outward). The narration and the picture disagree here: the words read as End being keyed down to zero a little later, and the head's first click as being at a barb's free end; the played frames show each barb growing out from the tip, so the picture wins — key End 0 → 100 on a path whose first vertex is the tip. Copy the Trim Paths from the first barb to the second so both open together (said).
+   - Final key times inside the arrow's own timeline (measured on the timeline, ±1 frame): shaft Start 100→0 at frames 35→47; both barbs End 0→100 at frames 36→49
+   - The author first keyed the head about 6 frames after the shaft start, then dragged it earlier "to be snappier" and then slid all keys to just before the second image's pop (said; shown versus)
+6. Select the three arrow layers and pre-compose them into one arrow comp (said; shown : the project holds a new arrow comp and the three shape layers are gone from the main comp).
+7. Duplicate the arrow precomp four times (five in all), move each copy right with Shift + arrow keys to sit in the next gap, and slide each copy later in time so it draws as the image it points to pops in (said; shown : five arrow precomp layers, staggered in-points).
+   - In-point offsets of the five copies, left to right (measured's timeline at 7.0 px per frame, ±1 frame): 0, 8, 17, 29, 39 frames
+   - So the arrows draw at about frames 35, 43, 52, 64 and 74 of the main comp (inferred from the offsets plus step 5's keys), each starting within a few frames of the pop of the image to its right (shown on the played result)
+layout: Measured on the clean result frame (crop below; comp calibrated on the black picture's own edges: 2164×1216 screen px for 1920×1080, 1.127 px per comp px). Five arrows, all the same size: length about 40 px (2.1 % of the width), head about 26 px tall (2.4 % of the height), stroke about 3.5 px rendered (3 px set), plain white (renders about 215 grey at its thin core, no glow, no shadow). All sit on one horizontal line at 63 % of the picture height (comp y about 682), the line of the image centres. Arrow centres at 28.2 %, 38.6 %, 49.0 %, 61.9 % and 73.0 % of the width — each centred in the gap between two neighbouring images, so the spacing is uneven (200, 199, 249, 213 px) because the images are unevenly spaced. Each image is roughly 100 px across (about 5 % of the width); arrows leave a clear margin of roughly 25–40 px to each image. Background flat black; nothing else in the comp affects the arrows. The phase bar, its labels and the images' pop are made outside this recipe; only the arrows are this recipe's. What the result shows of them (measured on the same crop): the bar runs from 47.4 % to 52.8 % of the height (about 5.5 % thick, centred at 50 %, so its centre is 13 % of the height above the arrows' row), lime (renders about 187, 236, 101) from 19.1 % to 62.5 % of the width and pale blue (renders about 144, 211, 223) from 63.1 % to 81.0 %, with a thin black gap between (colour warning: these two are recording colours, and a wide-gamut screen recording shows mid-tone greens and blues more saturated than the render; the lime's typed value, #BFF06C according to the check of the bar's own recipe, not shown in this window, comes through almost unchanged, while the pale blue's typed value was never shown, so treat its reading as approximate and match lightness rather than hue). Above it sit two one-word white labels in a bold sans, each left-aligned with its segment's left edge, about 3.0 % of the height tall (cap top to baseline) with their tops at 42.8 %.
+  Motion: each arrow draws left-to-right in reading order of the row, but each arrow itself grows from its tip backwards (shaft) and then its head opens from the tip outward (barbs); the shaft takes 12 frames and the head 13, overlapping almost entirely, with a sharp ease so each part creeps at both ends (about a sixth of its average speed) and snaps through the middle. No motion blur.
+timing and easing: Shaft Trim Start 100→0 % over 12 frames; barb Trim End 0→100 % over 13 frames starting 1 frame after the shaft; cubic ease 0.88, 0.14, 0.12, 0.86 on all keys (inferred conversion: 88 % influence each side, speed ≈ 0.16 × the average rate — about 32 %/s for the shaft, 29 %/s for the barbs). Copies offset 0, 8, 17, 29, 39 frames. Comp 23.976 fps on screen (the narrator calls it 24).
+variations: The shaft can be drawn to grow either way (the author picks one, said); the head can be straight barbs (click with Shift for straight) instead of curled ones (said). Copies can be placed wherever a new element appears (said).
+pitfalls: Draw the head with nothing selected so each barb is its own path/layer (said). Keep the stroke thin (3 px) so the arrow does not look heavy (said).
+build notes: Three shape layers each with one Path, one Stroke ("ADBE Vector Graphic - Stroke", width 3, colour white, Line Cap Butt, Line Join Miter) and one Trim Paths ("ADBE Vector Filter - Trim"); shaft path vertices (−20, 0) → (20, 0); barbs from (20, 0) with a curved handle to about (7, −13) and (7, 13) (inferred from the measured shape). Set ease (inferred conversion of the shown curve) with KeyframeEase(speed, 88) on both sides of each key, speed = 0.159 × 100 % ÷ the move's duration in seconds: about 31.8 for the shaft (12 frames) and 29.3 for the barbs (13 frames). KeyframeEase(0, 88) would give a harder ease than the one shown. Pre-compose the three layers at comp size, duplicate the precomp and set each copy's startTime to 0, 8, 17, 29, 39 frames and its position to the gap centres. In a later step of this video the background turns pale (06) and the arrows, still white, disappear there — change their stroke to the label colour if you use a pale ground.
+unknowns: The barbs' exact vertex and handle positions (only their drawn result is measured); the arrow precomp's size and duration (it keeps the comp's 23.976 fps, shown in the project panel); the exact first value of the barbs' End key (0 % inferred from the played draw); the exact image-pop frames each copy was aligned to (aligned by eye).
+
 ## Bar chart of thick strokes that grow up in a ladder, with value labels sliding in beside them
 id: 07-stroked-bars-grow-in-stagger-with-value-labels
 revision: 4731c114

@@ -13,3 +13,4 @@ The recipes in this folder were learned from public tutorials. The techniques ar
 | `SKU3QdqKLOs.md` | [SonduckFilm](https://www.youtube.com/channel/UC5DmsBrVi62DWBASLK5gMEw) | [5 Infographic Edits You Should Know in After Effects](https://www.youtube.com/watch?v=SKU3QdqKLOs) |
 | `Tf0EiCGOEYs.md` | [Mavi Design](https://www.youtube.com/channel/UCgD2FCXaZZwtnfpd_r8iW0A) | [Animate a Simple Call-To-Action Button Scene in After Effects (Full Process)](https://www.youtube.com/watch?v=Tf0EiCGOEYs) |
 | `nHh0NRo8G2U.md` | [Mapal](https://www.youtube.com/channel/UCQKbng8d-nh4EpvOrlF7Idw) | [How To Animate Infographics Like VOX (After Effects Tutorial)](https://www.youtube.com/watch?v=nHh0NRo8G2U) |
+| `201iywIy74c.md` | [Bart_VFX](https://www.youtube.com/channel/UCH04vkzlXlDTNqeQpSayj1w) | [5 Editing Ideas You Should Try \| After Effects](https://www.youtube.com/watch?v=201iywIy74c) |

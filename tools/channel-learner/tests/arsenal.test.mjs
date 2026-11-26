@@ -511,6 +511,9 @@ test('cli: one command builds the arsenal from drafts, tags and a jobs file, and
     assert.equal(r.status, 0, r.stderr);
     assert.deepEqual(fs.readdirSync(out).sort(), ['catalog.json', 'index.json', 'jobs-v1.json', 'recipes-line.md']);
     assert.match(r.stdout, /"recipes":1/);
+    // The merge step matches new recipes against the drafts' catalog.json; it is rewritten in the same run (lesson 43).
+    const drafted = JSON.parse(fs.readFileSync(path.join(dir, 'catalog.json'), 'utf8'));
+    assert.deepEqual(drafted.recipes.map((x) => x.id), ['01-a']);
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 });
 

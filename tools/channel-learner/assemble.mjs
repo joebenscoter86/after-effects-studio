@@ -79,7 +79,8 @@ export function assemble(study, outDir) {
   const creditsPath = path.join(outDir, 'CREDITS.md');
   let credits = fs.existsSync(creditsPath) ? fs.readFileSync(creditsPath, 'utf8') : '# Credits\n\n| Draft | Channel | Video |\n|---|---|---|\n';
   if (!credits.includes(`\`${info.id}.md\``)) {
-    credits = `${credits.trimEnd()}\n| \`${info.id}.md\` | [${info.channel}](${info.channel_url}) | [${info.title}](https://www.youtube.com/watch?v=${info.id}) |\n`;
+    const cell = (t) => String(t).replace(/\|/g, '\\|'); // a pipe in a title would split the table row
+    credits = `${credits.trimEnd()}\n| \`${info.id}.md\` | [${cell(info.channel)}](${info.channel_url}) | [${cell(info.title)}](https://www.youtube.com/watch?v=${info.id}) |\n`;
     fs.writeFileSync(creditsPath, credits);
   }
   return { id: info.id, recipes: files.length };

@@ -41,7 +41,8 @@ export const STAGES = {
   distil:         { model: 'sonnet', per: 'recipe', maxTurns: 60,  runUsd: 4 },
   check:          { model: 'sonnet', per: 'recipe', maxTurns: 50,  runUsd: 3 },
   layout:         { model: 'sonnet', per: 'recipe', maxTurns: 25,  runUsd: 1 },
-  art:            { model: 'sonnet', per: 'recipe', maxTurns: 60,  runUsd: 4, mcp: ['mcp__af2a5bee-d258-4aa6-8bf9-8eb2060db0e2'] },
+  // The Higgsfield connector is mcp__claude_ai_Higgsfield in a headless run; an interactive session may list it under its id.
+  art:            { model: 'sonnet', per: 'recipe', maxTurns: 60,  runUsd: 4, mcp: ['mcp__claude_ai_Higgsfield', 'mcp__af2a5bee-d258-4aa6-8bf9-8eb2060db0e2'] },
   'prove-author': { model: 'sonnet', per: 'recipe', maxTurns: 40,  runUsd: 3 },
   'prove-run':    { model: 'sonnet', per: 'recipe', maxTurns: 120, runUsd: 8, mcp: ['mcp__plugin_comp-room_comp-room'], alone: true },
   'prove-review': { model: 'opus',   per: 'recipe', maxTurns: 40,  runUsd: 5 },
@@ -140,6 +141,9 @@ const readJson = (p, fallback = null) => { try { return JSON.parse(fs.readFileSy
 const mtime = (p) => { try { return fs.statSync(p).mtimeMs; } catch { return null; } };
 const findFile = (dir, re) => { try { const f = fs.readdirSync(dir).filter((n) => re.test(n)).sort()[0]; return f ? path.join(dir, f) : null; } catch { return null; } };
 const recipeFile = (ctx, n) => findFile(path.join(ctx.study, 'recipes'), new RegExp(`^${n}-.*\\.md$`));
+/** A technique's build script: SCRIPTS/<n>-<slug>.jsx, never the finished example copied into every scripts folder. */
+const EXAMPLE_SCRIPT = '01-dotted-line.jsx';
+const scriptFile = (ctx, n) => { try { const f = fs.readdirSync(ctx.scripts).filter((x) => x !== EXAMPLE_SCRIPT && new RegExp(`^${n}-.*\\.jsx$`).test(x)).sort()[0]; return f ? path.join(ctx.scripts, f) : null; } catch { return null; } };
 const checkFile = (ctx, n) => path.join(ctx.study, 'checks', `${n}.md`);
 
 /** What a check file says: { verdict: 'pass'|'fail'|null, round } (null when there is none). */
@@ -211,6 +215,12 @@ function runBlock(stage, unit, ctx) {
   if (ctx.study) L.push(`- STUDY: \`${ctx.study}\``);
   if (/^(art|prove)/.test(stage)) L.push(`- PROOF: \`${ctx.proof}\``);
   if (/^prove-(author|run)$/.test(stage)) L.push(`- SCRIPTS: \`${ctx.scripts}\``);
+  if (stage === 'prove-run') { const sf = scriptFile(ctx, unit); if (sf) L.push(`- Script: \`${sf}\` (yours to run; \`${EXAMPLE_SCRIPT}\` is only the finished example)`); }
+  if (stage === 'prove-run') {
+    const rv = path.join(ctx.proof, unit, 'review.md');
+    const v = fs.existsSync(rv) ? (fs.readFileSync(rv, 'utf8').match(/^verdict:\s*(.+)$/m) || [])[1]?.trim() : null;
+    if (v && !/^matches\b/.test(v)) L.push(`- This is a rebuild: the last build was reviewed "${v}". Read \`${rv}\`, its \`the look\`, \`missing from the recipe\` and \`to fix\` lines, and aim for its targets (estimates: measure your own render). Keep the earlier build's files under their label, as step 3 says.`);
+  }
   if (stage === 'menu') L.push(`- DRAFTS: \`${ctx.drafts}\``);
   const v = ctx.video;
   if (ctx.study) L.push(`- Video: ${v.id}${v.width ? `, ${v.width} by ${v.height}` : ''}${v.fps ? `, ${v.fps} frames a second` : ''}`);
@@ -221,6 +231,10 @@ function runBlock(stage, unit, ctx) {
   if (stage === 'distil' || stage === 'check') {
     L.push('- Standing notes:');
     for (const n of STANDING_NOTES) L.push(`  - ${n.replace('<n>', unit)}`);
+    const extras = path.join(ctx.study, 'extras.md');
+    if (fs.existsSync(extras)) {
+      L.push(`- Beside the video: \`${extras}\` holds what the author gave outside the recording (a pinned comment's expression, the description), copied word for word. Read it when the narration points to it. A step or value taken from it is marked \`said (pinned comment)\` (or \`said (description)\`); the screen still decides what was actually used, and our recipe text stays in our own words.`);
+    }
   }
   if (stage === 'distil') {
     const c = readCheck(checkFile(ctx, unit));
@@ -231,7 +245,10 @@ function runBlock(stage, unit, ctx) {
   if (stage === 'check') {
     const c = readCheck(checkFile(ctx, unit));
     const round = c ? c.round + 1 : 1;
-    L.push(`- This is round ${round}: write \`round: ${round}${round === 3 ? ' (changed lines only)' : ''}\` as the first line of checks/${unit}.md.${round === 3 ? ' Check only the lines changed since round 2.' : ''}`);
+    // From round 3 on (round 4 and later only when the lead revives a held recipe) a check looks at the lines
+    // the last fix changed: lines that passed a full check are not re-opened (LESSONS.md, lesson 37).
+    const narrow = round >= 3;
+    L.push(`- This is round ${round}: write \`round: ${round}${narrow ? ' (changed lines only)' : ''}\` as the first line of checks/${unit}.md.${narrow ? ` Check only the lines changed since round ${round - 1}.` : ''}`);
   }
   if (stage === 'prove-review') {
     L.push(`- The contact sheets are made: \`PROOF/${unit}/sheet.png\`${fs.existsSync(path.join(ctx.proof, unit, 'sheet-motion.png')) ? ` and \`PROOF/${unit}/sheet-motion.png\`` : ''}.`);
@@ -274,7 +291,7 @@ function judgeOutput(stage, unit, ctx, started) {
     case 'art':
       return freshSince(path.join(proof, 'art', 'brief.md'), started) ? { ok: true } : { ok: false, note: 'no art/brief.md written' };
     case 'prove-author': {
-      const s = findFile(ctx.scripts, new RegExp(`^${unit}-.*\\.jsx$`));
+      const s = scriptFile(ctx, unit);
       return s && freshSince(s, started) ? { ok: true } : { ok: false, note: `no script ${unit}-*.jsx written` };
     }
     case 'prove-run':
@@ -302,7 +319,7 @@ async function prepare(stage, unit, ctx, deps) {
       if (!fs.existsSync(to) && fs.existsSync(from)) fs.copyFileSync(from, to);
     }
   }
-  if (stage === 'prove-run' && !findFile(ctx.scripts, new RegExp(`^${unit}-.*\\.jsx$`))) {
+  if (stage === 'prove-run' && !scriptFile(ctx, unit)) {
     throw new Error(`no script ${unit}-*.jsx in ${ctx.scripts}: run prove-author first`);
   }
   if (stage === 'prove-review') await deps.makeSheets(path.join(ctx.proof, unit));

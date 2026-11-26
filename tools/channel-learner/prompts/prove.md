@@ -12,7 +12,7 @@ You test whether a written recipe is enough to rebuild a technique. You get the 
 ## Rules for After Effects
 
 - You are the only one driving After Effects right now. The open project must be `PROOF/proofs.aep`; check with `ae_project_info` before the first write, and stop and report if it is anything else. Never open, close or create a project. Never touch comps you did not make, except to read them.
-- One comp per technique, named `<n> <short name>`, 1920 by 1080, 24 frames a second unless the recipe says otherwise, 3 to 6 seconds. Use our own stand-in content: text, shapes, solids, gradients. No downloaded assets.
+- One comp per technique, named `<n> <short name>`, 1080 by 1920 (9:16, the phone frame the owner reviews on), 24 frames a second unless the recipe says otherwise, 3 to 6 seconds. Use our own stand-in content: text, shapes, solids, gradients. No downloaded assets.
 - Prefer a dedicated plugin operation (`ae_catalog`) when one exists; otherwise write ExtendScript in `SCRIPTS/<n>-<slug>.jsx` and run it with `ae_do` `eval.run` `{ file, args: { prelude: "<SCRIPTS>/prelude.jsx" } }`. Scripts must be re-runnable (`P.freshComp` removes the earlier comp). ExtendScript is ES3: no `let`, arrow functions or template strings. After `addProperty`, fetch properties again by name or index; old references go stale.
 - Do not call undo. Do not use the render queue except through `render.preview`. Leave project settings alone (8 bits per channel).
 - Menu commands that open a dialog are off limits. If a step can only be done by hand in the interface, say so and build the same result another way (keyframes, properties), marked as a substitute.

@@ -81,7 +81,7 @@ export type BeatAsk = {
   exclude?: string[]; limit?: number;
 };
 export type Candidate = Pick<ArsenalRecipe, "id" | "revision" | "name" | "line" | "status" | "needs" | "duration" | "motion" | "section">
-  & { still: string | null; fit: string; variants?: string[]; kind?: "piece"; call?: string };
+  & { still: string | null; fit: string; variants?: string[]; variant_of?: string; kind?: "piece"; call?: string };
 export type FindAnswer = { vocab: string; version: string; results: Candidate[]; relaxed?: string[] };
 
 /** A refusal the asker can act on (an unknown job, another vocab); the message says what is valid. */
@@ -115,6 +115,17 @@ function distance(duration: ArsenalRecipe["duration"], want?: number): number {
   return m[2] ? Math.max(0, d - want) : Math.abs(d - want);
 }
 
+/**
+ * Of the entries that answer an ask, the ones that stand on their own: every entry that is not a variant, and each
+ * variant whose parent is not among them (its parent would stand for it and list it). A variant learned for another
+ * beat than its parent's is found for that beat this way, and never hidden behind a parent that was not found.
+ */
+function standOnTheirOwn<T extends { id: string; variant_of?: string }>(answering: T[]): T[] {
+  const ids = new Set(answering.map((e) => e.id));
+  return answering.filter((e) => !e.variant_of || !ids.has(e.variant_of));
+}
+const variantText = (e: { variant_of?: string }) => (e.variant_of ? `variant of ${e.variant_of}, found here on its own` : null);
+
 /** Per beat: a ranked shortlist. Refuses another vocab or an unknown job id; never guesses one. */
 export function findTechniques(catalog: ArsenalCatalog, ask: BeatAsk): FindAnswer {
   if (ask.vocab !== catalog.vocab) throw new ArsenalRefusal(`refused: ask is vocab ${ask.vocab} but the catalog is ${catalog.vocab}`);
@@ -130,8 +141,10 @@ export function findTechniques(catalog: ArsenalCatalog, ask: BeatAsk): FindAnswe
   // Job match tier: 0 primary job, 1 the asked job is one of its supports, 2 it serves one of the beat's support jobs.
   const tier = (r: ArsenalRecipe): number | null =>
     r.job === ask.job ? 0 : r.support.includes(ask.job) ? 1 : [r.job, ...r.support].some((j) => j !== null && support.includes(j)) ? 2 : null;
-  // A variant is never a candidate on its own: its parent stands for it and lists it (variants).
-  const byJob = catalog.entries.filter((r) => (r.kind === "technique" || r.kind === "piece") && !r.variant_of && tier(r) !== null && !exclude.has(r.id));
+  // A variant stands behind its parent, which lists it (variants), whenever the parent serves the asked jobs too, even
+  // when the parent is excluded. A variant learned for a job its parent does not serve is a candidate on its own.
+  const serves = catalog.entries.filter((r) => (r.kind === "technique" || r.kind === "piece") && tier(r) !== null);
+  const byJob = standOnTheirOwn(serves).filter((r) => !exclude.has(r.id));
 
   const pass = (r: ArsenalRecipe, loose: string[]) =>
     (loose.includes("status") || ask.constraints?.status === "any" || r.status === "proven")
@@ -160,7 +173,7 @@ export function findTechniques(catalog: ArsenalCatalog, ask: BeatAsk): FindAnswe
       : missing.length ? `needs ${missing.join(", ")}, not on hand`
         : have === null ? `needs ${r.needs.join(", ")}` : `needs met: ${r.needs.join(", ")}`;
     const m = overlap(r);
-    return [r.kind === "piece" ? "piece: runnable code, get returns its call" : null, job, needs, m.length ? `mood: ${m.join(", ")}` : mood.length ? "no mood overlap" : null,
+    return [r.kind === "piece" ? "piece: runnable code, get returns its call" : null, job, variantText(r), needs, m.length ? `mood: ${m.join(", ")}` : mood.length ? "no mood overlap" : null,
       r.taught_by > 1 ? `taught ${r.taught_by} times` : null, r.status === "proven" ? "proven" : "unproven, needs a test build first"]
       .filter(Boolean).join("; ");
   };
@@ -171,6 +184,7 @@ export function findTechniques(catalog: ArsenalCatalog, ask: BeatAsk): FindAnswe
       id: r.id, revision: r.revision, name: r.name, line: r.line, status: r.status, needs: r.needs,
       duration: r.duration, motion: r.motion, still: r.still?.path ?? null, section: r.section, fit: fit(r),
       ...(r.variants?.length ? { variants: r.variants } : {}),
+      ...(r.variant_of ? { variant_of: r.variant_of } : {}),
       ...(r.kind === "piece" && r.call ? { kind: "piece" as const, call: r.call.signature } : {}),
     })),
   };
@@ -244,7 +258,7 @@ export type ProvidesAsk = {
   level?: string; provides?: string[]; query?: string; shelf?: "shipped" | "user"; status?: "proven" | "any"; exclude?: string[]; limit?: number;
 };
 export type EntrySummary = Pick<ArsenalEntry, "id" | "revision" | "level" | "also_level" | "name" | "line" | "status" | "kind" | "provides" | "needs" | "cost" | "section">
-  & { still: string | null; fit: string; variants?: string[]; use_for?: string; call?: string };
+  & { still: string | null; fit: string; variants?: string[]; variant_of?: string; use_for?: string; call?: string };
 export type ProvidesAnswer = { vocab: string; version: string; results: EntrySummary[]; relaxed?: string[]; words?: string[] };
 
 /**
@@ -252,7 +266,8 @@ export type ProvidesAnswer = { vocab: string; version: string; results: EntrySum
  * any (relaxed when that leaves nothing). With query, only the entries that carry the most of its words are kept
  * (every word when any entry has them all, else "words" is named in relaxed), pieces first among them. Then ranked by
  * how many asked provides an entry gives, then with a still before without, then catalog order; never by a
- * preferred look. A variant stands behind its parent.
+ * preferred look. A variant stands behind a parent that answers the same ask; one that alone gives what was asked
+ * is found on its own and names its parent.
  */
 export function findByProvides(catalog: ArsenalCatalog, ask: ProvidesAsk): ProvidesAnswer {
   const level = checkLevel(ask.level);
@@ -262,14 +277,21 @@ export function findByProvides(catalog: ArsenalCatalog, ask: ProvidesAsk): Provi
   if (!level && !asked.length && !words.length) throw new ArsenalRefusal("refused: find needs a job, a level, provides or a query");
   const exclude = new Set(ask.exclude ?? []);
   const limit = ask.limit ?? 5;
-  let pool = catalog.entries.filter((e) => !e.variant_of && !exclude.has(e.id)
-    && (!level || atLevel(e, level)) && (!ask.shelf || e.shelf === ask.shelf) && (!asked.length || matched(e, asked).length > 0));
+  const answers = (e: ArsenalEntry) => (!level || atLevel(e, level)) && (!ask.shelf || e.shelf === ask.shelf) && (!asked.length || matched(e, asked).length > 0);
+  let pool = catalog.entries.filter((e) => !exclude.has(e.id) && answers(e));
   let relaxed: string[] = [];
   if (words.length) {
     const best = Math.max(0, ...pool.map((e) => wordsMatched(e, words).length));
     pool = best ? pool.filter((e) => wordsMatched(e, words).length === best) : [];
     if (best && best < words.length) relaxed = ["words"];
   }
+  // A variant stands behind a parent that answers the same ask (excluded or not) with as many of its words.
+  const byId = new Map(catalog.entries.map((e) => [e.id, e]));
+  const behindParent = (e: ArsenalEntry) => {
+    const p = e.variant_of ? byId.get(e.variant_of) : undefined;
+    return !!p && answers(p) && wordsMatched(p, words).length >= wordsMatched(e, words).length;
+  };
+  pool = pool.filter((e) => !behindParent(e));
   let hits = pool.filter((e) => ask.status === "any" || e.status === "proven");
   if (!hits.length && pool.length) { relaxed = [...relaxed, "status"]; hits = pool; }
   const ranked = hits
@@ -289,9 +311,10 @@ export function findByProvides(catalog: ArsenalCatalog, ask: ProvidesAsk): Provi
         ...(e.kind === "piece" && e.call ? { use_for: e.use_for, call: e.call.signature } : {}),
         fit: [e.kind === "piece" ? "piece: runnable code, get returns its call" : null, levelText(e),
           w.length ? `words: ${w.join(", ")} of ${words.join(", ")}` : null,
-          m.length ? `provides ${m.join(", ")}` : null, e.status === "proven" ? "proven" : "unproven, needs a test build first",
+          m.length ? `provides ${m.join(", ")}` : null, variantText(e), e.status === "proven" ? "proven" : "unproven, needs a test build first",
           e.still ? null : `no still: ${e.no_still ?? "none shipped"}`].filter(Boolean).join("; "),
         ...(e.variants?.length ? { variants: e.variants } : {}),
+        ...(e.variant_of ? { variant_of: e.variant_of } : {}),
       };
     }),
   };
@@ -300,7 +323,7 @@ export function findByProvides(catalog: ArsenalCatalog, ask: ProvidesAsk): Provi
 }
 
 export type BrowseAsk = { level?: string; provides?: string[]; shelf?: "shipped" | "user"; page?: number; page_size?: number; include_unpictured?: boolean };
-export type BrowseTile = { n: number; id: string; name: string; level: Level; also_level?: Level[]; kind?: "piece"; role?: "house" | "example"; block?: string; provides: string[]; status: ArsenalEntry["status"]; no_still?: string };
+export type BrowseTile = { n: number; id: string; name: string; level: Level; also_level?: Level[]; kind?: "piece"; role?: "house" | "example"; block?: string; provides: string[]; status: ArsenalEntry["status"]; no_still?: string; variant_of?: string };
 export type BrowsePage = {
   vocab: string; version: string; level: Level | "all"; provides?: string[]; page: number; pages: number; page_size: number; total: number;
   hidden_without_still: number; tiles: BrowseTile[];
@@ -310,7 +333,8 @@ export const BROWSE_PAGE_MAX = 24;
 
 /**
  * One page of a level (or every level, styles first) as tiles: id, name and provides for each, in catalog order.
- * Entries with no still are hidden unless include_unpictured, and counted. A variant stands behind its parent.
+ * Entries with no still are hidden unless include_unpictured, and counted. A variant stands behind its parent unless
+ * the parent is not on the page's list (a provides filter it alone meets); then it is a tile of its own.
  */
 export function browseCatalog(catalog: ArsenalCatalog, ask: BrowseAsk = {}): BrowsePage {
   const level = checkLevel(ask.level);
@@ -318,19 +342,21 @@ export function browseCatalog(catalog: ArsenalCatalog, ask: BrowseAsk = {}): Bro
   const size = Math.min(Math.max(1, Math.floor(ask.page_size ?? BROWSE_PAGE)), BROWSE_PAGE_MAX);
   const order = level ? [level] : [...LEVELS];
   const seen = new Set<string>();
-  const all: ArsenalEntry[] = [];
+  const answering: ArsenalEntry[] = [];
   for (const l of order) for (const e of catalog.entries) {
-    if (seen.has(e.id) || e.variant_of || !atLevel(e, l)) continue;
+    if (seen.has(e.id) || !atLevel(e, l)) continue;
     if (ask.shelf && e.shelf !== ask.shelf) continue;
     if (asked.length && !matched(e, asked).length) continue;
-    seen.add(e.id); all.push(e);
+    seen.add(e.id); answering.push(e);
   }
+  const all = standOnTheirOwn(answering);
   const shown = ask.include_unpictured ? all : all.filter((e) => e.still);
   const pages = Math.max(1, Math.ceil(shown.length / size));
   const page = Math.min(Math.max(1, Math.floor(ask.page ?? 1)), pages);
   const tiles = shown.slice((page - 1) * size, page * size).map((e, i) => ({
     n: (page - 1) * size + i + 1, id: e.id, name: e.name, level: e.level, ...(e.also_level?.length ? { also_level: e.also_level } : {}),
     ...(e.kind === "piece" ? { kind: "piece" as const } : {}), ...(e.role ? { role: e.role } : {}), ...(e.block ? { block: e.block } : {}), provides: e.provides, status: e.status, ...(e.still ? {} : { no_still: e.no_still ?? "none shipped" }),
+    ...(e.variant_of ? { variant_of: e.variant_of } : {}),
   }));
   return {
     vocab: catalog.vocab, version: catalog.version, level: level ?? "all", ...(asked.length ? { provides: asked.map(showProvides) } : {}),
@@ -486,7 +512,7 @@ export const arsenalTool = defineTool({
   name: "ae_arsenal", title: "Library: styles, worlds, recipes and pieces", group: "document", effect: "read", blockedInReadOnly: false,
   description: "The library at three levels, each entry with a still from our own proof build and what it provides: styles (a look a section can borrow: colour, type, light, material), worlds (a set a section lives in: floor, light, environment, materials) and recipes (one technique for one beat). Among the recipes, pieces are runnable code: one file each, called by name, built and lit (thickness, light, shadow, overshoot) but carrying no look of their own. " +
     "action browse shows a level as labelled stills, a page at a time (level, provides, shelf, page, page_size); start a brief there. " +
-    "action find with job returns a ranked shortlist for one beat, pieces first, then written recipes (job, and optionally support, duration, mood, assets, constraints.status, exclude, limit; proven only unless constraints.status is any; relaxed names any filter loosened when nothing passed; never another job; a candidate taught in other ways lists their ids as variants). " +
+    "action find with job returns a ranked shortlist for one beat, pieces first, then written recipes (job, and optionally support, duration, mood, assets, constraints.status, exclude, limit; proven only unless constraints.status is any; relaxed names any filter loosened when nothing passed; never another job; a candidate taught in other ways lists their ids as variants, and a variant learned for a job its parent does not serve comes up on its own with variant_of). " +
     "action find with query (plain words, e.g. \"something that turns over\"), level and/or provides (e.g. \"material: glass\", \"floor: gloss-dark\") returns entries across levels, pieces first when the words fit one. " +
     "An unknown job, level or provides word is refused with the valid ones: pick one, never invent one. action jobs lists the job and provides vocabularies. " +
     "action get takes any id (and the pinned revision) with its still: a piece answers with its call (the load line, signature, options, returns and a short example) to run in eval.run; a recipe with its text; a style or world with its document. Offline; no After Effects needed.",

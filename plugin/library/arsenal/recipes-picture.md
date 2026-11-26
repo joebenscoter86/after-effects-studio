@@ -2,6 +2,130 @@
 
 Generated from the recipe drafts; do not edit by hand. Recipes whose primary job is in this group. Find candidates for a beat with ae_arsenal find; read one with ae_arsenal get, or a section here by its heading.
 
+## Concentric gradient discs from a Repeater with eased scale and rotation
+id: 02-repeater-hypnotic-background
+revision: 004bb5ad
+job: fill-the-backdrop; support: keep-it-alive, reveal-headline
+status: proven (accepted 2026-11-25)
+what it does for a beat: A calm, minimal animated backdrop for a title or explainer; it sits behind text that pops in with an overshoot bounce.
+what it looks like: A pale-lilac field filled edge to edge with soft concentric rings. Each ring is a white-to-purple left-to-right gradient disc, larger than the one inside it, so the whole thing reads as a tunnel that slowly swells and twists.
+
+ingredients:
+- Ellipse path on a shape layer — built-in; ellipse tool from the toolbar's shape group (said, 3:31)
+- Gradient Fill (linear) — built-in; fill type switched from solid in the layer's Properties panel (said; panel shown)
+- Repeater — built-in; Contents > Add > Repeater (said)
+- Graph editor easing — built-in; F9 then drag handles (said)
+- Hue/Saturation effect — stock; used for recolouring (said, 5:30; panel shown)
+
+steps:
+1. Draw one circle in the centre of the comp, holding Shift for a true circle (said). Behind it is a near-white light grey ground (about F2F2F2, shown; whether it is the comp background colour or a layer is not shown, inferred a plain background). Size 410 x 410, stroke none, centred at comp middle (position 960,540) (shown for 410 and 960,540; the comp is 1920x1080 inferred from those values)
+   - Anchor/shape position recentred (said "recenter"). Before: layer Anchor Point -85,-17 and Shape Transform Position -85,-17, Shape Transform Anchor 0,0 (shown). After: layer Anchor Point 0,0 and Shape Transform Position 0,0, layer Position 960,540 (shown). The zeroing itself is not narrated and no click is seen; the final state is what matters: ellipse at 0,0 inside the repeater's 0,0 anchor, so the rings are concentric.
+2. Change the fill from solid to Linear Gradient (said; shown)
+   - Gradient: left stop white, right stop hex C49FFF (RGB 196,159,255); the hex is typed with the editor open (shown). Gradient runs left to right across the disc (shown). Motion blur: not seen on (switch not visible); treat as off.
+3. Soften the gradient's middle by editing the gradient's path handles: double-click the line of the gradient on the shape, then drag one end dot toward the left (said), and the other end dot the same way from its own side (said "the same thing with the other side"; its direction is inferred, outward toward the right) so the blend is smoother (result shown; precise handle positions not given)
+4. Contents > Add > Repeater (said). 
+   - Copies: 3 default, set to 10 (said; shown)
+   - Offset: 0 (shown)
+   - Composite: Below (shown : default, never changed)
+5. Open Transform: Repeater (the repeater's own transform, not the layer's) (said). It first shows Position 72,0 (shown : copies fan out right); set Position to 0,0 so the copies stack in place (said; shown area)
+6. At time 0 add keyframes on Scale and Rotation of the repeater transform (100%, 0°) (said; shown)
+7. Move forward in time (the second key sits at about 10 s 21 frames in the demonstration: comp time 0;00;10;21 shown), raise Scale to 143.3% and Rotation to about 34.3° (scale shown; rotation 0x+34.3° read in the full-size crop (timeline reads 34.39) graph panel). The values were dragged to taste ("something like that").
+8. Select all keys, F9 (Easy Ease), open the graph editor, fit graphs and drag the end handle left, then the other handle left (said; graph with steep start decaying to zero by the last key shown). The curves are speed graphs: very fast early, long slow tail.
+9. Squeeze the two keys closer together for a quicker look (said "squeeze in these keyframes"). Later frames show the second key at about 2.9 s (: key marks at about 0 and 3 s).
+10. Add text on top with the bounce pop-in from technique 01 (said; shows the word over the rings).
+11. Optional recolour: Hue/Saturation effect, play with Master Hue (said). The panel starts at 0°; the author passes through about 162° (timeline, 5:) and lands on Master Hue 0x+91.0°, which turns the lilac rings pink (shown).
+
+layout: Comp picture in the full-size frame is x 984–2902, y 270–1350 (measured), i.e. 1918x1080, scale ~1920x1080.
+- Base disc: diameter 21.4% of picture width / 37.8% of height (measured; matches 410 of 1920). Centred.
+- Ring radii (viewer time 0;00;01;29 on the long keys), measured along the vertical and horizontal lines through the centre as shares of picture width: 0.107 (base disc), 0.136, 0.172, 0.216, 0.274, 0.346, then an outer edge near 0.43. So 6 to 7 rings are legible; each is about 1.26 times the one inside it. The factor per ring is the repeater scale at that moment (compounding per copy). It reaches 1.43 only when scale lands on 143.3%; on the later squeezed keys (1;25, scale 141.1%, rotation 32.6°) the ratio is about 1.41. The "143%" and these 1.26 describe the same picture at two moments of the swell, not two sizes.
+- Start of the move (viewer 0;00;00;15): a single disc about 55% of the picture width across (largest copy radius about 0.275), with the ten copies bunched inside it, so the light-grey ground shows all round; scale per copy at that moment is about 1.11 (inferred from 0.275/0.107 over nine steps). By 1;15 the rings fill the picture.
+- Gradient and twist: each ring is the same white-to-purple gradient, but rotation compounds per copy, so the base disc is purple at its right while the outer rings are purple at left and bottom and nearly white at upper right. Colours measured (display gamut caveat): bottom-left corner C8A4FF, just right of the base disc CFB5FE, upper-right corner FBFBFD.
+- Rings overlap with hard edges and no shadow; each larger ring sits behind the smaller ones (Composite Below) (shown).
+- Ground: near-white light grey, covered by the rings once they swell.
+- Every copy carries the effect; one layer, no shadows.
+- Motion: animated. Viewer time reads 0;15, 1;15, 1;29, 3;18 across while the timeline stays at 0, so it is a running preview. Fast start, long tail: per-ring ratio is about 1.11 at viewer 0;15, 1.26 at 1;29 and about 1.42 at the end value, so about 26 % of the scale change has happened by 0;15 and about 60 % by 1;29. Twist direction: clockwise on screen with positive rotation; the purple side runs from right (base disc) to lower right, bottom and left (outer rings) (shown). The work area runs from 0 to about 13 s (end marker about 13.1 s on the ruler). Speed from keys: scale 100%→143.3% and rotation 0→34.3° over the key gap (about 10.7 s on the first keys, about 3 s once squeezed); loop length in redraws was not counted.
+- Recoloured variant (after step 11): same rings, pink (Master Hue 91°), lighter toward the upper right.
+
+timing and easing: Two keys on repeater Scale and Rotation; start at 0 s, end about 10.7 s in the first demo and later about 3 s after squeezing. Easy ease with the first-key handle pulled so the speed is high at the start and falls to zero at the last key; tooltip at first handle read speed 0 %/s influence 2.31% (shown; read with the cursor on the handle, probably mid-drag). The very steep start implies the first key's outgoing handle was pulled to a very small influence (inferred); which handle "end handle" means in step 8 is not stated. Speed values not otherwise given.
+variations: Squeeze the keys for faster movement; slow for hypnotic feel; recolour via Hue/Saturation Master Hue; pair with the bounce text.
+pitfalls: Use the Repeater's own Transform, not the layer's Transform (said). Click directly on the gradient line when editing it or it may not work (said).
+build notes: Shape layer > Ellipse 1 (Size 410,410) with Gradient Fill (Type: Linear), start point left, end point right, stops white and #C49FFF. Add Repeater: Copies 10, Offset 0, Composite Below; Transform: Repeater 1: Position 0,0, Scale 143.3%, Rotation ~34°, keyframed with ease. Gradient handle smoothing (step 3) is done by hand; in script, add a mid-point stop or adjust the gradient midpoint. Anchor Point of repeater is 0,0 so scaling is about the disc centre.
+unknowns: Exact gradient midpoint position after smoothing; exact handle influence values of the ease; loop length of the preview in redraws; real-time speed of the playback; text-free result window; comp size not displayed in the frames I viewed; motion blur switch not seen (treated as off).
+
+## Frosted glass bar refracting a smeared gradient star
+id: 05-glass-bar-refraction
+revision: 31249974
+job: fill-the-backdrop; support: add-depth, reveal-headline
+status: proven (accepted 2026-11-25)
+what it does for a beat: A premium title or UI backdrop: a pill-shaped pane of frosted glass sits over a soft, flowing colour field and bends what lies behind it. Reach for it when text needs a rich, calm, frosted-glass ground.
+what it looks like: On black, a streaky, blurred ribbon of blue, amber, red and pink flows horizontally. A rounded pill with a thin bright rim sits across it; inside the pill the colours are brighter, blurrier and shifted sideways, so it reads as refracting glass. A mirrored smear spills below the pill.
+ingredients:
+- Shape layer with Polystar (star) and linear gradient fill — built-in; star tool in the toolbar (said, 11:07)
+- Expression on Rotation — built-in (said)
+- Fast Box Blur — stock; Effects & Presets (said)
+- Wave Warp — stock (said)
+- Turbulent Displace — stock (said; added at the end only)
+- Rounded Rectangle shape layer, duplicated; Size property linked by pick whip — built-in (said)
+- Layer Styles > Inner Glow — built-in (said; menu shown region as right-click, layer styles)
+- Adjustment Layer switch — built-in (said)
+- Exposure — stock (said)
+- Displacement Map — stock (said; screen)
+- Optional: a text-reveal preset from a paid pack for a white script word on top (said; the preset is not shown in detail)
+steps:
+1. Comp on black (shown : black viewer). Draw a star with the star tool near the centre (said; its Shape Transform position reads -7,10, shown).
+   - Type: Star (shown); Points: 8 (shown)
+   - Inner Radius 186.8, Outer Radius 128.3 (shown). Stroke: none, Fill on. (shown)
+2. Change Fill from Solid to Linear Gradient and open the gradient editor; make four colour stops. (said; shown)
+   - Stop at 0 %: 55A4FF blue (shown)
+   - Stop at 30.5 %: FFC655 amber (shown)
+   - Stop at 64.7 %: FF5555 red (shown; the author nudged the position, said)
+   - Stop at 100 %: FF9090 pink (shown)
+   - Gradient runs left to right across the star (shown). Author advises light colours (said).
+3. Name the layer BG. Alt-click the Rotation stopwatch and type a time multiple for constant spin. (said)
+   - Rotation expression: time*20 (said)
+4. Add Fast Box Blur to BG. (said)
+   - Blur Radius: 15 (said; shown)
+5. Add Wave Warp to BG. (said)
+   - Wave Type: Uncircle (said 12:29; shown)
+   - Wave Height 200, Wave Width 200 (said; shown)
+   - Direction 0° so the smear is horizontal (said; shown)
+   - Wave Speed 0 (said; shown)
+6. Draw a rounded rectangle at the centre; Fill solid black; name it Bar. (said)
+   - Size seen: 369 × 130 at that point; Roundness 158 (shown, timeline 13:00 frames; value read from the changed list)
+   Layer order top to bottom: Edge (1), Bar (2), BG (3) (shown layer panel). The author also recentres the star layer and the Bar layer after drawing them (position/anchor edits; values not read). (shown/inferred)
+7. Duplicate Bar and name the copy Edge. Link the two Size properties with the pick whip, Edge's Size following Bar's (direction inferred from the expression); unlock proportions to change only X. (said)
+8. Animate the Size X: stopwatch on, squeeze narrow then widen later; select both keys, F9, and in the graph editor make a peak on the left of the curve (said; "fast-out" is not said). 
+   - Size at comp time 0: 321 × 130 (shown, key diamond on Size, pill measures 321 px). The later key value is unknown; the result pill measures ≈498 px at preview time 2;13, but the pill may still be growing there, so that is not known to be the end value. The values 56 and 501 seen in the timeline were passed while dragging, not keys. Exact key times: unknown.
+9. On Edge: Layer Styles > Inner Glow. (said)
+   - Blend Mode Screen, Opacity 75 %, Technique Softer, Source Edge, Choke 0 %, Range 50 % (shown)
+   - Colour: swatch is pale yellow with Size 5.0 (shown); the author later says white (said, 14:11); set white.
+   - Size: raised from 5 to 34.0 (final panel value 34.0, timeline note; said "bump up")
+10. Collapse the Inner Glow property group in Effect Controls (said "close it down" at 14:18; Size stays 34.0, so the glow is not shrunk), then turn Edge's eye off (order: inferred). Turn Bar into an adjustment layer with its switch. (said)
+11. On Bar add Fast Box Blur, then Exposure, then Displacement Map. (said)
+   - Fast Box Blur Radius: 9.1 (shown; narrator says about nine)
+   - Exposure: 0.50 (shown)
+12. Displacement Map settings. (said)
+   - Displacement Map Layer: the Edge layer, source "Effects & Masks" (said; shown "Effect"). Trap: the layer list defaults to Bar (shown), so pick Edge explicitly.
+   - Use for Horizontal: Red (shown); Use for Vertical: Green (shown)
+   - Max Horizontal Displacement: 68 (shown; said "around 70")
+   - Max Vertical Displacement: 46.0 (shown, landed; said 45; reads 40.0 mid-change)
+   - Displacement Map Behavior: Center Map; Expand Output on; Wrap off (shown)
+13. Optional finish: tweak the star (e.g. Outer Radius ≈94, Inner ≈153) and add Turbulent Displace on BG (Displacement Turbulent, Amount 50, Size 100, Complexity 1) so the smear is less perfect. (shown panel; said)
+14. Optional: white script text on top with a blur-up preset from a paid pack. (said)
+layout: (Share measures are of the crop at the result frame, not the comp, because the viewer is at 225 % and clipped; measured.); where the colour sits against the pill: the lit colour mass is centred on the pill's height (its centroid about 50 % down the result crop, the pill's centre about 49 %), with colour both above and below the pill, and the row through the pill's centre lit across the pill's right two-thirds while its left third stays dark (measured on the result frame; this placement is what the star's position under the bar must give, inferred: the video does not show the star being placed for this frame)
+- Pill: ~54 % of crop width, ~26 % of crop height, ends fully round, centred slightly left of crop centre (measured).
+- Rim: thin bright edge, widest and brightest on the lower-left curve, thin amber/white; top edge a faint blue-white hairline (measured).
+- Inside the pill: the left third is black (inferred: displaced image shifted away), colours brighter (exposure 0.5) and more blurred than outside.
+- Outside colours: a fan of blue/amber above, pink/red mirrored below the pill's lower edge; in the 2045-wide crop a hard lower streak at the pill's bottom height (y≈685 of 1100) runs x≈170–1840 against pill x≈455–1575, about 14 % of crop width beyond each end; a hard upper streak at y≈237, well above the pill top (y≈405), runs x≈410–1700; a faint blue/amber smear sits above it (y≈120–235) (measured). Streaks inferred to come from Wave Warp on BG, not from the bar.
+- Black background, no grain.
+- Bar is a single pane; Edge is hidden and only drives displacement. The rim seen is inferred to come from the displacement of Edge's inner glow acting on Bar's backdrop (Edge hidden).
+- Finished example vs build: the finished clip at 16:00 shows the same pill with a white script word, a smaller star and turbulent displace; the hand-built state at 14:55 has the star at 128.3/186.8 and no turbulence.
+timing and easing: Bar Size has keys narrow-to-wide, but key times are not shown (layer collapsed) and not said; the preview time display moving 0;00;01;19 → 0;00;02;13 is only where the preview had reached, not a key time. Graph editor: a peak on the left; influence not shown. Star spins at 20°/s from the expression. Wave Speed 0 so no wave motion.
+variations: Change the star's points, radii and colours for different looks (said). Inner Glow size on Edge controls how much distortion appears at the rim (said). Move the star under the bar to get other effects (said).
+pitfalls: Pick light gradient colours (said). Inferred (not an author warning): keep Edge in the comp with its eye off, because the Displacement Map reads it. The author wishes it had been 4K (said).
+build notes: Shape Layer > Polystar; Gradient Fill with 4 stops; Rotation expression "time*20"; Fast Box Blur (ADBE Box Blur2); Wave Warp; Exposure; Displacement Map; Turbulent Displace. Edge→Bar link: Size on Edge with expression thisComp.layer("Bar").content("Rectangle 1").content("Rectangle Path 1").size. The adjustment-layer switch and graph editor ease are done by hand. Layer Styles inner glow can be added by hand.
+unknowns: the exact Roundness/Size of the final pill; the displacement map layer's precise source at 14:49 (said Edge, effects and masks); the text preset's name and settings; the Bar-layer comp size; the true comp-share sizes of elements (viewer zoomed and clipped); easing influence values; a clean result frame is but cursor-free only at the crop shown; the star's exact start rotation.
+
 ## Window-light shadow map over a flat layout
 id: 01-shadow-map-overlay
 revision: 73f75aaa
@@ -759,6 +883,51 @@ pitfalls: the shadow copy must not keep the original's layer styles (said)
 build notes: Result window: the comp plays its build-on with a slow camera drift, and every object has its finished shadow from about 228.0; the author stops and solos one bar (shown, source cuts). Later frames such as show one bar mid-rebuild without a finished shadow, plus selection handles and the camera label. The cursor sits over the word; mask it when comparing. The author also solos the bar and deletes its old shadow before duplicating (shown, around), and switches the original off after duplicating (still on, off); that is housekeeping, not part of the technique. layer.duplicate(), then move the copy below the original (moveAfter). Leaving it with the original's parent (as on screen) or parenting it to the original (as in the finished example) both keep it in step (inferred). Remove layer styles from the copy (Layer > Layer Styles > Remove All, via app.executeCommand(app.findMenuCommandId("Remove All")) with the copy selected). Effects: "ADBE Fill" ("Color" black, "Opacity" 100 %), "CC Radial Fast Blur" ("Center" point, "Amount" 95, "Zoom" Standard), "ADBE Gaussian Blur 2" ("Blurriness" 25.6, "Repeat Edge Pixels" on). Center is in layer space, so pick it relative to the shape (on comp-sized, unscaled shape and text layers a proof build found Center read as comp pixels, and a fromComp() conversion put every centre near the comp's top-left corner; a centre several object-widths away kept each shadow a near-parallel band where a close one fanned it out; shadow layer opacity of about 70 % matched the tutorial's darkness at the object: inferred: found in a proof build, not said or shown); the shadow may run past the layer's edge — the copy in the example is a shape layer, which is not clipped, but other layer types may need room (inferred).
 unknowns: the shadow layer's opacity or blend mode (not shown; shadows read as mid grey, so it may be lowered); the order of the layers when the original is switched off during editing (the original is hidden); exact Center values for the other objects in the scene; the background and object colours
 
+## Long soft shadow from a blacked-out copy and a radial blur
+id: 03-radial-blur-long-shadow
+revision: 7b76003e
+job: add-depth; support: finish-the-look
+status: proven (accepted 2026-11-25)
+variant of: 12-long-soft-shadow
+differs: the same mechanism as the parent: a duplicate of the layer kept below the original, made solid black with Fill (parent step 3, Fill Color black, Opacity 100 %), then CC Radial Fast Blur with Zoom Standard (parent step 4), its Center dragged so the streaks run away from it (parent step 5, which gives the downward-right direction as inferred from the screen; here the same reading is inferred too). Differences: here the scene is one rounded 16:9 picture card on a near-white ground with a single shadow, where the parent has several pale bars and blocks around a title, each with its own shadow and its own Center (parent layout line); here Amount ends at 85 (shown), where the parent uses 95 (parent step 4); here Center is 438,159 (shown), where the parent shows 224.7,366.6 then 137.7,375.0 (parent step 5); here the layer Opacity is set to 35 % (said, T key, step 8), where the parent's section never shows the shadow layer's opacity or blend mode (parent unknowns line), and the roughly 70 % the parent mentions came from a proof build, not its video (parent build notes), so no difference is claimed against it; here there is no Gaussian Blur, where the parent adds Gaussian Blur 25.6 as a further step (parent step 6).
+what it does for a beat: Reach for it when a card, thumbnail or panel on a plain light ground needs to lift off the page with a long, soft, directional shadow, as a stronger and softer alternative to the stock drop shadow.
+what it looks like: A rounded 16:9 picture card on a near-white ground. A pale grey shadow streams from its lower and right edges, fading out with distance and aimed away from a point up and to the left of the card; the card's edges themselves stay sharp.
+ingredients:
+- Duplicate of the artwork layer, renamed "Shadow" and kept below the original — built-in (duplicate step inferred; the rename is said)
+- Fill — stock; effect applied to the shadow layer (said; panel shown)
+- CC Radial Fast Blur — stock; the effects search box shows it (shown)
+- Layer Opacity — built-in (said, T key)
+steps:
+1. Duplicate the artwork layer so two copies stand one above the other over a white background layer (said; layer stack shown). Shortcut/menu inferred.
+2. Rename the lower copy "Shadow" (said; shown).
+3. Switch the top copy's eye off while working so only the shadow layer is visible (said; shown, top layer's eye off).
+4. Apply Fill to the Shadow layer (said). It turns the card solid red at first (shown).
+   - Color: black (said; shown, card solid black)
+   - Opacity of Fill: 100% (shown)
+5. Apply CC Radial Fast Blur to the Shadow layer, below Fill in the effect stack (said; shown with the stack Fill then CC Radial Fast Blur).
+   - Amount: raised until the black card smears out into a large grey halo; 93.3 (shown), 91.3 when the centre is moved (shown)
+6. Drag the blur's Center (Center 438,159 already settled) to choose which way the shadow falls (said). The shadow streams away from the Center point (inferred and the final frame).
+   - Center: 865,540 mid-drag (shown, still being dragged, not final); 438,159 as settled (shown)
+   - Zoom: Standard (shown)
+7. Switch the top artwork copy back on so the card sits over the blur (said; shown).
+8. Lower the Shadow layer's Opacity (said, T key).
+   - Opacity: 35% (said; shown in the timeline)
+9. Reduce the blur Amount a little for a shorter drop (said "85 should do").
+   - Amount: 85 (said; shown, landed, panel reads 85.0 with Center 438.0,159.0 unchanged). Passed through while dragging: 89.1, 82.4 (not final).
+layout: All measured cropped to the picture (comp 1920x1080; crop = viewer picture at 405,219 size 2976x1674 in the full frame, edges inexact by a few px).
+- Card: about 32% of picture width and 32% of picture height (16:9 itself, ~415x230 on a 1280x720 view of the picture), centred (measured). Corners rounded, radius about 1–1.25% of picture width (measured: about 24 px at the top row, zero by about 30 px down, on the 2976-wide crop).
+- Ground: near-white solid layer below everything, flat (measured).
+- Shadow (reach figures are at the final Amount 85; at Amount 91.3, the reach is longer, about 21% right of picture width, approximate as the tail is faint, and about 28% down of picture height): only the one blacked-out copy casts it; the upper card sits unblurred at full size on top (shown). The copy is the same size and position as the card (shown). Shadow extends right of the card's right edge by about 7.5% of picture width to the 2% grey level (10.8% to near white) and below the card's bottom edge by about 16.5% of picture height, widest at the lower right and also lapping the lower left; hardly any shadow shows above the card (measured).
+- Darkness: sampled (white = 0%): just under the card's bottom edge the grey is about 30% (pixel 179 at 16 px below, of 255), 24% (194) at 36 px, 15% (217) at 76 px, 5% (242) at 176 px, 2% (250) at 276 px; right of the card it is 187 at the edge, 217 about 70 px out, 252 about 320 px out (all on the 2976-wide crop; ground about 253). Nothing above or left of the card. 35% opacity of a black layer that has already been blurred fits this (inferred).
+- Direction: the streaks run radially away from the blur Center, which at 438,159 lies up and left of the card, so the shadow falls down and to the right (shown; the same direction with Center at 865,540 is a looser halo around the card).
+- The card has no drop shadow of its own and no other layer casts shadows; the artwork's own bevel and glow come from the artwork itself.
+- This final card is the thumbnail artwork (letters, rounded blue card); the shadow is independent of what's on it, only the silhouette matters.
+timing and easing: none given. All stills; no keyframes.
+variations: Move the blur Center to choose the drop direction; change Amount for how far it falls; lower Opacity for subtlety (said). A paid plugin does the same with a gradient fill and light direction, applied in one step (said in passing; its settings are another technique).
+pitfalls: none given. Seen on screen: with the top copy off, the bare blur looks like light rays (author remarks on this); the shadow reads right only with the card on top.
+build notes: Duplicate layer, rename "Shadow", place under the original. Effects: Fill (Color black) then CC Radial Fast Blur (Center, Amount; Zoom Standard). Set the layer's Opacity to 35. Center is in comp pixels (1920x1080), about 438,159. Amount 85 (shown); Center stays 438,159 (shown, also). Effect order matters: Fill above blur so the blur acts on black. Everything is scriptable; the on-screen Center position is by hand only for taste.
+unknowns: The Fill colour's typed value is black by eye (swatch), exact values not read. The duplicate's menu path/shortcut is unseen.
+
 ## Fine dot-grid background from a ball-grid effect
 id: 13-dot-grid-texture
 revision: 4222655e
@@ -1131,101 +1300,3 @@ variations: Use whatever is furthest away (sky or other background) as the layer
 pitfalls: Pushing a layer back makes it smaller on screen, so it must be scaled up again (said). The shape layer is turned back to 2D without explanation (shown, reason unknown).
 build notes: All scriptable. layer.threeDLayer = true for each layer (skip any 2D guide/shape layer). Set "ADBE Transform Group" > "ADBE Position" to [x, y, z] and "ADBE Scale" to [s, s, s]. The X/Y values in the steps only mean something for this artwork: they depend on each image's size and anchor point (the wall's 561.8 lands it at the right edge because its stone sits off-centre in its own image; inferred from the picture). Aim instead for the end shares in `layout`. To keep a pushed layer in the same place and size through the default camera, multiply its scale by (zoom + z) / zoom and move its X/Y away from the comp centre by the same factor, where zoom is the default camera's 2666.7 px for a 1920-wide comp (this formula is inferred, not given): the sky's 76% × (2666.7 + 7940) / 2666.7 ≈ 303%, close to the 312% used; the pine's flat X 567.9 at Z 1200 would need about 391 to stay put, and 407.9 was used. The author did not compensate everything exactly: the city ends at about 0.61 of its flat size, the pine about 1.16, and the foreground branches far bigger (37% instead of about 19% for the right one, which was at 60%), so they loom. Set Continuously Rasterize on .ai layers scaled above 100%.
 unknowns: The grass, wall, figures' and ledge's Scale in this technique (not shown; nothing in the result suggests they changed); the left bare tree's landed Scale (162% is the last value seen while dragging); whether the city's Z 4730 is final (it is the last value shown); whether the composition's default camera or a specific view was used to judge framing (only "Active Camera (Default)" is shown); what the shape layer contains and why it is left 2D; Continuously Rasterize settings.
-
-## Rain slanted to match the wind
-id: 08-rainfall-matched-to-wind
-revision: ce6ebd7e
-job: establish-place; support: keep-it-alive, finish-the-look
-status: proven (accepted 2026-11-19)
-what it does for a beat: Adds weather on top of a wind-animated scene so the motion has a reason, with the rain leaning the same way everything else is blowing. Assumes a scene that already moves in one wind direction (techniques 05–07; here the leaves enter from the left edge).
-what it looks like: Fine, faint white rain streaks over the whole night scene, falling towards the right at about 10–18° from vertical, over the drifting leaf specks, the swaying branches and the camera's heavy depth of field.
-ingredients:
-- Adjustment layer — built-in; Layer > New > Adjustment Layer (shown)
-- CC Rainfall — stock (Cycore); applied through the Effects & Presets search (search box in use, inferred route; the effect first)
-steps:
-1. Make a new adjustment layer at the top of the comp (said: an adjustment layer; menu shown; its position at the top of the stack shown)
-2. Apply CC Rainfall to it (said; shown)
-   - Drops: 5000, Size: 3.00, Scene Depth: 5000, Speed: 4000 (shown, left at default)
-   - Variation % (Wind): 0.0 (shown; covered by the cursor), Spread: 6.0, Color: white, Opacity: 25.0 (shown, left at default)
-   - Transfer Mode: Lighten, Composite With Original: on (shown)
-3. Set Wind so the drops lean the same way as the scene's wind (said; shown)
-   - Wind: 840.0 (shown; dragged through -140.0, 840.0)
-layout: measured, as shares of the crop (the whole viewer picture minus its edges): the two figures span about 34% to 49% of the width, about 42% of the crop height tall, feet at about 83% down (measured); rain streaks are thin, faint lines about 5–7% of the crop height long (about 57 full-size px of the 880-px crop), covering the whole picture (measured); they run from upper left to lower right, about 10–18° off vertical with the bottoms further right, e.g. (405,290)→(440,400) and (600,90)→(625,230) on a 2x crop of 400x400 at 1700,500 (measured), which agrees with atan(840/4000) ≈ 12° from Wind over Speed (inferred) and with the leaves travelling left to right; so positive Wind sends the rain towards the right. Leaf specks from technique 07 (07-leaf-particles-blown-across: CC Particle World on a comp-size solid, Textured QuadPolygon from a leaf layer, Birth Size 0.150, Death Size 1.500, Producer X −0.82, Physics Twirl, Velocity 0.91, Gravity 0.020, Extra 0.80, graded with the scene's Tritone and Curves): dark grey-blue specks about 1% of the crop width, a dozen or so scattered from mid to right, moving left to right at about 0.6% of the width per comp frame (about 14–15% per comp second), nearly level (measured in this window per viewer redraw, see 07). 07's shown values did not carry the leaves across the frame in a build: in the 08 proof (2026-11), with Birth Rate 2.0, Gravity 0.020 and the default downward Gravity Vector, the leaves hovered within about 5% of the left edge for; the crossing needed a sideways Gravity Vector (1, 0, 0) with Gravity about 0.0045 and Birth Rate cut to about 0.04 (from 2.0) to get a dozen or so in view (proof build notes; a build finding, not shown in the video). Defocus: the figures and ledge are sharp (edges 2–4 px), the pine, bare trees and city behind spread their edges over about 12–30 px of 1600 (about 1–2% of the width, varying with the camera push) and the foreground leafy branches are softer still (measured, 10–90% edge widths). Source: the depth of field of technique 04's camera (04-camera-depth-of-field-focus-lock-dolly: Two-Node Camera, 50 mm preset, Zoom 2666.7 px, Depth of Field On, focus locked to the figures, Position z −2666.7 at 0:00 to −1749.5 at 0:00:03:00): sharp plane on the figures, blur growing with distance either side. It is about 1.5 times as strong (1.2–1.6×) as in 04's own filmed playback at Aperture 26.3 px, measured on the same edge at the same framing (figures the same size, against): the pine canopy's outer edge spreads over about 9–19 px there against about 13–30 px here, and the trunk over about 9–10 px in both (single-crop measurement, 10–90% edge widths, confirmed by a gradient-percentile comparison); the change happened in an unexplained jump (technique 06) and its values are never shown, so aim for the measured edge widths. Near branches (re-measured 2026-11-19 for the proof review): in this window and in technique 06's playback the two leafy foreground branches stay in frame through the whole push as soft but readable leaves; they are not at technique 03's Z −1810. Evidence: (a) the camera move is still technique 04's: from the loop restart (comp frame 0) to comp frames 29 and 46 (counted in viewer redraws, 06's playback on; the same picture repeats here from the restart) the left figure grows 1.164× and 1.286× (269 → 313 → 346 px tall, measured), against 1.161× and 1.282× predicted for Position z −2666.7 → −1749.5 over 72 frames; (b) over the same frames a leaf cluster on the left branch grows only about 1.3–1.45× (a leaf about 83 → 110 px long, the three-leaf cluster about 190 → 275 px across, of the 1528-px crop; measured by hand on two leaves, a template match gave 1.25–1.3×), where Z −1810 predicts 3.16× by frame 46 and the camera passing the branches at about frame 66; solving for depth puts them at about Z −130 to −780, call it Z −400 to −800 (measured, rough); (c) they are still 3D layers (3D switch on in the timeline, shown) and still in the depth of field: their blur grows with the push, leaf edges about 9–12 px of 1600 at comp frame 0 and about 15–35 px by comp frame 46, 10–90% edge widths, about as soft as the pine at the same moments (measured); a layer at about Z −400 to −800 should blur about 0.6–1.6× as much as the pine at frame 46 by the usual depth-of-field geometry, consistent with that (inferred), whereas Z −1810 gives about seven times. On screen at comp frame 0 the left branch fills about 0–25% of the width up the left side and the right one about 65–100% across the upper right, a single leaf about 5% of the picture width long (measured). When they were moved: in technique 04's own playback (Z −1810) the branches show only as huge dark smudges at the top edge; by the first build frame of technique 05 they are readable leaves at the frame edges, already turned (Z Rotation 123° and 64°, technique 05). The move, any new Scale and the new Position are never shown (between, inferred off screen). The finished example near is a different comp with its own camera, so it gives no depth figures. Builders: place the branches at about Z −400 to −800 (scaled so a leaf is about 5% of the width at frame 0), not at −1810, to keep them in frame and as soft as the pine. The rain sits on an adjustment layer above everything, so it is not defocused (inferred: an adjustment layer is not a 3D layer here; streaks look crisp).
-timing and easing: none given; the rain is not keyframed.
-variations: the author offers rainfall as one example of weather; other weather effects are implied but not named.
-pitfalls: the author stresses the one thing that matters: the rain's direction must agree with the wind direction already in the scene (said).
-build notes: comp.layers.addSolid then adjustmentLayer = true (or Layer > New > Adjustment Layer by hand); addProperty("CC Rainfall"); set "Wind" to 840. All other properties as shown are the defaults. The layer is later renamed to a plain name for rain (seen in technique 10's frames). Positive Wind sends the drops towards the right, about 12° off vertical at Speed 4000 (measured, see layout).
-unknowns: whether any other CC Rainfall value was changed later; the camera's depth-of-field values in this window (never shown).
-
-## Film-stock grain and mood finish on a top adjustment layer
-id: 10-film-grain-finish-stack
-revision: e20e6ad4
-job: finish-the-look
-status: proven (accepted 2026-11-19)
-what it does for a beat: The last pass on an illustrated shot: real-film grain, one last overall curve, and an optional posterize for a rougher look, all in one layer over everything. Assumes the full scene is built beneath (techniques 01–09).
-what it looks like: The rainy night scene gets fine colourless grain over the whole frame and becomes clearly darker: measured at the same comp time and framing, the picture's mean brightness drops by about 28 %, half from the Curves and half from Posterize Level 14, which also crushes the deepest shadows to black and gathers the sky's tones into coarse steps broken up by the grain.
-ingredients:
-- Adjustment layer — built-in; Layer > New > Adjustment Layer (shown)
-- Add Grain — stock; Effects & Presets search, Noise & Grain group (shown)
-- Curves — stock; found by search (shown)
-- Posterize — stock; found by search, Stylize group (shown search; group seen in the search results)
-steps:
-1. Make an adjustment layer at the very top of the comp (said; shown)
-2. Apply Add Grain (said; shown)
-   - Viewing Mode: Final Output (said; shown; dropdown open)
-   - Preset: Kodak Vision 500T (5279) (shown hovered in the list, landed and cut short as "Kodak Vision 50..."); the author says to pick a favourite
-   - Tweaking: Intensity, Size, Softness, Aspect Ratio all 1.000 (shown, unchanged)
-3. Under Color, tick Monochromatic so the grain carries no colour (said; shown)
-   - Tint Amount: 100.0%, Saturation greyed out (shown; unchanged)
-4. Add Curves below Add Grain for the overall mood (said; shown)
-   - RGB curve: one point near the middle pulled down, about input 0.54 to output 0.47 (shown; read from the graph, box 620 px square in the full-size frame, inferred)
-   - Effect on this scene (measured, Posterize not yet applied, same comp time 0:00:01:15 and framing): mean brightness 42.7 to 36.3 grey levels, about 15 % darker; every tone loses 11 to 19 % of its level (see layout)
-5. Optionally add Posterize for a gritty look (said; shown)
-   - Level: 14 (shown). It lands at the default 7 (shown) and 14 is typed into the field (shown, same sheet)
-   - The author switches its eye off for about half a second and back on (shown: the eye is dimmed under the cursor and lit; the viewer, lagging the switch by a few frames, shows the picture without Posterize and with it again, cuts in); it is on at the end (shown)
-   - Effect on this scene (measured as above): with Level 14 the mean brightness falls a further 36.3 to 30.9 grey levels, about 15 %; Level 7, on screen for a second before the 14 is typed, gave 23.9, about 44 % below the untouched picture
-layout: measured, as shares of the crop, which is the whole viewer picture: the two figures span about 36% to 46% of the width, about 27% of the picture height tall, feet at about 72% down (measured). What the stack does, measured with the comp time held at 0:00:01:15 and the same viewer framing, on the whole picture except the viewer label and the anchor icon (93 % of the width, 87 % of the height), in 8-bit grey levels of the recording; before = (no adjustment layer yet), Curves + grain = with Posterize off, full stack = (script) (all measured):
-  - darkening: mean RGB (30, 45, 59) before, (25, 38, 52) with Curves and grain, (20, 33, 46) with Posterize 14; mean luminance 42.7, 36.3, 30.9: the full stack takes away about 28 % of the picture's brightness, about half each from Curves and Posterize. Median 42 to 36 to 31; 95th percentile 83 to 72 to 69.
-  - tone by tone (grain blurred out, picture binned by its brightness before): tones at 10–20 go to about 13 with Curves and 5–6 with Posterize; 40–50 to 38 then 33; 60–70 to 55 then 52; 90–100 to 79 then 76. So Curves takes about a seventh off every tone in this range, and Posterize takes most from the shadows, halving tones below about 20.
-  - crushed shadows: pixels under 4 grey levels are 3.6 % of the picture before, 4.4 % after Curves, 16 % with Posterize 14 (40 % with Level 7).
-  - banding: in the sky (upper 40 % of the picture, right half) the green values with Posterize gather into peaks about 20 levels apart (near 37 and 58 on the recording), where without it they spread evenly; no clean contour bands are visible because the grain, added before Posterize, breaks each step into speckle.
-  - grain: fine, colourless, over the whole frame. High-pass noise (4 px blur removed) in a flat sky patch has a standard deviation of 1.7 grey levels before, 3.6 with the monochrome grain and Curves, 3.7 with Posterize (2.6 with the first, coloured grain before Monochromatic); the specks correlate over about 2 px of the 1445-px-wide picture (about 0.15 % of its width), at the limit of the recording.
-  Everything else in the result frame comes from the scene beneath, not from this stack: the cold blue-teal grade on every layer and the warm street lamp (02; the lamp is warm because its wall layer's Tritone is off, 02 step 7), the Z layout (03), the camera's depth of field and slow dolly in (04), branches swaying (05), grass rippling (06), drifting leaves (07), slanted rain (08).
-timing and easing: none given; no keyframes.
-variations: any grain preset (said); Curves to taste (said); Posterize is optional and part of the author's own style (said).
-pitfalls: the author prefers no colour in the noise, hence Monochromatic. Not said but true of Add Grain: in Preview viewing mode it shows grain only in a small preview box, so Final Output is needed to see it on the full frame (inferred).
-build notes: comp.layers.addSolid with adjustmentLayer = true, moved to index 1. addProperty("ADBE Add Grain"): "Viewing Mode" popup (Final Output, third item in the list), "Preset" popup (Kodak Vision 500T (5279) is the 8th entry after [None]; check the index), "Color" > "Monochromatic" = true. addProperty("ADBE CurvesCustom"): the curve shape cannot be set by ordinary scripting, so set it by hand or apply a saved .acv/.ffx preset. addProperty("ADBE Posterize") with "Level" = 14. Effect order on the layer: Add Grain, Curves, Posterize; Posterize after Add Grain is what turns its bands into speckle. Aim at the measured result, not the settings: about 28 % darker overall, a seventh from the curve and the rest from Posterize, with about one pixel in eight more pushed to black (near-black share 4 % to 16 %). If the curve cannot be set, a Levels output-white of about 0.85 (about 217 of 255) gives the curve's measured 11–19 % drop in a dark scene like this one, but would also dim highlights the curve leaves alone (inferred, untested).
-unknowns: the exact Curves point (read from the graph only); whether Posterize stays on in the final render; whether any Add Grain Application or Animation values were changed (not opened). Result caveat: frame is cut from the source video; the comp is playing with the camera dolly, and the adjustment layer is deselected only in this short window. The result frame is at another comp time than the before, so its brightness cannot be compared with it directly: use the held frames above for the measured targets.
-
-## Side-light a face with a matted Curves layer
-id: 13-masked-curves-relight-track-matte
-revision: 7dc05162
-job: light-the-hero; support: finish-the-look
-status: proven (accepted 2026-11-19)
-what it does for a beat: Assumes a close-up with the character on its own layer (or pre-comp) under a scene grade (techniques 11 and 12). Adds a soft wash of differently coloured light to one side of the face and hair only, so a flat close-up gains a light direction without touching the background.
-what it looks like: The frame-right side of the girl's face (her left) and the hair falling on that side take on a cool green-cyan, slightly brighter tint that starts just right of her nose and fades in over a short soft edge; the sky, tree and city behind her are unchanged.
-ingredients:
-- Adjustment layer — built-in; Layer > New > Adjustment Layer (inferred, not shown)
-- Curves — stock; Effect > Color Correction > Curves (inferred path)
-- Pen tool mask — built-in
-- Track Matte (Alpha) — built-in; timeline Track Matte column
-steps:
-1. Add an adjustment layer (said) at the top of the close-up comp (shown : layer 1, above the camera)
-2. Apply Curves to it and shape a different look (said)
-   - RGB: one point raised above the diagonal at about input 40% to output 48–49% (shown; point position is our reading of the graph, crop; a checker read 0.49)
-   - Red: one point pulled below the diagonal at about input 55% to output 42% (shown; same crop), which brightens a little and pushes the area toward cyan-green
-3. With the pen tool, draw a mask on the adjustment layer around one side of the character's face (said; shown : a closed path down the frame-right side of the face (her left) and hair, running off the top and bottom of the frame)
-   - Mask mode: Add, not inverted (shown)
-4. Set the adjustment layer's Track Matte to the character layer so the look lands only on her (said; shown : Track Matte set to the character pre-comp, layer 5)
-   - Matte type: Alpha, not inverted (shown, crop)
-5. Feather the mask heavily (said); Mask Feather: 143.0, 143.0 pixels (shown)
-layout: on the result crop, the face (brow to chin) spans about 37–63% of the width, centred at 50%, eyes at about 35% of the height, chin at about 75% (measured).
-  - where the light lands (measured on the result crop, 60 % down, green minus red): −2 at 40–52 % across (untouched), 0 at 55 %, +6 at 58 %, +13 at 60 %, and +13 to +15 on the hair at 75–80 %; the same at 535.25,. So the soft edge runs from about 55 % to 60 % of the width, about 4–6 % of the picture, a little right of the nose, and the light then covers the frame-right cheek and hair out to the girl's edge (about 82 %), full height. Left of 55 % the colour does not change (green minus red stays at −2); the brightness changes only a little: at 52 % across every channel rises about 4 levels together, (55, 53, 50) to (59, 57, 54), within the feather's tail or the rain and alignment differences between the two frames (measured). The 143 px Mask Feather gives that short edge at this viewer zoom (the check measured the same).
-  - what it does to the colours (measured by matching the same close-up held, before the adjustment layer existed, shifted 61 px left and 24 px up, against): at the edge of the light (58 % across), (69, 67, 63) becomes (66, 73, 69): red falls about 4 %, green and blue rise about 9 %; on the fully lit cheek (61 % across), (65, 63, 60) becomes (60, 75, 72), and (68, 66, 62) becomes (61, 75, 71): red falls about 8–10 %, green and blue rise about 15–20 %, overall about 10 % brighter. On lit mid hair (33, 31, 30) becomes (26, 40, 37): red down about a fifth, green up about a quarter. Skin left of the edge, (67, 65, 61), is unchanged. The comps differ by 17 frames, so rain and hair differ slightly between the two; read these as targets, not exact pairs.
-  - everything else in the result frame comes from techniques 11 and 12 and is unchanged by this one: the dark, nearly colourless grade on the girl, the ungraded blue sky and city, the dark blue-grey pine, the soft background and the slanted rain (11's layout), and the cut-out hair with its patch (12).
-  - the finished example (reference, a different file, crop=920,345,1500,840 in the full-size frame; measured on a) also carries a side light on the frame-right of the face: its face spans about 27–50 % across, neutral grey (41, 41, 41) on the frame-left cheek, and from about 43 % across the frame-right cheek turns cool and brighter, (46, 62, 78), with the collar on that side (30, 51, 69) and the hair bluish; its tint is bluer than green (blue minus red +24 to +34, green minus red +11 to +16), unlike the build's green-cyan, so its curve values differ and are not shown.
-timing and easing: none given; the relight is static.
-variations: the narrator suggests it for close-ups; the look inside Curves is free (said: make a different look).
-pitfalls: remember to feather the mask (said).
-build notes: Script: comp.layers.addSolid at comp size, then set adjustmentLayer = true. Effect "ADBE CurvesCustom": curve points cannot be set from script directly; apply a saved .ffx preset or use a substitute such as "ADBE Easy Levels2"/Levels (Individual Controls) with Red gamma lowered and RGB gamma raised. Mask: layer.Masks.addProperty("ADBE Mask Atom"), set maskShape vertices, Mask Feather [143,143], Mask Mode ADD. Track matte: in After Effects 2023+ use layer.setTrackMatte(characterLayer, TrackMatteType.ALPHA); the matte layer stays visible.
-unknowns: exact Curves point values (read off the graph only); green looks untouched (in the Red view its line runs on the diagonal with no point); blue is not shown; mask vertex positions; whether the mask was drawn before or after the matte was set (both are in place); the result frame is cut from the source video. The time display reads 0:00:02:06 throughout, so the result is a still.

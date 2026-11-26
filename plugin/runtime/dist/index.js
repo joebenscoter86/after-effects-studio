@@ -67523,6 +67523,11 @@ function distance(duration3, want) {
   const d = parseFloat(m[1]);
   return m[2] ? Math.max(0, d - want) : Math.abs(d - want);
 }
+function standOnTheirOwn(answering) {
+  const ids = new Set(answering.map((e) => e.id));
+  return answering.filter((e) => !e.variant_of || !ids.has(e.variant_of));
+}
+var variantText = (e) => e.variant_of ? `variant of ${e.variant_of}, found here on its own` : null;
 function findTechniques(catalog, ask) {
   if (ask.vocab !== catalog.vocab) throw new ArsenalRefusal(`refused: ask is vocab ${ask.vocab} but the catalog is ${catalog.vocab}`);
   for (const j of [ask.job, ...ask.support ?? []]) {
@@ -67534,7 +67539,8 @@ function findTechniques(catalog, ask) {
   const exclude = new Set(ask.exclude ?? []);
   const limit = ask.limit ?? 5;
   const tier = (r) => r.job === ask.job ? 0 : r.support.includes(ask.job) ? 1 : [r.job, ...r.support].some((j) => j !== null && support.includes(j)) ? 2 : null;
-  const byJob = catalog.entries.filter((r) => (r.kind === "technique" || r.kind === "piece") && !r.variant_of && tier(r) !== null && !exclude.has(r.id));
+  const serves = catalog.entries.filter((r) => (r.kind === "technique" || r.kind === "piece") && tier(r) !== null);
+  const byJob = standOnTheirOwn(serves).filter((r) => !exclude.has(r.id));
   const pass = (r, loose) => (loose.includes("status") || ask.constraints?.status === "any" || r.status === "proven") && (loose.includes("needs") || have === null || unmet(r.needs, have).length === 0);
   let relaxed = [];
   let hits = byJob.filter((r) => pass(r, relaxed));
@@ -67557,6 +67563,7 @@ function findTechniques(catalog, ask) {
     return [
       r.kind === "piece" ? "piece: runnable code, get returns its call" : null,
       job,
+      variantText(r),
       needs,
       m.length ? `mood: ${m.join(", ")}` : mood.length ? "no mood overlap" : null,
       r.taught_by > 1 ? `taught ${r.taught_by} times` : null,
@@ -67579,6 +67586,7 @@ function findTechniques(catalog, ask) {
       section: r.section,
       fit: fit(r),
       ...r.variants?.length ? { variants: r.variants } : {},
+      ...r.variant_of ? { variant_of: r.variant_of } : {},
       ...r.kind === "piece" && r.call ? { kind: "piece", call: r.call.signature } : {}
     }))
   };
@@ -67639,13 +67647,20 @@ function findByProvides(catalog, ask) {
   if (!level && !asked.length && !words.length) throw new ArsenalRefusal("refused: find needs a job, a level, provides or a query");
   const exclude = new Set(ask.exclude ?? []);
   const limit = ask.limit ?? 5;
-  let pool = catalog.entries.filter((e) => !e.variant_of && !exclude.has(e.id) && (!level || atLevel(e, level)) && (!ask.shelf || e.shelf === ask.shelf) && (!asked.length || matched(e, asked).length > 0));
+  const answers = (e) => (!level || atLevel(e, level)) && (!ask.shelf || e.shelf === ask.shelf) && (!asked.length || matched(e, asked).length > 0);
+  let pool = catalog.entries.filter((e) => !exclude.has(e.id) && answers(e));
   let relaxed = [];
   if (words.length) {
     const best = Math.max(0, ...pool.map((e) => wordsMatched(e, words).length));
     pool = best ? pool.filter((e) => wordsMatched(e, words).length === best) : [];
     if (best && best < words.length) relaxed = ["words"];
   }
+  const byId = new Map(catalog.entries.map((e) => [e.id, e]));
+  const behindParent = (e) => {
+    const p = e.variant_of ? byId.get(e.variant_of) : void 0;
+    return !!p && answers(p) && wordsMatched(p, words).length >= wordsMatched(e, words).length;
+  };
+  pool = pool.filter((e) => !behindParent(e));
   let hits = pool.filter((e) => ask.status === "any" || e.status === "proven");
   if (!hits.length && pool.length) {
     relaxed = [...relaxed, "status"];
@@ -67682,10 +67697,12 @@ function findByProvides(catalog, ask) {
           levelText(e),
           w.length ? `words: ${w.join(", ")} of ${words.join(", ")}` : null,
           m.length ? `provides ${m.join(", ")}` : null,
+          variantText(e),
           e.status === "proven" ? "proven" : "unproven, needs a test build first",
           e.still ? null : `no still: ${e.no_still ?? "none shipped"}`
         ].filter(Boolean).join("; "),
-        ...e.variants?.length ? { variants: e.variants } : {}
+        ...e.variants?.length ? { variants: e.variants } : {},
+        ...e.variant_of ? { variant_of: e.variant_of } : {}
       };
     })
   };
@@ -67700,14 +67717,15 @@ function browseCatalog(catalog, ask = {}) {
   const size2 = Math.min(Math.max(1, Math.floor(ask.page_size ?? BROWSE_PAGE)), BROWSE_PAGE_MAX);
   const order = level ? [level] : [...LEVELS2];
   const seen = /* @__PURE__ */ new Set();
-  const all = [];
+  const answering = [];
   for (const l of order) for (const e of catalog.entries) {
-    if (seen.has(e.id) || e.variant_of || !atLevel(e, l)) continue;
+    if (seen.has(e.id) || !atLevel(e, l)) continue;
     if (ask.shelf && e.shelf !== ask.shelf) continue;
     if (asked.length && !matched(e, asked).length) continue;
     seen.add(e.id);
-    all.push(e);
+    answering.push(e);
   }
+  const all = standOnTheirOwn(answering);
   const shown = ask.include_unpictured ? all : all.filter((e) => e.still);
   const pages = Math.max(1, Math.ceil(shown.length / size2));
   const page = Math.min(Math.max(1, Math.floor(ask.page ?? 1)), pages);
@@ -67722,7 +67740,8 @@ function browseCatalog(catalog, ask = {}) {
     ...e.block ? { block: e.block } : {},
     provides: e.provides,
     status: e.status,
-    ...e.still ? {} : { no_still: e.no_still ?? "none shipped" }
+    ...e.still ? {} : { no_still: e.no_still ?? "none shipped" },
+    ...e.variant_of ? { variant_of: e.variant_of } : {}
   }));
   return {
     vocab: catalog.vocab,
@@ -67863,7 +67882,7 @@ var arsenalTool = defineTool({
   group: "document",
   effect: "read",
   blockedInReadOnly: false,
-  description: 'The library at three levels, each entry with a still from our own proof build and what it provides: styles (a look a section can borrow: colour, type, light, material), worlds (a set a section lives in: floor, light, environment, materials) and recipes (one technique for one beat). Among the recipes, pieces are runnable code: one file each, called by name, built and lit (thickness, light, shadow, overshoot) but carrying no look of their own. action browse shows a level as labelled stills, a page at a time (level, provides, shelf, page, page_size); start a brief there. action find with job returns a ranked shortlist for one beat, pieces first, then written recipes (job, and optionally support, duration, mood, assets, constraints.status, exclude, limit; proven only unless constraints.status is any; relaxed names any filter loosened when nothing passed; never another job; a candidate taught in other ways lists their ids as variants). action find with query (plain words, e.g. "something that turns over"), level and/or provides (e.g. "material: glass", "floor: gloss-dark") returns entries across levels, pieces first when the words fit one. An unknown job, level or provides word is refused with the valid ones: pick one, never invent one. action jobs lists the job and provides vocabularies. action get takes any id (and the pinned revision) with its still: a piece answers with its call (the load line, signature, options, returns and a short example) to run in eval.run; a recipe with its text; a style or world with its document. Offline; no After Effects needed.',
+  description: 'The library at three levels, each entry with a still from our own proof build and what it provides: styles (a look a section can borrow: colour, type, light, material), worlds (a set a section lives in: floor, light, environment, materials) and recipes (one technique for one beat). Among the recipes, pieces are runnable code: one file each, called by name, built and lit (thickness, light, shadow, overshoot) but carrying no look of their own. action browse shows a level as labelled stills, a page at a time (level, provides, shelf, page, page_size); start a brief there. action find with job returns a ranked shortlist for one beat, pieces first, then written recipes (job, and optionally support, duration, mood, assets, constraints.status, exclude, limit; proven only unless constraints.status is any; relaxed names any filter loosened when nothing passed; never another job; a candidate taught in other ways lists their ids as variants, and a variant learned for a job its parent does not serve comes up on its own with variant_of). action find with query (plain words, e.g. "something that turns over"), level and/or provides (e.g. "material: glass", "floor: gloss-dark") returns entries across levels, pieces first when the words fit one. An unknown job, level or provides word is refused with the valid ones: pick one, never invent one. action jobs lists the job and provides vocabularies. action get takes any id (and the pinned revision) with its still: a piece answers with its call (the load line, signature, options, returns and a short example) to run in eval.run; a recipe with its text; a style or world with its document. Offline; no After Effects needed.',
   inputShape: askShape,
   handler: async (args) => {
     try {

@@ -702,6 +702,38 @@
     "environment: map",
     "motion: draw-on"
    ]
+  },
+  "01-bounce-keyframes-word-stagger": {
+   "provides": [
+    "motion: bounce",
+    "motion: stagger",
+    "type: reveal"
+   ]
+  },
+  "02-repeater-hypnotic-background": {
+   "provides": [
+    "backdrop: shapes",
+    "backdrop: pattern"
+   ]
+  },
+  "03-radial-blur-long-shadow": {
+   "provides": [
+    "depth: shadow"
+   ]
+  },
+  "04-echo-stroke-text-reveal": {
+   "provides": [
+    "motion: draw-on",
+    "type: handwritten",
+    "finish: glow"
+   ]
+  },
+  "05-glass-bar-refraction": {
+   "provides": [
+    "material: glass",
+    "backdrop: shapes",
+    "finish: blur"
+   ]
   }
  },
  "styles": {

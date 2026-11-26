@@ -10,7 +10,7 @@
 // line shortened to its acceptance date (the drafts keep the full line); makes a small
 // JPEG still from our own proof render for each proven technique (never a tutorial frame); writes the README gallery
 // that shows those stills (the directory rule: every bundled image is shown in the README); regenerates the library
-// manifest. Never hand-edit the output. Design: product/arsenal-catalog-design.md.
+// manifest; rewrites the drafts' own catalog.json, which the merge step reads. Never hand-edit the output. Design: product/arsenal-catalog-design.md.
 import fs from 'node:fs';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
@@ -714,9 +714,10 @@ export function withGallery(readme, block) {
 export function creatorsOf(credits) {
   const names = [];
   for (const line of credits.split('\n')) {
-    const cells = line.split('|').map((c) => c.trim());
+    const cells = line.split(/(?<!\\)\|/).map((c) => c.trim()); // a cell may hold an escaped pipe, \|
     const m = cells[2]?.match(/^\[([^\]]+)\]\(/);
-    if (m && !names.includes(m[1])) names.push(m[1]);
+    const name = m?.[1].replace(/\\\|/g, '|');
+    if (name && !names.includes(name)) names.push(name);
   }
   return names;
 }
@@ -743,6 +744,8 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     const proofs = JSON.parse(fs.readFileSync(arg(argv, '--proofs', path.join(drafts, 'proof-stills.json')), 'utf8'));
     const creators = creatorsOf(fs.readFileSync(arg(argv, '--credits', path.join(drafts, 'CREDITS.md')), 'utf8'));
     const catalog = buildCatalog({ draftsDir: drafts, tags, jobs, proofs });
+    // The merge step matches new recipes against this file; rewritten here so it never falls behind the drafts (lesson 43).
+    fs.writeFileSync(path.join(drafts, 'catalog.json'), `${JSON.stringify(catalog, null, 2)}\n`);
     const levelsPath = arg(argv, '--levels', path.join(drafts, 'levels.json'));
     const levels = fs.existsSync(levelsPath) ? JSON.parse(fs.readFileSync(levelsPath, 'utf8')) : null;
     const stylesDir = arg(argv, '--styles', path.join(ROOT, 'plugin', 'library', 'styles'));
