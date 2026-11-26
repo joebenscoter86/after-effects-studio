@@ -214,6 +214,11 @@ function runBlock(stage, unit, ctx) {
   L.push('');
   if (ctx.study) L.push(`- STUDY: \`${ctx.study}\``);
   if (/^(art|prove)/.test(stage)) L.push(`- PROOF: \`${ctx.proof}\``);
+  if (stage === 'prove-run') {
+    let real = null;
+    try { real = fs.realpathSync(ctx.proof); } catch { /* no proof folder yet */ }
+    if (real && real !== ctx.proof) L.push(`- PROOF's real path: \`${real}\` (the same folder through the study link, so a project open from \`${path.join(real, 'proofs.aep')}\` is \`PROOF/proofs.aep\`)`);
+  }
   if (/^prove-(author|run)$/.test(stage)) L.push(`- SCRIPTS: \`${ctx.scripts}\``);
   if (stage === 'prove-run') { const sf = scriptFile(ctx, unit); if (sf) L.push(`- Script: \`${sf}\` (yours to run; \`${EXAMPLE_SCRIPT}\` is only the finished example)`); }
   if (stage === 'prove-run') {

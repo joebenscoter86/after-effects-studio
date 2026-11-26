@@ -214,6 +214,11 @@ The first video's 25 recipes all passed the check. Building them found three rec
 - **What happened.** 02 is a bounce pop-in with a letter-by-letter rise. Its round-1 check refused the result crop, which had a layer gizmo in it. In the fix round, the writer withdrew the animated result and named a settled still. The check passed, and the proof review could only say "cannot be judged": a still shows where things land, not the overshoot or the stagger that are the technique. A played window (440.72–441.52 s) did exist and was found when the recipe went back after the review.
 - **Rule.** `distil.md` (result windows) and `check.md` item 7: a technique that is a move needs a played window. A still result for it fails unless the recipe shows that none exists. A checker does not ask for that trade, and a writer does not make it to get a clean crop: the played window is given with its overlays named, and a clean still can go beside it. Test in `tests/run-stage.test.mjs`.
 
+### 46. A build run refused the proof project because it was opened by its real path (explainer piece 4, tYRvoI04pJk 01, 2026-11-26)
+- **What happened.** After Joe took After Effects back and handed it over again, the lead reopened `proofs.aep` from `~/Assets/comp-room-studies/...`, where the study really lives. The first rebuild compared that path with PROOF, which goes through the worktree's `quality/renders/channel-study` link, decided another project was open and stopped before any change ($0.36). The lead stopped the runner, reopened the file by the PROOF path, and the twelve rebuilds then ran.
+- **Why.** `prove-run.md` told a build to stop unless the open project was `PROOF/proofs.aep`, and nothing told it that the study link (lesson 21's move of studies to `~/Assets`) gives the same file a second path.
+- **Rule.** A build run behind the link is also given `PROOF's real path`, and `prove-run.md` counts the file opened from there as the proof project. `video-lead.md` step 6 says to open it by the PROOF path anyway. Test in `tests/run-stage.test.mjs`.
+
 ## Still open
 - The 24 "matches" on the first video were given before the look line existed.
 - Nothing yet tests the prompts themselves. A cheap test: keep technique 11's first recipe as a fixture and confirm a fresh checker fails it on check 8.

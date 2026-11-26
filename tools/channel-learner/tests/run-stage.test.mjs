@@ -318,6 +318,22 @@ test('a build run is told its own script by name, never the 01 example that ever
   assert.ok(!runBlock.includes(`- Script: \`${path.join(scripts, '01-dotted-line.jsx')}\``), 'does not give the example as the script');
 });
 
+test('a build run reached through the study link is told the proof folder\'s real path too (lesson 46)', async () => {
+  const dir = study(['01']);
+  fs.writeFileSync(path.join(dir, 'recipes', '01-zigzag.md'), '## Technique 01\n');
+  const scripts = path.join(dir, 'scripts');
+  fs.mkdirSync(scripts);
+  fs.writeFileSync(path.join(scripts, '01-zigzag.jsx'), '// technique 01\n');
+  const link = path.join(fs.mkdtempSync(path.join(tmpdir(), 'run-stage-link-')), 'study');
+  fs.symlinkSync(dir, link);
+  const { claude, calls } = fakeClaude(() => {});
+  await runStage('prove-run', { study: link, scripts }, { ...quiet, claude });
+  const real = fs.realpathSync(path.join(dir, 'proof'));
+  assert.ok(calls[0].input.includes(`- PROOF's real path: \`${real}\``), 'names the real folder a project may be opened from');
+  const rules = fs.readFileSync(path.join(PROMPTS, 'prove-run.md'), 'utf8');
+  assert.ok(rules.includes('real path'), 'prove-run.md accepts the project by its real path');
+});
+
 test('a rebuild after a review that did not match is pointed at that review', async () => {
   const dir = study(['01']);
   fs.writeFileSync(path.join(dir, 'recipes', '01-zigzag.md'), '## Technique 01\n');

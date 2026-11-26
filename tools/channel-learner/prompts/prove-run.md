@@ -9,7 +9,7 @@ The build scripts were written from the recipes alone, without After Effects (`p
 
 ## Rules for After Effects
 
-- You are the only one driving After Effects. The open project must be `PROOF/proofs.aep`: check with `ae_project_info` before your first write, and stop and report if it is anything else. Never open, close or create a project. Never touch comps you did not make, except to read them.
+- You are the only one driving After Effects. The open project must be `PROOF/proofs.aep`: check with `ae_project_info` before your first write, and stop and report if it is anything else. The same file reached by its real path (the run lists `PROOF's real path` when PROOF sits behind the study link) is that project, not another one. Never open, close or create a project. Never touch comps you did not make, except to read them.
 - **One call at a time.** Never send a call while another is pending, and never send calls in parallel. If a call is slow, wait for it; do not send another on top of it (the installed plugin can raise a blocking dialog when two launches overlap). After an error, read it before the next call.
 - If a call times out or reports a dialog, call `ae_do` `instance.dialogs` once. If a dialog is open, stop and report its text; do not dismiss it.
 - Do not call undo or redo. Use the render queue only through `render.preview`. Leave project settings alone.
