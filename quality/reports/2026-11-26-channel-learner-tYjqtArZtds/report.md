@@ -73,10 +73,19 @@ All five were written and none is held. The first write, check and fix rounds co
 
 ## Acceptance
 
-Waiting for Joe.
+- **Accepted.** Joe accepted all five on 2026-11-26 ("accept"). In each recipe only the status line changed, to proven, and each `checks/<n>.md` has a note saying so. Copies of the recipes from before acceptance are in the study's `scratch/lead/pre-accept/`. The draft now reads 5 recipes, 5 proven.
+- **Stills.** The five `proof/<n>/build.png` stills are in `product/arsenal-drafts/proof-stills.json`. 02 is a build aid, so the arsenal shows no still for it, which leaves four new stills. 01's still is the bare card, as its recipe's result says; 03's is the card-only stage.
+- **Catalog.** After the rebuild the arsenal holds 124 recipes and 151 stills, and no still is missing. `find introduce-tool` (proven only) returns 03 as a support recipe, next to the paper piece `piece-picture-face`, so the job is no longer empty. No recipe takes it as its primary job. flag-a-problem and fail-then-fix gained no technique: 05's proof plays a warning and its fix, but its tags stay list-items with add-depth and add-impact as matched, since the proposed retag was not taken up.
+- **Rebuild.** `node tools/channel-learner/arsenal.mjs`, `npm ci --ignore-scripts` in `plugin/runtime`, `node plugin/scripts/build.mjs`, then `node release/build-claude-package.mjs` (425 files). In a fresh worktree `build.mjs` stops with `ERR_MODULE_NOT_FOUND` for esbuild until `npm ci` has run. The repo README already gives that order; the brief listed the two steps the other way round.
+- **Tests.** After the rebuild, every suite passes:
+  - learner, 227 of 227;
+  - release, 125 of 125;
+  - runtime offline (`npm run test:offline`), 100 files, with 1702 tests passed and 117 skipped (the After Effects opt-ins).
+  The runtime bundle in `plugin/runtime/dist` is unchanged.
 
 ## Open
 
 - 03's ring is a little livelier than the tutorial's. First peak: 9.1 % of the card's height against 7.8 %. Back-swing: 3.5 % against 4.9 %. The build shows a small second crest, which the tutorial does not. The review says nothing needs fixing. It suggests the tutorial's on-screen values may differ from the description's text, which is quoted as given.
 - 04's wallpaper is graded darker than the others, so its card reads dimmer at phone size.
+- flag-a-problem and fail-then-fix are still empty. 05's proof shows the warning-then-fix beat, and a retag of 05 to support them was proposed but not taken up. A recipe whose own job is the warning, or the later worked scene the plan describes (a problem marked, the change, the fixed state), would fill them.
 - A stray test run: while writing lesson 50's test, the lead called the runner with the arguments in the wrong order, and one real listing run (a few cents) ran against a temporary folder. The test now uses the fake as intended.

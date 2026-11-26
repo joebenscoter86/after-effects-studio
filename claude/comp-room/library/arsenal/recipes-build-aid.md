@@ -331,3 +331,54 @@ variations: the narrator says the reused pieces depend on your scene (sky, backg
 pitfalls: do not forget the camera and its depth of field in the new shot (said).
 build notes: Script: comp.layers.add for each reused footage item; layer.threeDLayer = true for backdrop and character; set Transform > Position [x,y,z] and Scale; add camera via comp.layers.addCamera, then Camera Options > Depth of Field = 1, Focus Distance, Aperture, Zoom. A layer pushed back in Z by a factor k must be scaled about k times larger (relative to camera distance) to keep its framing; the video gives the end values, not the formula. Effects: "ADBE Tritone", "ADBE CurvesCustom" (curve points cannot be set by property value from script without preset/.ffx), "ADBE Tint" (Amount to Tint 72). Copying layers between comps is by hand or by script (copyToComp). The demonstrated comp is a simplified rebuild; the finished close-up shown has many more layers (branches, a dead tree, a second character layer, a camera parented to a null, several adjustment layers). The result window falls just after the technique's spoken stretch, while the same arrangement is still on screen before the hair work starts.
 unknowns: the character layer's Z position and scale; the sky layer's position and scale (it fills the frame in the result, measured); whether the tree was scaled again after its Z push; how the camera, rain and grain layers were brought into the new comp; camera position and point of interest; comp size; exact hex values of the Tritone colours; how the effect stack was copied.
+
+## Null hierarchy: three group nulls under one master null
+id: 02-null-hierarchy-for-grouped-motion
+revision: 1102a00e
+job: none (build-aid)
+status: proven (accepted 2026-11-26)
+what it does for a beat: Reach for it before animating a card made of many layers (shapes, text, logo). Each part-group gets its own null, and one master null sits above them, so the whole card or any single group moves with one layer.
+what it looks like: Nothing visible changes. A wide, pale, rounded notification card on a near-white ground shows a round mint logo on the left, a bold name with a grey message line under it, and a small grey "NOW" at the top right. Only the layer stack (parent column) records the technique.
+
+ingredients:
+- Null Object layer — built-in; Layer > New > Null Object (inferred; the menu is not shown, only the new null "Null 1" appears)
+- Parent & Link column (pick whip or drop-down) — built-in; shown in the timeline,
+- Text layers, imported logo image — built-in (the example's content, any will do)
+
+steps:
+1. Start from a finished card made of three shape layers (a depth/shadow copy, the main card, an outline copy), in a 16:9 comp with a pale ground. (shown)
+2. Add a null and rename it as the shapes' controller. It lands on top of the stack. (said; shown with the name field open, renamed "Null Notification")
+3. Select the three shape layers and parent them to that null (said). The parent column of all three reads the null (shown : "5. Null Notific" on Stroke, Notification, Depth).
+   - Parent: the shape-controller null (shown)
+4. Import the logo image and place it at the left end of the card; add the text layers and arrange them. (said that the logo is placed and the text arranged; shown for the layers; the side is shown only: the narration says "right side", but every frame on has the logo at the LEFT, so the screen wins)
+   - Logo: left end of the card, round mint badge (shown; the narration's "right" disagrees)
+   - Text: name above, message below, both left-aligned beside the logo, "NOW" at upper right (shown)
+   - The imported image layer still reads "[Artboa… ]" and reads "Logo": the author renamed it in between, with no word about it (shown). Later steps use the name "Logo".
+5. Add a second null, rename it "Text Null", and parent all three text layers to it. (said; shown for the name being typed and the three text layers reading "1. Null 2"; shows the finished name "Text Null" with text layers "1. Text Null")
+   - Text layer colours were changed to mark them in the timeline (said; layer label colour shifts from red to blue). Cosmetic only.
+6. Add a third null, rename it "Logo Null", and parent the logo layer to it (said; shown renaming "Logo Nu…", logo parent "5. Logo Null").
+7. Add a fourth null and parent the three nulls (shape controller, Text Null, Logo Null) to it; the narration calls it "main", but it still reads "[Null 4]", so the name is said, not shown. (said; shown)
+   - Chains (shown): Text Null → 1. Null 4; Logo Null → 1. Null 4; the shape-controller null → 1. Null 4. Then the three text layers → 2. Text Null; Logo → 6. Logo Null; Stroke, Notification, Depth → 8. Null Notific[ation]. Null 4 → None.
+   - At the three nulls still read parent None and Null 4 exists; they are parented, so the parenting happens between (shown).
+8. Copy the bounce expression from the description, and add a Position keyframe on the shape-controller null (said). The key is at time 0 with value 0,0 (shown : Position 0.0, 0.0 with the stopwatch on, tooltip 0:00:00:00 • 0.0, 0.0). Because this null is now a child of Null 4, 0,0 is a position relative to its parent, not to the comp. Its box (dashed square, anchor at its top-left corner) sits with that corner on the comp centre, which fits a parent whose own position is the comp centre (inferred: the parent's value is not on screen). Pasting the expression belongs to technique 03 (see extras.md: pasted).
+
+Final stack (top to bottom): main null, Text Null, "NOW", name, message line, Logo Null, Logo, shape-controller null, Stroke, Notification, Depth (shown). Chains: text layers → Text Null → main; Logo → Logo Null → main; Stroke/Notification/Depth → shape-controller null → main.
+
+layout: Comp 1920×1080 shown at 50 % (the viewer's picture is at x 555–1515, y 131–671 of the full frame, measured). Frame short side = height. Measured (a clean frame; the view is 50 %, so comp px = 2 × view px):
+- Card outline: x 696–1373, y 321–480 of the frame, i.e. 1354 × 318 comp px: 70.5 % of the comp width, 29.4 % of the comp height (measured on the outline, stroke included), centred on the comp. It is a rounded rectangle, not a pill: corner radius about 0.33 of the card's height (about 105 comp px, 7.8 % of its width), with the left and right sides straight for about 35 % of the height (measured on the crop). It is wider than the 290 px Size shown in technique 01, so the card was resized between, or the outline adds to it; build to the measured 1354 × 318.
+- Card look (measured): fill light grey about 236 (ground about 250, near-white), a soft darker inner edge, a thin grey outline about 2–3 view px wide (value 202–216 at the edge row) and a faint lighter halo outside it. These come from technique 01 (stroke, depth and blur layers); no step here makes them.
+- Logo: mint round badge, diameter 94 view px = 188 comp px (17.4 % of the comp height, 59 % of the card height), vertically centred on the card; its left edge is 38 view px (5.6 % of card width) in from the card's left edge. Rendered badge colour about (182,250,237); the dark glyph inside about 54 view px wide. This is the example's imported artwork: a builder may use any round logo of this size.
+- Text, all left-aligned with its left edge 163 view px (24 % of card width) in from the card's left edge: name, bold black, cap height about 26 view px (about 4.8 % of comp height; inferred font about 72 comp px); message line, regular mid-grey (about 150), cap height 21 view px (3.9 % of comp height; inferred font about 60 px); "NOW" at the upper right, regular light grey, cap height about 14 view px (inferred about 37–40 px; the Character panel reads 37 px, grey, Regular on the selected layer, which fits this label). Name sits in the card's upper half and message below it; the two together are centred vertically on the card. Font in the panel: SF Pro Display (shown; the description names SF Pro). Text content is the example's: the builder is free to pick words.
+- Null boxes: default null size 100 × 100 comp px (50 view px = 5.2 % of comp width, 9.3 % of comp height), anchor at the top-left corner, which sits on the comp centre, so the box lies just below-right of the centre (x 1035–1085, y 401–451). Dashed null boxes are layer outlines, drawn by the editor, not rendered. Every kept frame shows this box inside the card, so no frame of the card is free of it; the clean sub-crop below avoids it.
+- No shadows or animation belong to this technique: the picture is the same before and after parenting (comp time reads 0:00:00:00 throughout).
+timing and easing: none given for the parenting itself. One Position key at the start (time 0) on the shape-controller null, shown.
+variations: Group different layers per null as the design needs (said in effect: shapes, text, logo each in its own null). Colour-label the layers to keep them apart (said).
+pitfalls: none given. Order matters in practice: parent the child nulls only after each is named and filled (inferred).
+build notes: Script: comp.layers.addNull(); null.name = "..."; child.parent = null for each layer (set the parent after creating all nulls); main.parent not set; children of main: the three group nulls. Shape-layer parenting must keep world position (setting .parent in script keeps transform values, so the nulls should be at the comp centre or positions offset). The shown child position is 0,0 relative to its parent, so either leave the three group nulls at 0,0 under a main null placed at the comp centre, or keep them at the comp centre and leave the main null at 0,0; do not offset both (inferred: the parent's value is not on screen). The layer rename of the logo is cosmetic.
+unknowns:
+- The parent null's own Position, and any step where the author zeroed the child's Position: not on screen.
+- Null layer size (100×100 default?) and which nulls were moved: not given.
+- The exact new null colours/labels beyond red/blue: not given.
+- The name "main" is said but the layer reads "Null 4" through.
+- Where in the stack each null was dragged: only visible in the layer order above.
+- Stroke/Notification/Depth settings: from technique 01, not this video segment.

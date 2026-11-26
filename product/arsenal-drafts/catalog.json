@@ -1,6 +1,6 @@
 {
   "vocab": "jobs-v1",
-  "version": "63db6ee1",
+  "version": "b7cb11e6",
   "jobs": [
     "land-number",
     "count-things",
@@ -62,7 +62,7 @@
       },
       "revision": "d073f30e",
       "still": "quality/renders/channel-study/201iywIy74c/proof/01/build.png",
-      "taught_by": 8,
+      "taught_by": 10,
       "variant_of": "03-step-icons-pop-with-bounce-in-sequence",
       "variants": []
     },
@@ -206,8 +206,10 @@
       },
       "revision": "31249974",
       "still": "quality/renders/channel-study/201iywIy74c/proof/05/build.png",
-      "taught_by": 1,
-      "variants": []
+      "taught_by": 2,
+      "variants": [
+        "01-frosted-glass-pill-from-adjustment-shape"
+      ]
     },
     {
       "id": "01-shadow-map-overlay",
@@ -1143,8 +1145,10 @@
       },
       "revision": "3e9d01cb",
       "still": "quality/renders/channel-study/Tf0EiCGOEYs/proof/05/build.png",
-      "taught_by": 8,
-      "variants": []
+      "taught_by": 10,
+      "variants": [
+        "04-staggered-element-offsets"
+      ]
     },
     {
       "id": "06-cursor-travels-and-taps-button",
@@ -1248,7 +1252,7 @@
       },
       "revision": "b061556e",
       "still": "quality/renders/channel-study/Tf0EiCGOEYs/proof/08/build.png",
-      "taught_by": 8,
+      "taught_by": 10,
       "variants": []
     },
     {
@@ -1419,7 +1423,7 @@
       },
       "revision": "9201d48e",
       "still": "quality/renders/channel-study/YBeMmC43Q1U/proof/05/build.png",
-      "taught_by": 8,
+      "taught_by": 10,
       "variants": []
     },
     {
@@ -3294,10 +3298,11 @@
       },
       "revision": "326c36ad",
       "still": "quality/renders/channel-study/nHh0NRo8G2U/proof/03/build.png",
-      "taught_by": 8,
+      "taught_by": 10,
       "variants": [
         "01-bounce-keyframes-word-stagger",
-        "02-bounce-expression-pop-in"
+        "02-bounce-expression-pop-in",
+        "03-expression-bounce-drop-in"
       ]
     },
     {
@@ -3573,7 +3578,7 @@
       },
       "revision": "6464b2db",
       "still": "quality/renders/channel-study/nHh0NRo8G2U/proof/11/build.png",
-      "taught_by": 8,
+      "taught_by": 10,
       "variants": []
     },
     {
@@ -3783,7 +3788,7 @@
       },
       "revision": "fb747e70",
       "still": "quality/renders/channel-study/tYRvoI04pJk/proof/02/build.png",
-      "taught_by": 8,
+      "taught_by": 10,
       "variant_of": "03-step-icons-pop-with-bounce-in-sequence",
       "variants": []
     },
@@ -3886,7 +3891,7 @@
       },
       "revision": "95d4ae6c",
       "still": "quality/renders/channel-study/tYRvoI04pJk/proof/05/build.png",
-      "taught_by": 8,
+      "taught_by": 10,
       "variants": []
     },
     {
@@ -4167,6 +4172,182 @@
       "still": "quality/renders/channel-study/tYRvoI04pJk/proof/13/build.png",
       "taught_by": 3,
       "variant_of": "18-smooth-text-reveal",
+      "variants": []
+    },
+    {
+      "id": "01-frosted-glass-pill-from-adjustment-shape",
+      "video": "tYjqtArZtds",
+      "n": 1,
+      "name": "Frosted-glass pill built from three stacked shape layers",
+      "line": "Reach for it when a card, banner or notification has to sit in front of a busy picture and look like frosted glass: it blurs whatever is behind it and gets a faint tint and a thin light outline. It is the base card that later techniques animate.",
+      "status": "proven",
+      "kind": "technique",
+      "job": "add-depth",
+      "support": [
+        "finish-the-look"
+      ],
+      "mood": [
+        "light",
+        "clean",
+        "soft",
+        "minimal"
+      ],
+      "needs": [
+        "shapes"
+      ],
+      "duration": 3,
+      "motion": "still",
+      "difficulty": 2,
+      "group": "frosted-glass refraction",
+      "why": "'a card, banner or notification has to sit in front of a busy picture and look like frosted glass: it blurs whatever is behind it and gets a faint tint and a thin light outline': a blurring adjustment-layer pill with a 5 % tint copy and a thin outline copy lifts the card off the picture",
+      "section": {
+        "file": "tYjqtArZtds.md",
+        "heading": "Frosted-glass pill built from three stacked shape layers"
+      },
+      "revision": "0a854efa",
+      "still": "quality/renders/channel-study/tYjqtArZtds/proof/01/build.png",
+      "taught_by": 2,
+      "variant_of": "05-glass-bar-refraction",
+      "variants": []
+    },
+    {
+      "id": "02-null-hierarchy-for-grouped-motion",
+      "video": "tYjqtArZtds",
+      "n": 2,
+      "name": "Null hierarchy: three group nulls under one master null",
+      "line": "Reach for it before animating a card made of many layers (shapes, text, logo). Each part-group gets its own null, and one master null sits above them, so the whole card or any single group moves with one layer.",
+      "status": "proven",
+      "kind": "build-aid",
+      "job": null,
+      "support": [],
+      "mood": [
+        "neutral",
+        "workflow"
+      ],
+      "needs": [
+        "none"
+      ],
+      "duration": 0,
+      "motion": "still",
+      "difficulty": 2,
+      "group": null,
+      "why": "\"Nothing visible changes.\" and \"the whole card or any single group moves with one layer\": setup that only shows in the layer stack, so it never fills a beat on screen alone.",
+      "section": {
+        "file": "tYjqtArZtds.md",
+        "heading": "Null hierarchy: three group nulls under one master null"
+      },
+      "revision": "1102a00e",
+      "still": "quality/renders/channel-study/tYjqtArZtds/proof/02/build.png",
+      "taught_by": 1,
+      "variants": []
+    },
+    {
+      "id": "03-expression-bounce-drop-in",
+      "video": "tYjqtArZtds",
+      "n": 3,
+      "name": "Two-key drop-in that settles with an expression bounce",
+      "line": "Reach for it when a card or group should drop into place and wobble a little before it rests, without hand-keying the overshoot. Two plain keys give the move; one pasted expression adds the settle on Position and on Scale.",
+      "status": "proven",
+      "kind": "technique",
+      "job": "add-impact",
+      "support": [
+        "introduce-tool"
+      ],
+      "mood": [
+        "light",
+        "clean",
+        "playful"
+      ],
+      "needs": [
+        "type",
+        "shapes"
+      ],
+      "duration": 2,
+      "motion": "one-shot",
+      "difficulty": 3,
+      "group": "time stagger",
+      "why": "'a card or group should drop into place and wobble a little before it rests, without hand-keying the overshoot': a two-key Position and Scale drop with the bounce expression, on the card, logo and text nulls of an app notification, so the app's mark and name land with a settle",
+      "section": {
+        "file": "tYjqtArZtds.md",
+        "heading": "Two-key drop-in that settles with an expression bounce"
+      },
+      "revision": "f26631a0",
+      "still": "quality/renders/channel-study/tYjqtArZtds/proof/03/build.png",
+      "taught_by": 10,
+      "variant_of": "03-step-icons-pop-with-bounce-in-sequence",
+      "variants": []
+    },
+    {
+      "id": "04-staggered-element-offsets",
+      "video": "tYjqtArZtds",
+      "n": 4,
+      "name": "Offset the logo and text groups a few frames behind the card",
+      "line": "Reach for it when several parts of one card all get the same drop-and-settle move and read as a single stiff block. Sliding the start of each part a couple of frames later makes the parts land one after another.",
+      "status": "proven",
+      "kind": "technique",
+      "job": "reveal-headline",
+      "support": [
+        "add-impact"
+      ],
+      "mood": [
+        "light",
+        "clean",
+        "soft"
+      ],
+      "needs": [
+        "shapes",
+        "type"
+      ],
+      "duration": 1,
+      "motion": "one-shot",
+      "difficulty": 2,
+      "group": "time stagger",
+      "why": "\"Sliding the start of each part a couple of frames later makes the parts land one after another\": a card, its logo and its text arrive in sequence instead of as one stiff block; the title lands last as part of the card, and the logo is generic, not a named product's mark.",
+      "section": {
+        "file": "tYjqtArZtds.md",
+        "heading": "Offset the logo and text groups a few frames behind the card"
+      },
+      "revision": "ff96ebf7",
+      "still": "quality/renders/channel-study/tYjqtArZtds/proof/04/build.png",
+      "taught_by": 10,
+      "variant_of": "05-staggered-slide-in",
+      "variants": []
+    },
+    {
+      "id": "05-stacked-second-notification-with-push-back",
+      "video": "tYjqtArZtds",
+      "n": 5,
+      "name": "Second notification arrives and the first one is pushed back",
+      "line": "Use it when a second card lands on top of a card already on screen and the first should react: sink, shrink and settle with a small springy wobble instead of just being covered.",
+      "status": "proven",
+      "kind": "technique",
+      "job": "list-items",
+      "support": [
+        "add-depth",
+        "add-impact"
+      ],
+      "mood": [
+        "light",
+        "clean",
+        "soft",
+        "playful"
+      ],
+      "needs": [
+        "shapes",
+        "type"
+      ],
+      "duration": 2,
+      "motion": "one-shot",
+      "difficulty": 3,
+      "group": null,
+      "why": "\"Use it when a second card lands on top of a card already on screen and the first should react: sink, shrink and settle with a small springy wobble instead of just being covered.\": a second item arrives while the first stays visible, stepped back behind it, so it reads as a growing stack of messages",
+      "section": {
+        "file": "tYjqtArZtds.md",
+        "heading": "Second notification arrives and the first one is pushed back"
+      },
+      "revision": "626d0c64",
+      "still": "quality/renders/channel-study/tYjqtArZtds/proof/05/build.png",
+      "taught_by": 1,
       "variants": []
     }
   ]

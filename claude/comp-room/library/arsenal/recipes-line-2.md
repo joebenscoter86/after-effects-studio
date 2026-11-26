@@ -2,6 +2,94 @@
 
 Generated from the recipe drafts; do not edit by hand. Recipes whose primary job is in this group. Find candidates for a beat with ae_arsenal find; read one with ae_arsenal get, or a section here by its heading.
 
+## Hollow chrome outline title: faces hidden, bevels and walls remain
+id: 08-outline-only-3d-title
+revision: fdb05df9
+job: reveal-headline; support: light-the-hero
+status: unproven
+what it does for a beat: A cut-out, stroke-like 3D title for a sleek or dark mood: the letter faces vanish and only the rounded bevels and the extrusion walls remain, so the word reads as a hollow metal outline standing on a floor.
+what it looks like: The same chunky extruded word, now with see-through front and back faces. Each letter is outlined twice by a thin, bright, rounded metal tube (the convex bevel at the front edge and again at the back edge), with the darker, grainy side walls showing between the two tubes inside the hollow letters. First shown on the pale blue background, then on a near-black background where the tubes glint pale silver-gold, with only a thin dark contact line under the letters.
+ingredients:
+- Continues directly from technique 07's state, itself a variant of 01 (bevelled advanced-3D text with Material Assignment overrides) lit as in 02–04: the text fill is still pale yellow #FFDCAD (Character swatch shown) and Material Options > Specular Shininess is still 100% (set in 07, not changed here: inferred). These two settings give the rims their warm glint; starting from 01's white fill and low shininess will not match.
+- So this recipe stands alone, the scene it needs (figures from those recipes, each shown in its own span):
+  - Text (01, 05): one word, Poppins Black 100 px, layer Scale 472 %, 3D layer, comp renderer Advanced 3D, comp 1920x1080 at 23.976 fps. Geometry Options: Extrusion Depth 20, Bevel Style Convex, Bevel Depth 2, Hole Bevel Depth 100 % (01). The bevel is what makes the bright tubes: Front and Back Opacity hide only the flat front and back faces, not the bevel, so without a convex bevel the result is flat ribbon walls. Extrusion Depth sets how much grainy wall shows between the two tubes.
+  - Floor (02): a 3D comp-size solid, X Rotation 90°, Position 960,721,0, Scale 627 %, Material Options > Accepts Shadows: Only, so only shadows show on it; the 2D backdrop solid below it is replaced or covered by the dark solid of step 5.
+  - Parallel light (03, 04): Position 2920,−100,2663.3, Point of Interest 960,540,0, Intensity 216 % (03 sets 407 %, 04 lowers it to 216 %), Casts Shadows Off.
+  - Point light (04): Position 456,530,−666.7, Intensity 100 %, Falloff Smooth, Radius 589, Falloff Distance 373, Casts Shadows Off.
+  - Environment light (02, retuned in steps 6 and 7 here): X Rotation −25°, Intensity 187 %, Casts Shadows On, Shadow Darkness 100 %.
+  - Letter entrance (05) and camera (06): a 50 mm two-node camera with Depth of Field On, Aperture 30.3, Focus Distance 2343.7, parented to a 3D null whose Z Position goes 0 to 231 over 0 to 0:00:04:23. The result is at comp time 0:00:04:10, letters landed (shown in the). The entrance animator from 05 stays on the layer: when the author plays the comp from 0 s right after the still, the outlined letters tumble in as in 05 (shown).
+- The lights, floor and camera are not changed in this span apart from steps 6 and 7; the timeline lists null, camera, point, parallel and environment lights, the text, the floor and the dark solid (shown in a).
+- Advanced 3D text layer, Material Assignment overrides — built-in, After Effects 27 (shown)
+- Text animator properties Front Opacity and Back Opacity — built-in, After Effects 27; Animate > Front > Color > Opacity (shown), then the animator's Add > Property > Back > Color > Opacity (shown)
+- Solid layer for the background — built-in (Solid Settings dialog shown)
+- Environment Light (Light Options: Environment) — built-in (shown)
+steps:
+1. Remove every texture from the title: under the text layer's Material Assignment set Front, Bevel, Side and Back all to Default (said; partly done with Bevel, Side and Back on Default; all four Default).
+   - Front / Bevel / Side / Back: Default (shown)
+2. On the text layer click Animate and choose Front > Color > Opacity; this adds a new animator, Animator 2 (shown), beside the existing Animator 1 (inferred: the letter entrance from 05) holding Front Opacity (said; menu shown; Front Opacity 100% in Animator 2 shown).
+3. In that same animator use Add > Property > Back > Color > Opacity to add Back Opacity (said; menu shown).
+4. Set both to 0% so the flat front and back faces disappear; the convex bevels at both edges and the side walls are still drawn (said; shown; the bevels' survival measured on the result). The animator's Range Selector 1 is left at its defaults (inferred: it is not opened).
+   - Front Opacity: 0% (shown)
+   - Back Opacity: 0% (shown)
+5. Darken the background: a Solid Settings / Solid Color dialog is used to make a dark grey solid, and the bottom layer is a solid named as a second background; the panel already reads Effect Controls for that solid and the dialog is Solid Settings with "Affect all layers that use this solid", so the solid existed before its colour was set (said "change your background colour"; shown; the bottom layer reads as a new dark solid). The colour first tried is #0E0E0E (shown, dialog open; crop) and then #282828 (shown, dialog still open; crop).
+   - Solid colour: #282828 (shown, dialog open). The background in the result frame measures RGB 23,23,23 (#171717) everywhere, inside the letters too, matching neither dialog value, so the final colour is not settled; aim for #171717 (measured on the).
+6. On Environment Light 1, click the stopwatch of Y Rotation off, which deletes the keyframes it carried from technique 02; the value stays at 0x+198.5° and the light becomes static (not said; shown in cuts: the keyframe navigator and a keyframe are present, they are gone and the stopwatch is plain).
+7. Retune the now-static light so the rims catch light from a better angle: drag Y Rotation from 0x+198.5° down to 0x+120.5° (said "adjust your environment lights rotation"; shown).
+   - X Rotation: 0x-25.0° (shown, unchanged)
+   - Y Rotation: 0x+120.5°, no keyframes (shown)
+   - Intensity: 187% (shown; it was scrubbed down to 142% and 101% and left back at 187%)
+   - Casts Shadows: On; Shadow Darkness: 100% (shown)
+8. Not a step: the author briefly opens another comp holding a different textured word before returning; nothing there is changed (inferred).
+layout: (measured on the result frame, a. There the viewer panel spans x 661–2102, y 360–1120 at full size and the comp, at the same 44.7 % zoom as in 07, runs slightly past the panel, so its edges are not visible.) The word measures x 812–1979, y 574–866 at full size, about 1167 x 292 px (measured). It is the same word at the same comp time and camera as 07's result, where it spans about 10% to 92% of the comp width and its caps run from about 32% to 67% of the comp height (measured on 07's); use those shares. Background flat #171717 (23,23,23), inside the hollow letters too (measured). Outline: on each letter a bright rounded tube at the front edge and another at the back edge, about 5 px wide at full size (about 1.7 % of the letter height) where seen edge-on, brightest pixels about 208,203,191 (pale warm silver) with highlights near white (measured; zoom); between the tubes the side walls show as darker, grainy bands, about 89,85,75 on average (measured), visible inside the counters and on the inner walls of the L and E. Floor: a thin near-black contact line right under the letter bases (about 3 to 6 at y 868), then a faint shadow that rises from about 17 back to the background's 23 within about 25 px below the bases (measured); no long shadow is visible on the dark background. Light: the brightest glints sit on the S's right-hand curve and on the inner walls of the L and E (seen on the result crop), from the environment light at Y 120.5° plus 03's parallel light and 04's point light.
+timing and easing: none given. No keyframes on Front/Back Opacity, and the environment light's Y Rotation keyframes from 02 are deleted in step 6, so the light is static in this look (shown).
+variations: The background colour and the environment light's rotation should be set to suit your own build (said).
+pitfalls: none given
+build notes: By script: Material Assignment overrides are new in After Effects 27 and may not be exposed to scripting; set them to Default by hand if needed. The animator: add a Text Animator to the text layer ("ADBE Text Animators") and, if the AE 27 per-face colour properties are scriptable, add the properties shown as "Front Opacity" and "Back Opacity" and set both to 0; otherwise add them by hand via Animate > Front > Color > Opacity and Add > Property > Back > Color > Opacity. Background: comp.layers.addSolid([0.157,0.157,0.157], ...) placed at the bottom. Light: on Environment Light 1 remove all Y Rotation keyframes (while numKeys > 0 removeKey(1)), then set Y Rotation = 120.5 as a static value; Intensity 187. Keep the text fill [1, 0.863, 0.678] and Specular Shininess 100 from 07. Keep 01's Geometry Options (Bevel Style Convex, Bevel Depth 2, Hole Bevel Depth 100, Extrusion Depth 20): the bright tubes are the bevel. The dialog shows #282828 ([0.157,0.157,0.157]) but the result measures #171717; to match the picture use [0.09,0.09,0.09].
+unknowns: Whether the dark background is a new solid or the old one recoloured (the layer name changes, so a new solid is likely); which colour was kept (#0E0E0E and #282828 are seen in the dialog, the picture measures #171717); the Range Selector settings of the new animator.
+
+## Two-colour phase bar that draws on segment after segment
+id: 01-segmented-progress-bar-draws-in-order
+revision: aa3d7518
+job: step-through-process; support: show-time
+status: proven (accepted 2026-11-21)
+what it does for a beat: A process or timeline beat ("first this phase, then that one"): one straight bar split into coloured phases that fill left to right, the second phase starting just as the first slows down, with step pictures lined up underneath.
+what it looks like: On a black frame, a thick horizontal bar across the middle 62 % of the width, about seven tenths lime green and the rest pale sky blue, split by a hairline gap. A short white bold label sits above the start of each segment and six cut-out step pictures sit in a row under the bar. The green fills from the left in one second, and the blue continues from the gap.
+ingredients:
+- Shape layer drawn with the Pen tool (an open two-point path with a stroke, no fill) — built-in
+- Trim Paths (shape layer Contents > Add > Trim Paths; menu path inferred, "Trim Paths 1" under the layer's Contents shown) — built-in
+- Text layers (Satoshi Black, a free font) — built-in text; font shown
+- Six cut-out PNG step pictures (art, not technique)
+- Flow (keyframe-easing extension) — paid; only used to apply an S-curve ease, given below as numbers
+steps:
+1. Comp: 1920 x 1080, black background. The narrator says 24 fps; the project panel shows 23.976 for every comp, so build at 23.976 (the screen wins). The project is 16 bpc. (said 1920 x 1080; shown for 23.976 and 16 bpc, also; black background shown; background colour setting inferred)
+2. With the Pen tool, no fill and a stroke, click two points with Shift held to make a straight horizontal line, then centre the layer in the comp. (said; shown)
+   - Fill: none (shown)
+   - Stroke width: 54 px while drawing (shown), later 60 px (shown, Properties panel "Stroke Width 60"). Use 60.
+   - Stroke colour: #BFF06C (shown, the colour dialog opened on the duplicate before it was recoloured, H 82 S 55 B 94)
+   - Layer Position 960, 540; Anchor Point 9.1, 0.8 (shown)
+   - Path ends at about x 365 and x 1556 in comp pixels (1191 px long, butt caps), centred on y 540 (measured on the result frame; endpoint positions not shown as numbers)
+3. Add Trim Paths to the line. Set the first segment: Start 0 %, End 70 %. (said "trim paths"; values: Start 0 shown, End 70 % shown)
+4. Duplicate the layer. On the copy's Trim Paths set Start 71 %, End 100 %, so a 1 % gap separates the two segments. (duplicate said; Start 71.0 % shown; End 100 % shown)
+   - The author tried 20/25, 22/74, 80/81 and 68/69 before landing on 70/71 (shown). The gap is always 1–5 % of the whole line, so spacing stays even because it is a share of one path. (said)
+5. Recolour the copy pale blue. (said "bluish"; shown as the dialog moves through teal values)
+   - Typed value: not legible; the dialog's last visible value is #60BFAD and the video then cuts. The rendered bar measures RGB 143, 211, 224 (#8FD3E0) on the result frame; use that as the target. (measured; typed value unknown)
+6. Add two labels above the segments: Satoshi, Black weight, 40.9 px, tracking −95, fill #F3F3F3, left aligned, anchor at 0,0. (font said as "otoshi", screen reads Satoshi: shown; fill F3F3F3 shown; left alignment said)
+   - Label 1 position 366.6, 493 (shown); label 2 position 1212.1, 493 (shown) — each starts a few pixels right of its segment's left end, baseline 15 px above the bar.
+7. Import six cut-out PNG step pictures, scale each so they look the same size (their sources differ in size), and line them up in a row under the bar, numbered left to right; the last two sit under the blue segment. (said; shown)
+   - Scales used: 26, 14, 7, 7, 8, 7 % for pictures 1–6 (shown); these depend only on the source images' sizes, so aim for the sizes in `layout`, not the percentages.
+   - The 70/71 split was chosen after the pictures were placed, so the gap falls between picture 4 and picture 5. (said; shown)
+8. Animate the first segment: keyframe Trim Paths End 0 % at frame 0 and 70 % at frame 24 (1 s). (said "about one second"; keys shown crop)
+9. Animate the second segment: keyframe its End 71 % (equal to its Start, so nothing shows) to 100 %, over 24 frames. (71 said and shown at time 0; 100 % shown)
+10. Ease all four keys with an S-curve: cubic-bezier 0.88, 0.14, 0.12, 0.86 (a saved curve in Flow). (ease said by its preset name; the numbers shown)
+    - In After Effects terms (converted, inferred): every key Influence 88 %; speed at each key = 0.159 x the average speed of the move. First segment: speed 11.1 %/s at both keys; second segment: 4.6 %/s.
+11. Slide the second segment's two keys earlier so it starts as the first is slowing: first segment 0–24 f, second segment 20–44 f. (said "as soon as it starts to slow"; frames read from key positions, ±1 frame)
+layout: Measured on the settled result frame (comp 1920 x 1080, calibrated on the picture's own borders: 1804 x 1015 px in the recording = 1920 x 1080). measured: the bar runs from x 365 to x 1556 (19.0 % to 81.0 % of the width, 62 % of the width long), centred on y 540 (50 %), thickness 61 px (5.7 % of the height). Green segment 365–1199.5 (70 % of the bar); gap 10.6 px; blue 1210–1556. Labels: baseline y 494 (45.7 % of the height), cap-plus-ascender height 31–33 px (about 3 % of the height), the longer word 180 px wide (9.4 % of the width); bottom of the labels 15 px above the bar's top edge. Step pictures: six in a row, centres at 22.9, 33.1, 43.7, 55.9, 67.4 and 78.0 % of the width, centred about y 675–684 (62.5–63.3 % of the height); heights 103–144 px (9.6–13.3 % of the height), widths 85–160 px; their tops 32–60 px below the bar's bottom edge; the row starts 15 px inside the bar's left end and ends 16 px inside its right end. Background pure black (0, 0, 0), no grain, no vignette, no shadows except a soft dark shadow baked into one picture's PNG (a packaging cut-out). Colours: green renders 188, 237, 101; blue renders 143, 211, 224; labels near white. The labels' slide-up comes from recipe 02 (they rise 61 px from behind their segment, inverted track matte, keys 10–22 f and 32–44 f, ease cubic-bezier 0.04, 0.47, 0.53, 0.93). The pictures' pop comes from recipe 03 (scale 0 to full over 12 frames, same S-curve as here, a bounce expression with about 2.5 % overshoot, starting at 22 f and every 10 frames after). For this recipe alone, the labels and pictures simply sit at their final positions. Motion: both segments fill from their left end towards the right. The green's leading edge (with picture lag, ±1 frame) is at x 370 at frame 1, 547 at frame 10, 947 at frame 13 (70 % of its run; frame 12, the half-way point, is a dropped recording frame), 1164 at frame 20 (95 %); the blue appears at frame 20 and reaches the bar's right end by about frame 43.
+timing and easing: Segment 1 Trim End 0→70 % at 0–24 f; segment 2 Trim End 71→100 % at 20–44 f (24 f each, 4 frames overlap). Ease cubic-bezier(0.88, 0.14, 0.12, 0.86) on all keys: a strong S, the middle about 7 times the average speed. Measured play: about real time (the step pictures start 10 recording frames apart for keys 10 comp frames apart). Motion blur off: the motion-blur switch column is empty for every layer (shown).
+variations: One long segment is fine; any number of segments by duplicating and setting Start/End percentages with a small gap; labels may sit above the bar or inside it. (said)
+pitfalls: Key the second segment's End from its own Start value (71), not from 0, or it draws in behind the first segment. (said)
+build notes: Shape layer contents: "ADBE Vector Group" > "ADBE Vector Shape - Group" (path with two vertices), "ADBE Vector Graphic - Stroke" (Stroke Width 60, Line Cap butt), then "ADBE Vector Filter - Trim" at the layer's Contents level (Start "ADBE Vector Trim Start", End "ADBE Vector Trim End"). Ease by script: `prop.setTemporalEaseAtKey(k, [new KeyframeEase(speed, 88)], [new KeyframeEase(speed, 88)])` with the speeds in step 10. Text: font PostScript name for Satoshi Black is likely "Satoshi-Black" (inferred); tracking −95, fontSize 40.9, justification LEFT_JUSTIFY. The pictures are any six cut-out PNGs of a process; scale each to the measured heights.
+unknowns: The blue's typed colour value (only its render is measured). The comp's background colour setting and duration (the ruler runs to about 15 s; preview stops at 4:00, work area inferred). The exact path vertex coordinates (only their rendered ends are measured).
+
 ## Labels that rise out of their own bar segment
 id: 02-labels-rise-from-behind-the-bar
 revision: 2d62f2fa
@@ -208,6 +296,78 @@ variations: Letters can be done by word instead of by character (a second preset
 pitfalls: The text animator starts at the layer's start, not at the playhead, so trim the layer. Motion blur is not applied to everything on purpose.
 build notes: Icon: layer.property("Scale").setValueAtTime(11/25,[0,0,0]); setValueAtTime(13/25,[42,42,42]) (2-frame keys, inferred; use 14/25 for the 3-frame fallback; the 15/25 spacing of the editing state is superseded); layer.property("Scale").expression = the comment's bounce text. Text: Text group "Animator" > Properties Position and Opacity; add selector "Expression" (Text Animator selector; set Based On Characters through its dropdown, which scripts may not reach by name). Opacity animator value 0 (note an animator opacity of 0 here means the letter is hidden at selector 100 %). Anything that must be pasted as the selector's Amount is set via the property's expression. Layer parenting and motion blur switches (layer.motionBlur = true, comp.motionBlur = true) are scriptable.
 unknowns: whether the Scale keys are linear or eased and whether there is a third key (the key icons in the timeline are too small to tell, and the expression's lower lines are never on screen as the take plays), so the softer settle is given as a measured target, not as settings; The expression the per-character script-panel preset runs (the comment's version delays by word, so with one word all letters would move together, yet the screen shows letters in turn); the selector's final Amount text; the exact stagger per letter; the exact key frames of the played take (2 frames is inferred; 3 is the fallback if the overshoot is too large); the amplitude the take shows (1.19×) is lower than the formula gives for 2-frame keys (about 1.3×), reason not shown; how many layers carry motion blur and the shutter angle (smear not measured: no kept frame shows the button or icon in motion with blur). The result window lies after the technique's stated end : every kept frame before it carries a layer gizmo over the word; the first clean ones are (comp frame 23, still settling, button edge differs slightly) and. Window check: the time display reads 0:00:01:03 (frame 28) and the crop differs by at most 22 grey levels (compression noise), so it is a still. is clean in the crop: no cursor (it sits below, at about 1762,1294 full size), no gizmo, no dialog. The earlier recipe judged the move 'never played': it is played in the source (checked: red bounds change over about 20 redraws), and that window is the animated result. What it does not show: a large icon overshoot (it is small, step 5); the growth from a smudge is shown (cut from the source video; no kept frame there).
+
+## Two-key drop-in that settles with an expression bounce
+id: 03-expression-bounce-drop-in
+revision: f26631a0
+job: add-impact; support: introduce-tool
+status: proven (accepted 2026-11-26)
+variant of: 03-step-icons-pop-with-bounce-in-sequence
+differs: Shared: both Alt-click a stopwatch, paste an inertial-bounce expression (it reads the speed at the last key through nearestKey and velocityAtTime and adds a decaying sine, so the property overshoots and rings after its last key) and put it on Scale over two Scale keys, and both reach the other layers by copying the same expression (the parent step 5 copies it to the other five pictures; here step 8 repeats it on every remaining null). Differences: here the full expression is on screen only in part but its text is copied word for word from the description (amp .04, freq 1.8, decay 3, time_max 3, with a 3 s window); in the parent amp = .1 and freq = 2.0 are shown and the rest, including decay 2.0 and a 1 s window (t < 1), is inferred by that recipe. Here the expression sits on Position as well as Scale; in the parent it is on Scale only (step 5). Here Position drops 150 comp px over 4 frames at 30 fps (the start key at 0.0, -150.0 shown) and Scale runs 60 to 100 % (100 % inferred, the parent has 0 to full size); in the parent Scale grows 0 to full over 12 frames at 23.976 fps with the cubic-bezier 0.88, 0.14, 0.12, 0.86 ease, while here the keys are plain diamonds with no ease named. Here the keyed layers are nulls of a parent hierarchy (card, text group, logo), so the whole notification bounces as one; the parent keys the six picture layers directly and its steps name no parenting. Here nothing is staggered (no offset between nulls is given); the parent offsets each picture 10 frames after the last (step 6). Here the wobble is only computed from the expression and never played (the played stretch is the keys-only drop); the parent's bounce was measured on played frames (its layout lists overshoot about +2.5 % and settling within about 16 frames). Here the beat is a notification card with a logo and a title dropping in; the parent's is a row of process pictures under a phase bar.
+merge: confirmed (carried from checks/03-before-proof.md; the variant of and differs lines are unchanged)
+what it does for a beat: Reach for it when a card or group should drop into place and wobble a little before it rests, without hand-keying the overshoot. Two plain keys give the move; one pasted expression adds the settle on Position and on Scale.
+what it looks like: A rounded card, at full size, starts above its final spot and drops straight down over four frames; with the expression on it then passes its rest, swings back above it and settles (played, see result). The small start (60 %) is the later Scale key, not part of the played drop. The same treatment sits on every parent null (card, text group, logo), so the whole notification bounces as one. (The plain two-key drop is the earlier, expression-free preview; the wobble plays, see result.)
+ingredients:
+- Null layers already parented as a hierarchy (see recipe 02-null-hierarchy-for-grouped-motion) — built-in
+- Position and Scale keyframes — built-in
+- Bounce expression on Position and on Scale (overshoot from the last key's velocity: amp 0.04, freq 1.8, decay 3, time_max 3) — pasted text from the video's description; the screen shows its first lines, `amp = .04;` and the closing brace
+steps:
+1. Copy the bounce expression from the description before starting (said; the description text is the source, said (description)).
+2. Select the null that drives the card (the one the card's shape layers are parented to) and open Position. At the first frame set a key. (said; the Position stopwatch and the key at frame 0 are shown)
+3. Move forward four frames and set the second key there (said: four frames). The key sits about 4 frames after the start (shown, diamond at the 4 f tick). The narration gives no value for it; leaving the null at its own value gives rest.
+   - Position at the later key: 0.0, 0.0 (shown as the null's value before any key; inferred that this is what the key holds)
+4. Back at frame 0, set the start Position above the rest point. (said "slightly above"; value shown)
+   - Position at frame 0: 0.0, -150.0 (shown; -150 being typed)
+5. Alt-click the Position stopwatch to open the expression field and paste the expression. (said; the tooltip "Alt-click: add or remove expression" is shown; the pasted result is shown as "Expression: Position")
+   The expression text, word for word (said (description); the screen shows only its first line `amp = .04;` and the closing brace):
+   ```
+   amp = .04;
+   freq = 1.8;
+   decay = 3;
+   n = 0;
+   time_max = 3;
+
+
+   if (numKeys > 0) {
+       n = nearestKey(time).index;
+       if (key(n).time > time) {
+           n--;
+       }
+   }
+
+
+   if (n == 0) {
+       t = 0;
+   } else {
+       t = time - key(n).time;
+   }
+
+
+   if (n > 0 && t < time_max) {
+       v = velocityAtTime(key(n).time - thisComp.frameDuration / 10);
+       
+       // Ease Out Factor (starts at 1, gradually reduces to 0)
+       easeFactor = easeOut(t, 0, time_max, 1, 0);
+       
+       value + v * amp * Math.sin(freq * t * 2 * Math.PI) / Math.exp(decay * t) * easeFactor;
+   } else {
+       value;
+   }
+   ```
+6. Go to the start and open Scale. Key at frame 0, then four frames on, repeat the same process as Position. (said)
+   - Scale at frame 0 on the card null: 60.0, 60.0 % (shown)
+   - Scale at the 4 f key: not typed on screen for this null; full size (100 %) inferred
+7. Alt-click the Scale stopwatch and paste the same expression. (said; "Expression: Scale" row shown)
+8. Repeat position+scale keys and both expressions on every remaining null (text null, logo null). (said)
+   - Logo null: start key at frame 0 is Position 0.0, -241.0 and Scale 84.0, 84.0 % (shown : comp time reads 0:00:00:00, key diamonds at frame 0 and 4 f, and the viewer shows the logo about 120 px (viewer) / 240 comp px higher and smaller, about 78 px wide against 95 px at rest). At 84 % the logo also sits about 41 px (viewer) to the right of its rest spot; no step gives that, so it comes from the null's anchor/position and is not explained on screen.
+   - Text null: Scale at frame 0 being typed to 80 with 100 beside it (shown); position not read
+   - The outer null (the parent of the three nulls, top row of the stack) is never keyed in this window; the narration says "remaining null layers" and the screen does not settle whether it gets keys or the expression.
+layout: Comp 1920x1080 (the study video is 1920x1080); the viewer picture is 960x540 px in the full frame at x 555, y 131 (measured), so comp px = 2 × viewer px. Card at rest: 676 of 960 px wide (70 % of the picture width), 158 of 540 px tall (29 % of the height), centred dead on the picture (measured : picture y 131–671, centre 401; card y 322–480, centre 401; x 697–1373, centre 1035 = picture centre). Corner radius at the ends about 55 px of the 159 px card height (about a third of the height, measured), so it is a rounded rectangle, not a full half-height pill. In the played result window the card is the same width at its high start pose as at rest (676 of 960 px, measured): the played drop is position only, the card falling about 74 px of the 540 px picture (150 comp px) from the start pose. The 406 px wide pose (60 %, 42 % of the picture width) belongs, after the Scale keys, and is never played; it is not part of the result crop. Content on the card at rest (measured crop): a teal round logo with a dark mark, about 95 px wide of 960 (10 % of the width, 17.6 % of the picture height), its centre about 23.5 % across and half way down; a bold title line starting about 32 % across and a grey subtitle line below it; a small grey "NOW" label at the top right, ending about 82 % across. The card look (pale grey body slightly darker than the near-white ground, thin light-grey outline, soft lighter rim just inside the outline, no visible blur because the ground is flat) comes from recipe 01-frosted-glass-pill-from-adjustment-shape; the shape's end rounding in this frame is about a third of the height as stated above. The logo, title, subtitle and NOW label come from the example's own artwork and text layers; the build here must supply them (a teal disc about 17.6 % of the picture height with a dark mark, black bold title about 5 % of the height, grey subtitle) to look like the frame. Only the card null is keyed when the drop plays : the logo and text sit at rest while the card drops, so the card passes behind them. Move size: Position starts 150 comp px above rest and falls over 4 frames. Played bounce (measured on the loop, card top edge at picture column x=700 of 960, rest = y 192 of 540): the card starts at top y 116 (high pose, 76 px = 150 comp px above rest), falls 116 → 153 → 172 → 191 → 198 in about 4 viewer frames (about 19 px per viewer frame), peaks at y 205 about 2 viewer frames after the fourth (13 px of the 540 picture, 26 comp px, 8.2 % of the 158 px card height, past rest), swings back to y 185 (7 px = 4.4 % of card height above rest) about 8 frames later, passes y 188–191 on the way down, creeps to y 193 (+1 px) near frame 43 and holds at 192 from about 27 viewer frames after the last key. Ring period about 16 viewer frames (0.53 s at 30 fps, matches 1.8 Hz), each swing roughly half the one before. In the played bounce only the card moves, at constant size (width 676 of 960 px and height 157–159 of 540 px in every frame checked, measured at 315.10, 315.25, 315.40): the logo and the text stand still at their rest places while the card falls past and rings behind them (the logo's rows are the same in every frame; in the first frame the card sits high and the logo and title hang below its bottom edge). Only the card null's Position keys and expression are on at that moment (steps 2–5); the Scale keys and the logo and text nulls' keys (steps 6–8) are added later, so the card's Scale ring and the logo and text drops are not played in this span. Recipe 04 measures them in its own window; that is outside this recipe's span and not re-checked here. The loop then restarts: the card is back at y 116 by about 4 viewer frames, handles and small red boxes appear on it again from the restart (50–65 viewer frames into the cut, on), so the clean part of each loop is. Computed check (from the expression; the expression's velocity is per second): last-key velocity = 150 px in 4 frames = 1125 px/s; amplitude = 1125 × 0.04 = 45 px; first peak where tan(2π·1.8·t) = 2π·1.8/3, t ≈ 0.116 s, height ≈ 45 × 0.967 × 0.706 ≈ 30 px beyond rest (about 15 px in the 960 picture), then alternating with ring period 1/1.8 = 0.56 s, each half cycle about 0.43 of the one before, gone by about 2 s (time_max 3 s). Scale: 60→100 % in 4 frames = 300 %/s, amplitude 12 %, first peak about 8 % beyond the end value (inferred, if the end is 100 %). Overshoot direction: the first swing passes rest in the direction of travel (down), inferred from the expression. Both properties then sit still. The computed figures above predicted a 15 px peak in the 540 picture against 13 px played, so the played bounce is the target. Earlier stretches show only the keys-only drop, before the expression was pasted.
+timing and easing: Keys 4 frames apart at 30 fps, first at comp start (said four frames; shown). Easing of the keys: shown as plain diamonds (default key type), no ease set on screen. Bounce timing comes from the expression values above (frequency 1.8 Hz, decay 3, window 3 s).
+variations: none given
+pitfalls: none given
+build notes: Per null: transform.position.setValueAtTime(0, [x, y-150]) and setValueAtTime(4/30, [x, y]); scale 60 → 100 (card). Then `prop.expression = "<pasted expression>"` on both Position and Scale. Expression is the block quoted under step 5, pasted unchanged: amp .04, freq 1.8, decay 3, time_max 3, uses nearestKey, velocityAtTime(key.time - frameDuration/10), easeOut(t,0,time_max,1,0). Keys are best set via script; expression text via script too. No interface-only step.
+unknowns: End scale value of the card null (100 % inferred); the text null's position start value; key ease type (plain diamonds, no ease shown); whether the outer null gets the expression; why the logo shifts right at 84 % scale. The bounce is not an unknown: it plays in the viewer (see result and layout). Not given: a redraw count of the preview against the work area (the timeline's time display stays at 0:00:00:00 while the preview plays, only the viewer's own readout moves, in jumps: 01, 07, 13, 20, 24, then 00 at the loop restart), so one viewer frame is taken as about one comp frame, good to roughly 20 %; the scale wobble is not measured separately. The viewer's fast-forward icon is an editing overlay, not part of the comp.
 
 ## Small swept-head arrow that draws itself between steps
 id: 04-curved-arrow-draws-between-steps
@@ -793,3 +953,84 @@ variations: Cursor Shape can be changed from Vertical Bar in the effect (menu se
 pitfalls: The text must be paragraph text, not point text, and the typing text layer must be cut off with Alt+[ so no cursor shows before it starts (said). First keys of the camera push must be hold keys or it looks odd (said).
 build notes: Add the preset by selecting the text layer and double-clicking it in Effects & Presets (Animation Presets > Text > Animate In). Effect names appear as "Animation", "Cursor On/Off", "Cursor Shape", "Cursor Blink Speed" (preset-created expression controls, so they cannot be added by name from the Effects menu). Text animator: Text > Animator > Opacity; Range Selector Advanced > Based On = Words; key Start 0 to 100 %. Null: add a null, link the card's parent chain to it, key Position and Scale with setInterpolationTypeAtKey(HOLD) for the first keys. Cursor preset must be applied by hand or the preset file loaded with applyPreset.
 unknowns: Opacity animator's own value on the final result (said 50 %, not read on screen); slider key values apart from the last (100); the later Range Selector Start value; the heading's own animation; how far the text block was moved; the null's second key times; the preset's file name beyond what Effects & Presets shows; ease handle values; font colours; the final picture after the push is a different framing from the first and plays no typing on screen in this stretch. The result crop shows both lines bold (building state, before the switch to Regular); the finished weight is regular.
+
+## Second notification arrives and the first one is pushed back
+id: 05-stacked-second-notification-with-push-back
+revision: 626d0c64
+job: list-items; support: add-depth, add-impact
+status: proven (accepted 2026-11-26)
+what it does for a beat: Use it when a second card lands on top of a card already on screen and the first should react: sink, shrink and settle with a small springy wobble instead of just being covered.
+what it looks like: A wide frosted pill card sits centred on a near-white ground. A copy drops in from above and lands on top at the same spot with a soft bounce, while the original slides down behind it, a little smaller, its lower part peeking out under the new card. The new card's glass blurs what lies behind it.
+
+ingredients:
+- Finished notification build (a group of shape, text and logo layers, all parented to a chain of null layers ending in one top "main" null) — built earlier in the video, not part of this technique
+- Duplicate layers (select all, duplicate, move copies to top of the stack, slide them later in time) — built-in; shortcut Ctrl+D said; menu path inferred (Edit > Duplicate)
+- Position and Scale keyframes on the first notification's main null — built-in
+- Bounce expression on both Position and Scale — stock; text supplied in the video description; used unchanged (said (description))
+
+steps:
+1. Select every layer of the finished notification and duplicate them (said, including the Ctrl+D shortcut; the Edit > Duplicate menu path is inferred, no menu is on screen).
+2. Move the duplicated set to the very top of the layer stack (said). Layer list shows the copies ("… 2" names) above the originals (shown).
+3. Slide the duplicated layers later in time by 15 to 20 frames (said). Their bars start at about frame 15 on the ruler (shown, bars start under the playhead at 0:00:00:15; measured from the ruler, ≈ frame 15).
+   - Result: the copy repeats the original's entrance, including its bounce, from that moment (inferred from the finished clip; frames 15919–15922 were cut from the source video, not kept frames). The copy's entrance is the one built in 03-expression-bounce-drop-in and 04-staggered-element-offsets: start 150 px above rest and at 60 % scale, 4 frames to rest, bounce expression amp 0.04, freq 1.8, decay 3; logo parts start 2 frames and text parts 4 frames after the card, so the copy's parts arrive one after another (at 15919 the logo is in while the card's text is still missing).
+4. Select the first notification's main null (the null at the top of its parent chain, with no parent itself — shown, parent column "None") and add Position and Scale keyframes (said). First keys are set where the playhead stands, at time 15, with Position 960,540 and Scale 100,100 (shown).
+5. Paste the bounce expression onto both Position and Scale of that null (said). The values go red, which marks an expression (shown). Expression used is the one from the description, with amp 0.04, freq 1.8, decay 3, time_max 3 (said (description)). Full text, word for word (said (description)):
+   ```
+amp = .04;
+freq = 1.8;
+decay = 3;
+n = 0;
+time_max = 3;
+
+
+if (numKeys > 0) {
+    n = nearestKey(time).index;
+    if (key(n).time > time) {
+        n--;
+    }
+}
+
+
+if (n == 0) {
+    t = 0;
+} else {
+    t = time - key(n).time;
+}
+
+
+if (n > 0 && t < time_max) {
+    v = velocityAtTime(key(n).time - thisComp.frameDuration / 10);
+    
+    // Ease Out Factor (starts at 1, gradually reduces to 0)
+    easeFactor = easeOut(t, 0, time_max, 1, 0);
+    
+    value + v * amp * Math.sin(freq * t * 2 * Math.PI) / Math.exp(decay * t) * easeFactor;
+} else {
+    value;
+}
+   ```
+6. Move the first key (and its Scale partner) from frame 15 back to about frame 13, two frames before the copy starts (said); the diamonds then sit at about 13 (inferred from diamond x position against the ruler). The 15 in step 4 is only where the keys were first made.
+7. Go about five frames on and lower both values slightly (said). The second key's time reads frame 19 on the time display (shown), so the span is about 6 frames from key one by measure; the narrator's "five" is rounded.
+   - Position (second key): Y first read 617, then 636, 652 along the way (617 and 636 read from the timeline panel text; 652 shown) and finished at 960, 676 (shown — panel reads 960.0,676.0).
+   - Scale (second key): 86 % passed through (shown), 90 % at the end (shown — 90.0,90.0 %).
+8. Preview. The original now sinks 136 px and shrinks to 90 % over about 6 frames as the copy arrives, then wobbles, while the copy carries its own bounce (seen in the finished clip, frames 15918–15930 cut from the source video).
+
+layout: (all measured on the finished clip frames and a 9-frame sheet 15890–15970; the clip fills the whole 1920×1080 picture and the card sizes match the editor view at 100 % scale, so one is the other)
+- Front (new) card: about 70 % of picture width (≈1350 px), about 29 % of picture height (≈315 px), a fully rounded pill; centred at x 50 %, y 50 % of the picture. measured
+- Back (first) card: about 90 % of the front card in each direction (≈1215 × 283 px), centred about 12.5 % of picture height (≈135 px) below the front card's centre, i.e. at y ≈ 62.4 %. This matches the typed key (540 → 676, scale 90 %). measured
+- Overlap: front card hides the back card's upper part; about 10.8 % of picture height (≈117 px) of the back card shows below the front card. The back card's logo and text peek out under the front edge: its second line of text is sharp there, its logo only partly visible. measured
+- The front card's glass blurs whatever sits behind it: the back card's logo shows through as a soft teal blob inside the front card's lower-left, and its text as dark smudges. measured. The blur is the card build of 01-frosted-glass-pill-from-adjustment-shape, which the copy's cards carry: the front card is an adjustment-layer pill with Fast Box Blur, Blur Radius 30, 3 iterations (said and shown in recipe 01), set for a card 1350 × 315 px (radius ≈ 2.2 % of the card width, 9.5 % of its height), with a 4 px CCCCCC outline and a 5 % black 'depth' pill under it, which gives the faint shading rim. Recipe 01's figures apply here; this clip's ground reads 247.
+- Both cards have a thin pale outline and very light shading; ground is near white, slightly grey (about 247 in the clip; the editor's own white picture is brighter). The shadow under each card is faint. measured by eye only.
+- Which objects carry it: only the first notification's top null is keyed; every layer of the first card follows it through parenting, so card, text and logo move and scale together (shown, parent column). The copy's layers carry the original's bounce unchanged.
+- Motion blur: the arriving copy and the sinking original are both streaked vertically in the clip (frames 15919–15922 cut from the source video). At 15921 the arriving card's small text is stretched to about 2 line heights (≈ 25–30 px of smear on glyphs ≈ 35 px tall, at 1920 wide) and card edges are doubled; the smear is vertical only. measured. Cause: not said or shown (no motion-blur switch is on screen in this technique). A smear along the direction of travel that fades as the cards settle is what the comp Motion Blur gives, not the glass box blur, so layer Motion Blur switches (plus the comp switch) are the likely cause: inferred. Card travel between clip frames 15920 and 15921 is ≈ 55 px; with smear ≈ 25–30 px the implied shutter is about 180–200° (smear ≈ speed × angle ÷ 360), matching the default 180°; inferred, as clip frame spacing against comp frames is unknown. Gone by 15930.
+- Direction: the copy enters from above (a faint card sits above centre at its start, shown, at y ≈ 275 of the editor's picture, i.e. ≈ 27 % of height from the top) and ends at the centre; the first card moves straight down, no sideways drift. At the new card is a blurred smear above the older one, so it arrives with a blur. (the copy's own entrance is built earlier in the video; only its look at arrival is given here).
+- Motion size: first card moves 136 px down and loses 10 % scale. Bounce size from the expression: peak speed on Position over the 6 frames is ≈ 23 px per frame (680 px/s), so the first overshoot is ≈ 0.04 × 680 ≈ 27 px, decaying with e^(−3t) at 1.8 cycles per second; on Scale the initial wobble is ≈ 0.04 × 50 %/s ≈ 2 percentage points. (inferred from the pasted expression and the keys; not measured on the clip.)
+- Overshoot read in the clip: the front card measured 68 % wide (settling) and 70.4 % (rest). measured. Source frames also read ≈ 75 % at 15924 and ≈ 71 % at 15930, so the front card overshoots to about 75 % before shrinking back to 70.4 %; it does not only settle from below.
+- Result is the pre-made finished clip at the end, not the build just watched: it zooms to full screen and the build's panels are gone; the keys in the build (676, 90 %) match the clip's measured offset and size, so they appear the same.
+
+timing and easing: Copy starts at about frame 15 (shown). First key about frame 13 (inferred), second key frame 19 (shown). Keys look like plain diamonds (linear) in the panel (shown), no easing change is mentioned or shown; the springy feel comes from the expression: amp 0.04, freq 1.8, decay 3, time_max 3 (said (description)). In the clip the copy's blur-in and the sink play over roughly the same half second at preview speed (not timed; preview speed unknown).
+variations: The narrator says the timing and values can be refined further (said).
+pitfalls: none given, apart from the need to start the first card's keys a couple of frames before the copy starts so the reaction is not late (said).
+build notes: In a script: duplicate all layers, set the duplicates' startTime +15 frames (0.5 s at 30 fps), put them above the originals. On the main null: setValueAtTime(13/30, [960,540]) and (19/30, [960,676]) for Position; Scale [100,100] and [90,90] at the same times; then set both properties' expression to the full text quoted in step 5, verbatim (including the easeOut factor). Turn on the comp's Motion Blur switch and the layers' switches (inferred, shutter about 180–200°). Keep the expression's `velocityAtTime(key(n).time - thisComp.frameDuration/10)` — it reads the move into the key. Keys are plain linear (inferred from diamond shape). Scale keys on a null need the link-dimensions switch on (the chain icon shows linked). If the cards are built differently from the original, 676 px is 12.5 % of a 1080 high comp: scale it to the card height (136 ≈ 0.43 × card height 315).
+  - Played window source seconds 530.3–531.2 (frames 15910–15935): full-screen picture, no overlay, the new card arrives and the first one sinks. Still reference: 531.3–532.5 (frames 15940–15975) holds the same layout; use (clean, no arrow or handles). The kept frame is blank, so the clip fades or cuts at ≈ 532.7. The comp's time display is not visible in the clip, so frames per redraw are not counted.
+unknowns: Exact first key time (13 is read from a diamond's position). Whether the narrator's "five frames" or the display's 19 is intended. Key interpolation type (looks linear). Whether Motion Blur switches are on (inferred only) and the exact shutter. Shadow darkness. Preview speed of the clip. The copy's entrance start position beyond a rough 27 % of height.

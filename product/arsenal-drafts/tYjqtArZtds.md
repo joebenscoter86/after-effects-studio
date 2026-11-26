@@ -1,20 +1,20 @@
-# Techniques from one video (5 recipes, all unproven)
+# Techniques from one video (5 recipes, 5 proven)
 
-Written by the channel learner from the video's narration and screen together, then checked against the video by a second reader. Every recipe here passed that check; none is in the plugin. `status: proven` means it was built in After Effects from the recipe alone, compared with the tutorial's own result, and accepted by Joe (0 of 5); `status: unproven` means it has not been.
+Written by the channel learner from the video's narration and screen together, then checked against the video by a second reader. Every recipe here passed that check; none is in the plugin. `status: proven` means it was built in After Effects from the recipe alone, compared with the tutorial's own result, and accepted by Joe (5 of 5); `status: unproven` means it has not been.
 
 Each step is marked `said` (narrated), `shown` (on screen; `fNNNNNN` is a frame in the local study folder, frame number divided by the video's frame rate is seconds) or `inferred` (our reading). The `source` and frame references are for checking and stay out of the plugin. Credits: `CREDITS.md`.
 
 | # | Technique | Jobs | Check passed in round | Status |
 |---|---|---|---|---|
-| 01 | Frosted-glass pill built from three stacked shape layers | depth and finish; lines and shapes; glow and colour | 5 | unproven |
-| 02 | Null hierarchy: three group nulls under one master null | workflow; layout and repetition | 3 | unproven |
-| 03 | Two-key drop-in that settles with an expression bounce | energy and impact; workflow | 7 | unproven |
-| 04 | Offset the logo and text groups a few frames behind the card | energy and impact; layout and repetition | 5 | unproven |
-| 05 | Second notification arrives and the first one is pushed back | energy and impact; layout and repetition; depth and finish | 3 | unproven |
+| 01 | Frosted-glass pill built from three stacked shape layers | depth and finish; lines and shapes; glow and colour | 5 | proven |
+| 02 | Null hierarchy: three group nulls under one master null | workflow; layout and repetition | 3 | proven |
+| 03 | Two-key drop-in that settles with an expression bounce | energy and impact; workflow | 7 | proven |
+| 04 | Offset the logo and text groups a few frames behind the card | energy and impact; layout and repetition | 5 | proven |
+| 05 | Second notification arrives and the first one is pushed back | energy and impact; layout and repetition; depth and finish | 3 | proven |
 
 ## Frosted-glass pill built from three stacked shape layers
 id: 01-frosted-glass-pill-from-adjustment-shape
-status: unproven
+status: proven (accepted by Joe 2026-11-26: rebuilt in After Effects on generated artwork from this recipe alone, reviewed against the tutorial's result and phone MP4s sent; he said "accept")
 variant of: 05-glass-bar-refraction (201iywIy74c #5)
 differs: Shared: a rounded-rectangle shape layer switched into an adjustment layer (parent step 10) with Fast Box Blur on it (parent step 11), over a stack of same-size pill copies, so the pill blurs what lies behind it. Here the pill is 1350 x 315 with Roundness 110; in the parent the Bar is 369 x 130 with Roundness 158 (parent step 6, comp size not given). Here Fast Box Blur Blur Radius is 30 with defaults and is the only effect; in the parent the Bar blurs at 9.1 and adds Exposure 0.50 and a Displacement Map (parent steps 11-12), and this recipe has no Exposure or Displacement Map. Here the two copies stay visible and plain: "Depth" is a black pill at 5 % opacity and "Stroke" is a 4 px CCCCCC outline with no fill; in the parent the one copy, Edge, carries an Inner Glow of Size 34.0, has its eye turned off, and only feeds the Displacement Map (parent steps 9-10 and 12). Here the ground is the comp's own flat near-white Background Color so the blur is not visible; in the parent the ground is black with a spinning, blurred, Wave Warped gradient star (parent steps 1-5). Here nothing is animated (still); the parent keys Bar Size X narrow to wide (parent step 8, key times unknown). Here a Null is added at the end for parenting; the parent's section has no null. In both the rim is inferred, not shown as a cause: here the blurred edge of the 5 % Depth pill, in the parent the displaced Inner Glow of Edge (parent layout).
 source: tYjqtArZtds 21–158 s
@@ -63,7 +63,7 @@ unknowns: Comp background colour's final typed value (the shown picture is 250/2
 
 ## Null hierarchy: three group nulls under one master null
 id: 02-null-hierarchy-for-grouped-motion
-status: unproven
+status: proven (accepted by Joe 2026-11-26: rebuilt in After Effects on generated artwork from this recipe alone, reviewed against the tutorial's result and phone MP4s sent; he said "accept")
 source: tYjqtArZtds 161.2–266.7 s (the technique's own span ends at 256.0 s; the last cited frame, f008000 at 266.7 s, shows the finished chains)
 jobs: workflow; layout and repetition
 what it does for a beat: Reach for it before animating a card made of many layers (shapes, text, logo). Each part-group gets its own null, and one master null sits above them, so the whole card or any single group moves with one layer.
@@ -117,7 +117,7 @@ unknowns:
 
 ## Two-key drop-in that settles with an expression bounce
 id: 03-expression-bounce-drop-in
-status: unproven
+status: proven (accepted by Joe 2026-11-26: rebuilt in After Effects on generated artwork from this recipe alone, reviewed against the tutorial's result and phone MP4s sent; he said "accept")
 variant of: 03-step-icons-pop-with-bounce-in-sequence (nHh0NRo8G2U #03)
 differs: Shared: both Alt-click a stopwatch, paste an inertial-bounce expression (it reads the speed at the last key through nearestKey and velocityAtTime and adds a decaying sine, so the property overshoots and rings after its last key) and put it on Scale over two Scale keys, and both reach the other layers by copying the same expression (the parent step 5 copies it to the other five pictures; here step 8 repeats it on every remaining null). Differences: here the full expression is on screen only in part but its text is copied word for word from the description (amp .04, freq 1.8, decay 3, time_max 3, with a 3 s window); in the parent amp = .1 and freq = 2.0 are shown (f012940) and the rest, including decay 2.0 and a 1 s window (t < 1), is inferred by that recipe. Here the expression sits on Position as well as Scale; in the parent it is on Scale only (step 5). Here Position drops 150 comp px over 4 frames at 30 fps (the start key at 0.0, -150.0 shown f009039) and Scale runs 60 to 100 % (100 % inferred, the parent has 0 to full size); in the parent Scale grows 0 to full over 12 frames at 23.976 fps with the cubic-bezier 0.88, 0.14, 0.12, 0.86 ease, while here the keys are plain diamonds with no ease named. Here the keyed layers are nulls of a parent hierarchy (card, text group, logo), so the whole notification bounces as one; the parent keys the six picture layers directly and its steps name no parenting. Here nothing is staggered (no offset between nulls is given); the parent offsets each picture 10 frames after the last (step 6). Here the wobble is only computed from the expression and never played (the played stretch is the keys-only drop); the parent's bounce was measured on played frames (its layout lists overshoot about +2.5 % and settling within about 16 frames). Here the beat is a notification card with a logo and a title dropping in; the parent's is a row of process pictures under a phase bar.
 merge: confirmed (carried from checks/03-before-proof.md; the variant of and differs lines are unchanged)
@@ -192,7 +192,7 @@ unknowns: End scale value of the card null (100 % inferred); the text null's pos
 
 ## Offset the logo and text groups a few frames behind the card
 id: 04-staggered-element-offsets
-status: unproven
+status: proven (accepted by Joe 2026-11-26: rebuilt in After Effects on generated artwork from this recipe alone, reviewed against the tutorial's result and phone MP4s sent; he said "accept")
 variant of: 05-staggered-slide-in (Tf0EiCGOEYs #05)
 differs: Shared: the stagger is made by sliding whole layer bars later in the timeline so each layer's keys travel with it, the first element staying at frame 0 (the parent's step 6: "sliding whole layer bars along the timeline (keys travel with them)", headline at frame 0; its build notes shift each layer's `startTime`). Differences: here the parts are groups, each a null plus its child layers (logo with its null, three text layers with theirs), and the card's own layers stay at 0; in the parent step 1 lists three layers (headline, button precomp, web address) and no nulls. Here the offsets are about 2 f (logo) and about 4 f (text) at 30 fps; in the parent they are 5 f (button) and 10 f (address) at 60 fps (its step 6). Here every group does a drop and settle with a bounce expression (recipe 03) and the order is card, logo, text; in the parent each layer does a left-to-right slide of two Position keys 47 frames apart with 65 % influence easing (its steps 2 to 4), with no expression listed among its ingredients. Here the offsets were read off the timeline ruler (the narrator said two to three frames); the parent's 5 and 10 are measured on the zoomed ruler (its step 6).
 merge: confirmed (carried from checks/04-before-proof.md; the variant of and differs lines are unchanged)
@@ -265,7 +265,7 @@ unknowns: Exact comp frame of each redraw (played preview skips frames, labels �
 
 ## Second notification arrives and the first one is pushed back
 id: 05-stacked-second-notification-with-push-back
-status: unproven
+status: proven (accepted by Joe 2026-11-26: rebuilt in After Effects on generated artwork from this recipe alone, reviewed against the tutorial's result and phone MP4s sent; he said "accept")
 source: tYjqtArZtds 429–535 s
 jobs: energy and impact; layout and repetition; depth and finish
 what it does for a beat: Use it when a second card lands on top of a card already on screen and the first should react: sink, shrink and settle with a small springy wobble instead of just being covered.
