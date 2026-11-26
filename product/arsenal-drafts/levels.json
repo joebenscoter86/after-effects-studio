@@ -734,6 +734,93 @@
     "backdrop: shapes",
     "finish: blur"
    ]
+  },
+  "01-gradient-pill-button-3d-entrance": {
+   "provides": [
+    "motion: swing",
+    "depth: z-stack"
+   ]
+  },
+  "02-bounce-expression-pop-in": {
+   "provides": [
+    "motion: bounce",
+    "motion: stagger",
+    "type: reveal"
+   ]
+  },
+  "03-glowing-gradient-stroke-line-draw": {
+   "provides": [
+    "motion: draw-on",
+    "light: glow",
+    "finish: glow"
+   ]
+  },
+  "04-light-sweep-edge-on-buttons": {
+   "provides": [
+    "light: rim",
+    "material: glass",
+    "motion: bounce"
+   ]
+  },
+  "05-duplicate-and-stagger-layout": {
+   "provides": [
+    "light: glow",
+    "motion: stagger",
+    "motion: draw-on"
+   ]
+  },
+  "06-subtle-gradient-overlay-and-lens-finish": {
+   "provides": [
+    "type: label",
+    "finish: grade"
+   ]
+  },
+  "07-shape-morph-into-app-window": {
+   "provides": [
+    "transition: match-cut",
+    "transition: morph",
+    "motion: bounce"
+   ]
+  },
+  "08-bouncing-dots-and-soft-grid-panel": {
+   "provides": [
+    "backdrop: grid",
+    "motion: bounce",
+    "motion: stagger",
+    "environment: screen"
+   ]
+  },
+  "09-typewriter-rewrite-text-effect": {
+   "provides": [
+    "type: terminal",
+    "type: reveal",
+    "camera: push"
+   ]
+  },
+  "10-liquid-gradient-orb": {
+   "provides": [
+    "light: glow",
+    "finish: blur",
+    "motion: loop",
+    "motion: bounce"
+   ]
+  },
+  "11-scale-through-dot-null-link": {
+   "provides": [
+    "transition: morph"
+   ]
+  },
+  "12-ring-orb-matte-and-echo": {
+   "provides": [
+    "light: glow",
+    "finish: blur"
+   ]
+  },
+  "13-text-fill-in-blur-and-scale-finish": {
+   "provides": [
+    "type: reveal",
+    "finish: blur"
+   ]
   }
  },
  "styles": {
