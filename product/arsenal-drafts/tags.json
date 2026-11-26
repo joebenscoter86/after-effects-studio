@@ -1,6 +1,6 @@
 {
   "vocab": "jobs-v1",
-  "tagged": "2026-11-25",
+  "tagged": "2026-11-26",
   "recipes": {
     "YBeMmC43Q1U#01": {
       "id": "01-dotted-stroke",
@@ -2562,6 +2562,117 @@
       "group": "ramped range reveal",
       "why": "'Closing caption for a hero graphic. The words are readable only as a faint ghost at first, then light up one word at a time while the block sharpens and slowly swells, so the shot never stops moving.'",
       "variant_of": "YBeMmC43Q1U#18"
+    },
+    "tYjqtArZtds#01": {
+      "id": "01-frosted-glass-pill-from-adjustment-shape",
+      "kind": "technique",
+      "job": "add-depth",
+      "support": [
+        "finish-the-look"
+      ],
+      "mood": [
+        "light",
+        "clean",
+        "soft",
+        "minimal"
+      ],
+      "needs": [
+        "shapes"
+      ],
+      "duration": 3,
+      "motion": "still",
+      "difficulty": 2,
+      "group": "frosted-glass refraction",
+      "why": "'a card, banner or notification has to sit in front of a busy picture and look like frosted glass: it blurs whatever is behind it and gets a faint tint and a thin light outline': a blurring adjustment-layer pill with a 5 % tint copy and a thin outline copy lifts the card off the picture",
+      "variant_of": "201iywIy74c#05"
+    },
+    "tYjqtArZtds#02": {
+      "id": "02-null-hierarchy-for-grouped-motion",
+      "kind": "build-aid",
+      "job": null,
+      "support": [],
+      "mood": [
+        "neutral",
+        "workflow"
+      ],
+      "needs": [
+        "none"
+      ],
+      "duration": 0,
+      "motion": "still",
+      "difficulty": 2,
+      "group": null,
+      "why": "\"Nothing visible changes.\" and \"the whole card or any single group moves with one layer\": setup that only shows in the layer stack, so it never fills a beat on screen alone."
+    },
+    "tYjqtArZtds#03": {
+      "id": "03-expression-bounce-drop-in",
+      "kind": "technique",
+      "job": "add-impact",
+      "support": [
+        "introduce-tool"
+      ],
+      "mood": [
+        "light",
+        "clean",
+        "playful"
+      ],
+      "needs": [
+        "type",
+        "shapes"
+      ],
+      "duration": 2,
+      "motion": "one-shot",
+      "difficulty": 3,
+      "group": "time stagger",
+      "why": "'a card or group should drop into place and wobble a little before it rests, without hand-keying the overshoot': a two-key Position and Scale drop with the bounce expression, on the card, logo and text nulls of an app notification, so the app's mark and name land with a settle",
+      "variant_of": "nHh0NRo8G2U#03"
+    },
+    "tYjqtArZtds#04": {
+      "id": "04-staggered-element-offsets",
+      "kind": "technique",
+      "job": "reveal-headline",
+      "support": [
+        "add-impact"
+      ],
+      "mood": [
+        "light",
+        "clean",
+        "soft"
+      ],
+      "needs": [
+        "shapes",
+        "type"
+      ],
+      "duration": 1,
+      "motion": "one-shot",
+      "difficulty": 2,
+      "group": "time stagger",
+      "why": "\"Sliding the start of each part a couple of frames later makes the parts land one after another\": a card, its logo and its text arrive in sequence instead of as one stiff block; the title lands last as part of the card, and the logo is generic, not a named product's mark.",
+      "variant_of": "Tf0EiCGOEYs#05"
+    },
+    "tYjqtArZtds#05": {
+      "id": "05-stacked-second-notification-with-push-back",
+      "kind": "technique",
+      "job": "list-items",
+      "support": [
+        "add-depth",
+        "add-impact"
+      ],
+      "mood": [
+        "light",
+        "clean",
+        "soft",
+        "playful"
+      ],
+      "needs": [
+        "shapes",
+        "type"
+      ],
+      "duration": 2,
+      "motion": "one-shot",
+      "difficulty": 3,
+      "group": null,
+      "why": "\"Use it when a second card lands on top of a card already on screen and the first should react: sink, shrink and settle with a small springy wobble instead of just being covered.\": a second item arrives while the first stays visible, stepped back behind it, so it reads as a growing stack of messages"
     }
   }
 }

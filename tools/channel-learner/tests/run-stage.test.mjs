@@ -416,3 +416,23 @@ test('narration that no technique span covers is named, so a late start or early
     assert.ok(fs.readFileSync(path.join(PROMPTS, f), 'utf8').includes('speech in no span'), `${f} names the note`);
   }
 });
+
+test('the owner\'s proof requirements reach art and build runs through PROOF/lead-notes.md, and only when it exists', async () => {
+  const told = async (stage, withNote) => {
+    const dir = study(['01']);
+    fs.writeFileSync(path.join(dir, 'recipes', '01-zigzag.md'), '## Technique 01\n');
+    const scripts = path.join(dir, 'scripts');
+    fs.mkdirSync(scripts);
+    fs.writeFileSync(path.join(scripts, '01-zigzag.jsx'), '// technique 01\n');
+    const note = path.join(dir, 'proof', 'lead-notes.md');
+    if (withNote) fs.writeFileSync(note, '# Lead notes\nInvented app mark; Inter Tight for SF Pro.\n');
+    fs.mkdirSync(path.join(dir, 'proof', '01'), { recursive: true });
+    const { claude, calls } = fakeClaude(() => {});
+    await runStage(stage, { study: dir, scripts, only: ['01'] }, { ...quiet, claude, makeSheets: async () => {} });
+    assert.equal(calls.length, 1, `${stage} ran once`);
+    return calls[0].input.slice(calls[0].input.indexOf('## This run')).includes(`- Lead notes: \`${note}\``);
+  };
+  assert.equal(await told('prove-run', false), false, 'no note file, no line');
+  for (const stage of ['art', 'prove-author', 'prove-run']) assert.equal(await told(stage, true), true, `${stage} is told`);
+  assert.equal(await told('prove-review', true), false, 'the review judges against the tutorial, not the brief');
+});

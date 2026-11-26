@@ -15,3 +15,4 @@ The recipes in this folder were learned from public tutorials. The techniques ar
 | `nHh0NRo8G2U.md` | [Mapal](https://www.youtube.com/channel/UCQKbng8d-nh4EpvOrlF7Idw) | [How To Animate Infographics Like VOX (After Effects Tutorial)](https://www.youtube.com/watch?v=nHh0NRo8G2U) |
 | `201iywIy74c.md` | [Bart_VFX](https://www.youtube.com/channel/UCH04vkzlXlDTNqeQpSayj1w) | [5 Editing Ideas You Should Try \| After Effects](https://www.youtube.com/watch?v=201iywIy74c) |
 | `tYRvoI04pJk.md` | [TomsProject](https://www.youtube.com/channel/UCVg8JEJOOLjFSx43tPbx3yQ) | [SaaS Motion Graphics Masterclass: Every Technique You Need](https://www.youtube.com/watch?v=tYRvoI04pJk) |
+| `tYjqtArZtds.md` | [Zuyns](https://www.youtube.com/channel/UCNtmXS6PG2w1cK8mByxC7Lg) | [How to Animate Notifications Like Apple in After Effects](https://www.youtube.com/watch?v=tYjqtArZtds) |

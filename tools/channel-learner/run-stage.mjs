@@ -229,6 +229,10 @@ function runBlock(stage, unit, ctx) {
     if (real && real !== ctx.proof) L.push(`- PROOF's real path: \`${real}\` (the same folder through the study link, so a project open from \`${path.join(real, 'proofs.aep')}\` is \`PROOF/proofs.aep\`)`);
   }
   if (/^prove-(author|run)$/.test(stage)) L.push(`- SCRIPTS: \`${ctx.scripts}\``);
+  if (/^(art|prove-author|prove-run)$/.test(stage)) {
+    const ln = path.join(ctx.proof, 'lead-notes.md');
+    if (fs.existsSync(ln)) L.push(`- Lead notes: \`${ln}\` holds the owner's requirements for this video's proofs (the subject or brand, type stand-ins, an extra variant to show). Read it before you start and follow it; where it and the recipe disagree on what the technique does, the recipe wins and you say so.`);
+  }
   if (stage === 'prove-run') { const sf = scriptFile(ctx, unit); if (sf) L.push(`- Script: \`${sf}\` (yours to run; \`${EXAMPLE_SCRIPT}\` is only the finished example)`); }
   if (stage === 'prove-run') {
     const rv = path.join(ctx.proof, unit, 'review.md');
