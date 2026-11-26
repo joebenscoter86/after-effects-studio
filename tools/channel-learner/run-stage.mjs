@@ -273,6 +273,39 @@ function runBlock(stage, unit, ctx) {
   return L.join('\n');
 }
 
+const clock = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+
+/**
+ * Stretches of narration that no technique's span covers (LESSONS.md lesson 50): the lead reads
+ * them after the techniques run, since a span that starts late loses the object's own build
+ * (a card's size and corners) and one that ends early loses "now do the same to the rest".
+ * A stretch is at least `minWords` words with no gap over `joinGap` seconds between them.
+ */
+export function uncoveredSpeech(timeline, techniques, { minWords = 10, joinGap = 4 } = {}) {
+  const words = [];
+  for (const c of timeline?.chapters || []) {
+    for (const s of c.sentences || []) for (const w of s.words || []) words.push(w);
+  }
+  const spans = (techniques || []).map((t) => [Number(t.start), Number(t.end)]);
+  const covered = (w) => spans.some(([a, b]) => w.t >= a && w.t <= b);
+  const out = [];
+  let run = [];
+  const flush = () => {
+    if (run.length >= minWords) {
+      out.push({ start: run[0].t, end: run[run.length - 1].end ?? run[run.length - 1].t,
+        words: run.slice(0, 6).map((w) => w.text).join(' ') });
+    }
+    run = [];
+  };
+  for (const w of words.sort((a, b) => a.t - b.t)) {
+    if (covered(w)) { flush(); continue; }
+    if (run.length && w.t - (run[run.length - 1].end ?? run[run.length - 1].t) > joinGap) flush();
+    run.push(w);
+  }
+  flush();
+  return out;
+}
+
 export function buildPrompt(stage, unit, ctx) {
   return `${fs.readFileSync(path.join(PROMPTS, `${stage}.md`), 'utf8').trimEnd()}\n${runBlock(stage, unit, ctx)}\n`;
 }
@@ -285,7 +318,10 @@ function judgeOutput(stage, unit, ctx, started) {
   switch (stage) {
     case 'techniques': {
       const t = readJson(path.join(ctx.study, 'techniques.json'));
-      return Array.isArray(t) && t.length ? { ok: true, note: `${t.length} techniques` } : { ok: false, note: 'no techniques.json' };
+      if (!(Array.isArray(t) && t.length)) return { ok: false, note: 'no techniques.json' };
+      const gaps = uncoveredSpeech(readJson(path.join(ctx.study, 'timeline.json')), t);
+      const shown = gaps.map((g) => `${clock(g.start)}–${clock(g.end)} "${g.words}…"`).join('; ');
+      return { ok: true, note: `${t.length} techniques${gaps.length ? `; speech in no span: ${shown}` : ''}` };
     }
     case 'distil': {
       const r = recipeFile(ctx, unit);

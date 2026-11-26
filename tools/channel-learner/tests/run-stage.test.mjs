@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
-  STAGES, claudeArgs, parseStream, runStage, runVideo, readResults,
+  STAGES, claudeArgs, parseStream, runStage, runVideo, readResults, uncoveredSpeech,
 } from '../run-stage.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -384,5 +384,35 @@ test('committed proof scripts name no home folder; paths come from args or start
   assert.deepEqual(bad, [], 'scripts with a home folder spelled out');
   for (const f of ['prove-author.md', 'prove-run.md']) {
     assert.ok(fs.readFileSync(path.join(PROMPTS, f), 'utf8').includes('never a home folder spelled out'), `${f} says so`);
+  }
+});
+
+test('narration that no technique span covers is named, so a late start or early end is seen before the writers run (lesson 50)', async () => {
+  const words = (from, n, text) => Array.from({ length: n }, (_, i) => ({ t: from + i * 0.5, end: from + i * 0.5 + 0.4, text: `${text}${i}` }));
+  const timeline = { chapters: [
+    { sentences: [{ words: words(0, 12, 'hello') }] },          // intro, 0–6 s
+    { sentences: [{ words: words(20, 30, 'card') }] },           // the card is drawn, 20–35 s
+    { sentences: [{ words: words(40, 20, 'blur') }] },           // the technique, 40–50 s
+    { sentences: [{ words: words(52, 12, 'rest') }] },           // "do the same to the rest", 52–58 s
+    { sentences: [{ words: words(70, 4, 'bye') }] },             // a short sign-off, under 10 words
+  ] };
+  const late = uncoveredSpeech(timeline, [{ n: '01', start: 40, end: 50.5 }]);
+  assert.deepEqual(late.map((g) => [g.start, Math.round(g.end)]), [[0, 6], [20, 35], [52, 58]]);
+  assert.match(late[1].words, /^card0 card1/);
+  assert.deepEqual(uncoveredSpeech(timeline, [{ n: '01', start: 20, end: 60 }]).map((g) => g.start), [0], 'only the intro is left once the span is widened');
+
+  // The techniques run's note carries them.
+  const dir = study(['01']);
+  fs.unlinkSync(path.join(dir, 'techniques.json'));
+  fs.writeFileSync(path.join(dir, 'timeline.json'), JSON.stringify(timeline));
+  const { claude } = fakeClaude(() => {
+    fs.writeFileSync(path.join(dir, 'techniques.json'), JSON.stringify([{ n: '01', slug: 'blur', start: 40, end: 50.5, purpose: 'x' }]));
+  });
+  await runStage('techniques', { study: dir }, { ...quiet, claude });
+  const [r] = readResults(path.join(dir, 'runs.jsonl'));
+  assert.ok(r.pass, 'listing passes');
+  assert.match(r.note, /speech in no span: 0:00–0:05 "hello0[^;]*; 0:20–0:34 "card0/);
+  for (const f of ['techniques.md', 'video-lead.md']) {
+    assert.ok(fs.readFileSync(path.join(PROMPTS, f), 'utf8').includes('speech in no span'), `${f} names the note`);
   }
 });

@@ -9,6 +9,7 @@ In a fresh worktree, run `node tools/channel-learner/learn.mjs link <worktree ro
 ## Steps
 
 1. **Preview** (starts nothing): `node tools/channel-learner/run-stage.mjs video --study STUDY --dry-run`.
+1b. **List first, then read the spans.** Run `node tools/channel-learner/run-stage.mjs techniques --study STUDY` on its own. Its line in `runs.jsonl` ends with `speech in no span` when narration falls outside every technique. For each stretch that builds or applies a listed technique (the object it acts on, "now do the same to the rest", the final result), widen that technique's span in `techniques.json` before any writer starts, keeping the first list as `techniques-first.json`; greetings, sign-offs and plain housekeeping stay out (lesson 50). `video` then skips the listing.
 2. **Run** it in the background, from the repository root: `node tools/channel-learner/run-stage.mjs video --study STUDY` (add `--budget-usd <n>` only if the owner set a different limit). It does, in order:
    - lists the techniques (`STUDY/techniques.json`) if there is no list yet;
    - one writer run per technique, then one checker run per recipe (round 1);
