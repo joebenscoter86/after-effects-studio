@@ -1,6 +1,6 @@
 {
  "vocab": "jobs-v1",
- "version": "3829f9f5",
+ "version": "50a3bb54",
  "jobs": [
   "land-number",
   "count-things",
@@ -1806,7 +1806,7 @@
    "duration": 3,
    "motion": "one-shot",
    "difficulty": 3,
-   "taught_by": 6,
+   "taught_by": 8,
    "variant_of": "03-step-icons-pop-with-bounce-in-sequence",
    "variants": [],
    "provides": [
@@ -1940,7 +1940,7 @@
    "duration": 2,
    "motion": "one-shot",
    "difficulty": 3,
-   "taught_by": 7,
+   "taught_by": 8,
    "variants": [],
    "provides": [
     "motion: draw-on",
@@ -3149,7 +3149,7 @@
    "duration": 1,
    "motion": "one-shot",
    "difficulty": 2,
-   "taught_by": 6,
+   "taught_by": 8,
    "variants": [],
    "provides": [
     "motion: stagger",
@@ -3280,7 +3280,7 @@
    "duration": 1,
    "motion": "one-shot",
    "difficulty": 3,
-   "taught_by": 6,
+   "taught_by": 8,
    "variants": [],
    "provides": [
     "transition: slide",
@@ -3493,7 +3493,7 @@
    "duration": 0,
    "motion": "one-shot",
    "difficulty": 1,
-   "taught_by": 6,
+   "taught_by": 8,
    "variants": [],
    "provides": [
     "motion: stagger"
@@ -4040,9 +4040,10 @@
    "duration": 2,
    "motion": "one-shot",
    "difficulty": 2,
-   "taught_by": 2,
+   "taught_by": 3,
    "variants": [
-    "05-per-character-3d-fly-in-ramp-up"
+    "05-per-character-3d-fly-in-ramp-up",
+    "13-text-fill-in-blur-and-scale-finish"
    ],
    "provides": [
     "type: reveal"
@@ -5017,7 +5018,7 @@
    "duration": 4,
    "motion": "one-shot",
    "difficulty": 3,
-   "taught_by": 2,
+   "taught_by": 3,
    "variant_of": "18-smooth-text-reveal",
    "variants": [],
    "provides": [
@@ -5693,7 +5694,7 @@
    "duration": 2,
    "motion": "one-shot",
    "difficulty": 3,
-   "taught_by": 7,
+   "taught_by": 8,
    "variants": [],
    "provides": [
     "motion: draw-on",
@@ -5748,7 +5749,7 @@
    "composes": [],
    "shelf": "shipped",
    "section": {
-    "document": "arsenal-line",
+    "document": "arsenal-line-2",
     "heading": "Labels that rise out of their own bar segment"
    },
    "still": {
@@ -5779,9 +5780,10 @@
    "duration": 4,
    "motion": "one-shot",
    "difficulty": 2,
-   "taught_by": 6,
+   "taught_by": 8,
    "variants": [
-    "01-bounce-keyframes-word-stagger"
+    "01-bounce-keyframes-word-stagger",
+    "02-bounce-expression-pop-in"
    ],
    "provides": [
     "motion: bounce",
@@ -5824,7 +5826,7 @@
    "duration": 3,
    "motion": "one-shot",
    "difficulty": 2,
-   "taught_by": 7,
+   "taught_by": 8,
    "variants": [],
    "provides": [
     "motion: draw-on"
@@ -5908,7 +5910,7 @@
    "duration": 4,
    "motion": "still",
    "difficulty": 2,
-   "taught_by": 2,
+   "taught_by": 3,
    "variants": [],
    "provides": [
     "backdrop: grid",
@@ -5953,7 +5955,7 @@
    "duration": 3,
    "motion": "one-shot",
    "difficulty": 2,
-   "taught_by": 7,
+   "taught_by": 8,
    "variants": [],
    "provides": [
     "motion: chart",
@@ -5996,7 +5998,7 @@
    "duration": 1,
    "motion": "one-shot",
    "difficulty": 1,
-   "taught_by": 7,
+   "taught_by": 8,
    "variants": [],
    "provides": [
     "motion: draw-on",
@@ -6040,7 +6042,7 @@
    "duration": 3,
    "motion": "still",
    "difficulty": 2,
-   "taught_by": 2,
+   "taught_by": 3,
    "variants": [],
    "provides": [
     "backdrop: grid",
@@ -6084,7 +6086,7 @@
    "duration": 2,
    "motion": "one-shot",
    "difficulty": 3,
-   "taught_by": 7,
+   "taught_by": 8,
    "variants": [],
    "provides": [
     "motion: chart"
@@ -6126,7 +6128,7 @@
    "duration": 3,
    "motion": "one-shot",
    "difficulty": 2,
-   "taught_by": 6,
+   "taught_by": 8,
    "variants": [],
    "provides": [
     "type: label",
@@ -6301,7 +6303,7 @@
    "duration": 3,
    "motion": "one-shot",
    "difficulty": 3,
-   "taught_by": 7,
+   "taught_by": 8,
    "variants": [],
    "provides": [
     "environment: map",
@@ -6319,6 +6321,585 @@
    "still": {
     "path": "arsenal/stills/15-map-highlights-and-border-trace.jpg",
     "sha256": "f52bae4696aaab98b2d62fc7ed13fe1fef257ee24f3b396996cdd209c522281c"
+   }
+  },
+  {
+   "id": "01-gradient-pill-button-3d-entrance",
+   "revision": "9bd8db71",
+   "level": "recipe",
+   "name": "Glossy red pill button that swings up from below in 3D",
+   "line": "A hook moment where a call-to-action button should arrive as a big event rather than just fade or pop. The button comes up from below, near the camera and tipped back, and settles flat in the middle.",
+   "status": "proven",
+   "kind": "technique",
+   "job": "call-to-action",
+   "support": [
+    "add-impact",
+    "add-depth"
+   ],
+   "mood": [
+    "bold",
+    "3D",
+    "dark",
+    "sleek"
+   ],
+   "needs": [
+    "shapes",
+    "type"
+   ],
+   "duration": 1,
+   "motion": "one-shot",
+   "difficulty": 3,
+   "taught_by": 1,
+   "variants": [],
+   "provides": [
+    "motion: swing",
+    "depth: z-stack"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
+   "section": {
+    "document": "arsenal-line-2",
+    "heading": "Glossy red pill button that swings up from below in 3D"
+   },
+   "still": {
+    "path": "arsenal/stills/01-gradient-pill-button-3d-entrance.jpg",
+    "sha256": "552683a365fc50a9d179194c44892bf5633a485bdd2659d57aacdb790749316b"
+   }
+  },
+  {
+   "id": "02-bounce-expression-pop-in",
+   "revision": "fb747e70",
+   "level": "recipe",
+   "name": "Overshoot-bounce pop-in for an icon, with a letter-by-letter text rise",
+   "line": "Reach for it when a button, icon or label should land with a springy settle instead of a flat scale-up, and when its words should rise in one letter after another.",
+   "status": "proven",
+   "kind": "technique",
+   "job": "add-impact",
+   "support": [],
+   "mood": [
+    "playful",
+    "clean",
+    "bold"
+   ],
+   "needs": [
+    "type",
+    "shapes"
+   ],
+   "duration": 2,
+   "motion": "one-shot",
+   "difficulty": 3,
+   "taught_by": 8,
+   "variant_of": "03-step-icons-pop-with-bounce-in-sequence",
+   "variants": [],
+   "provides": [
+    "motion: bounce",
+    "motion: stagger",
+    "type: reveal"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
+   "section": {
+    "document": "arsenal-line-2",
+    "heading": "Overshoot-bounce pop-in for an icon, with a letter-by-letter text rise"
+   },
+   "still": {
+    "path": "arsenal/stills/02-bounce-expression-pop-in.jpg",
+    "sha256": "47c6d6703231d33298e3151c41f395d0af8572b6e88381765e16f5ed10d9094d"
+   }
+  },
+  {
+   "id": "03-glowing-gradient-stroke-line-draw",
+   "revision": "7854bb63",
+   "level": "recipe",
+   "name": "Glowing blue gradient line that draws on from a button",
+   "line": "Reach for it when a button or card needs a connector that grows out of it towards the next idea, with a neon look that stays soft rather than harsh. The curve is drawn with the pen tool, coloured with a multi-stop gradient stroke, lit with stacked built-in Glows and revealed with Trim Paths.",
+   "status": "proven",
+   "kind": "technique",
+   "job": "relate-things",
+   "support": [],
+   "mood": [
+    "dark",
+    "glow",
+    "sleek"
+   ],
+   "needs": [
+    "shapes"
+   ],
+   "duration": 1,
+   "motion": "one-shot",
+   "difficulty": 3,
+   "taught_by": 8,
+   "variants": [],
+   "provides": [
+    "motion: draw-on",
+    "light: glow",
+    "finish: glow"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
+   "section": {
+    "document": "arsenal-line-2",
+    "heading": "Glowing blue gradient line that draws on from a button"
+   },
+   "still": {
+    "path": "arsenal/stills/03-glowing-gradient-stroke-line-draw.jpg",
+    "sha256": "6f580072e2e19999f8cc40722b9b58899708e91d40ec119746c1f13b9669f6cf"
+   }
+  },
+  {
+   "id": "04-light-sweep-edge-on-buttons",
+   "revision": "59a070f6",
+   "level": "recipe",
+   "name": "Moving edge highlight and liquid bounce on a glass button",
+   "line": "Reach for it when a dark rounded button or label card needs a rim of light where a glowing line meets it, and a springy pop-in that also squeezes sideways. Cheap way to make UI cards feel glassy and alive.",
+   "status": "proven",
+   "kind": "technique",
+   "job": "light-the-hero",
+   "support": [
+    "add-impact"
+   ],
+   "mood": [
+    "dark",
+    "glow",
+    "sleek"
+   ],
+   "needs": [
+    "shapes",
+    "type"
+   ],
+   "duration": 2,
+   "motion": "one-shot",
+   "difficulty": 3,
+   "taught_by": 1,
+   "variants": [],
+   "provides": [
+    "light: rim",
+    "material: glass",
+    "motion: bounce"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
+   "section": {
+    "document": "arsenal-picture-2",
+    "heading": "Moving edge highlight and liquid bounce on a glass button"
+   },
+   "still": {
+    "path": "arsenal/stills/04-light-sweep-edge-on-buttons.jpg",
+    "sha256": "3c0244993da5cb5992396e15a84df8d1715bcc462b9c87269cf8a8a7d46c1ebd"
+   }
+  },
+  {
+   "id": "05-duplicate-and-stagger-layout",
+   "revision": "95d4ae6c",
+   "level": "recipe",
+   "name": "Duplicate, mirror and stagger a button-and-line layout",
+   "line": "Turn one glowing button with a curved line into a branching diagram (two columns, two rows) and then retime it so each piece starts before the previous one has finished, all riding on one parent null that scrolls the view.",
+   "status": "proven",
+   "kind": "technique",
+   "job": "one-to-many",
+   "support": [
+    "relate-things"
+   ],
+   "mood": [
+    "dark",
+    "glow",
+    "sleek"
+   ],
+   "needs": [
+    "shapes",
+    "type"
+   ],
+   "duration": 5,
+   "motion": "one-shot",
+   "difficulty": 4,
+   "taught_by": 8,
+   "variants": [],
+   "provides": [
+    "light: glow",
+    "motion: stagger",
+    "motion: draw-on"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
+   "section": {
+    "document": "arsenal-line-2",
+    "heading": "Duplicate, mirror and stagger a button-and-line layout"
+   },
+   "still": {
+    "path": "arsenal/stills/05-duplicate-and-stagger-layout.jpg",
+    "sha256": "a58bd7cb38eea9a67be0bad0ec3c3fb9ddb4628a5f3595a68573d69d9d09273e"
+   }
+  },
+  {
+   "id": "06-subtle-gradient-overlay-and-lens-finish",
+   "revision": "b8191fd0",
+   "level": "recipe",
+   "name": "Faint ghost label with reversed gradient overlay, plus a vignette finish layer",
+   "line": "Reach for it when a button or card shows one word and you want a dim, secondary word hovering beneath it (a \"what's happening\" hint) that fades off instead of competing, then close the scene with a top adjustment layer carrying a vignette.",
+   "status": "proven",
+   "kind": "technique",
+   "job": "finish-the-look",
+   "support": [],
+   "mood": [
+    "dark",
+    "cinematic",
+    "soft"
+   ],
+   "needs": [
+    "type"
+   ],
+   "duration": 5,
+   "motion": "still",
+   "difficulty": 2,
+   "taught_by": 1,
+   "variants": [],
+   "provides": [
+    "type: label",
+    "finish: grade"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
+   "section": {
+    "document": "arsenal-picture-2",
+    "heading": "Faint ghost label with reversed gradient overlay, plus a vignette finish layer"
+   },
+   "still": {
+    "path": "arsenal/stills/06-subtle-gradient-overlay-and-lens-finish.jpg",
+    "sha256": "58beca27b7de00100fa545eafa4a4c48bb765135753902e03a346517695be029"
+   }
+  },
+  {
+   "id": "07-shape-morph-into-app-window",
+   "revision": "d9215d5c",
+   "level": "recipe",
+   "name": "Four buttons slide together and melt into one large app-window card",
+   "line": "Use it when a scene of several rounded buttons or cards must turn into one large panel (a notes or dashboard window) without a visible cut. A match cut hides the swap.",
+   "status": "proven",
+   "kind": "technique",
+   "job": "hand-over",
+   "support": [
+    "one-to-many",
+    "show-real-screen"
+   ],
+   "mood": [
+    "dark",
+    "clean",
+    "sleek"
+   ],
+   "needs": [
+    "shapes",
+    "type"
+   ],
+   "duration": 2,
+   "motion": "transition",
+   "difficulty": 4,
+   "taught_by": 1,
+   "variants": [],
+   "provides": [
+    "transition: match-cut",
+    "transition: morph",
+    "motion: bounce"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
+   "section": {
+    "document": "arsenal-connective",
+    "heading": "Four buttons slide together and melt into one large app-window card"
+   },
+   "still": {
+    "path": "arsenal/stills/07-shape-morph-into-app-window.jpg",
+    "sha256": "133b8bfdd2a7decf5757a4bd6cb493359327e1c4dadd4eeec6199105f29d4c15"
+   }
+  },
+  {
+   "id": "08-bouncing-dots-and-soft-grid-panel",
+   "revision": "30ed84e3",
+   "level": "recipe",
+   "name": "Three popping window dots and a faint feathered grid inside a card",
+   "line": "Turns a plain rounded card into an app window: three coloured dots pop in at the top-left with a springy overshoot, and a very light grid sits behind the content, fading out towards the edges.",
+   "status": "proven",
+   "kind": "technique",
+   "job": "fill-the-backdrop",
+   "support": [
+    "finish-the-look"
+   ],
+   "mood": [
+    "light",
+    "clean",
+    "minimal",
+    "playful"
+   ],
+   "needs": [
+    "shapes",
+    "type"
+   ],
+   "duration": 3,
+   "motion": "one-shot",
+   "difficulty": 3,
+   "taught_by": 3,
+   "variants": [],
+   "provides": [
+    "backdrop: grid",
+    "motion: bounce",
+    "motion: stagger",
+    "environment: screen"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
+   "section": {
+    "document": "arsenal-picture-2",
+    "heading": "Three popping window dots and a faint feathered grid inside a card"
+   },
+   "still": {
+    "path": "arsenal/stills/08-bouncing-dots-and-soft-grid-panel.jpg",
+    "sha256": "fe35803f399c996b324ff5fe1be9d7791ba5ed13c038f529ade633cfaac50ff0"
+   }
+  },
+  {
+   "id": "09-typewriter-rewrite-text-effect",
+   "revision": "10edb078",
+   "level": "recipe",
+   "name": "Typed-on note text that deletes and retypes, with word-by-word fade and a hold-key camera push",
+   "line": "Reach for it when a fake notes or chat window needs its text to appear as if someone is writing it, changing their mind and retyping, and then the shot needs a little extra life so the held text is not static.",
+   "status": "proven",
+   "kind": "technique",
+   "job": "make-concrete",
+   "support": [
+    "reveal-headline",
+    "keep-it-alive"
+   ],
+   "mood": [
+    "light",
+    "clean",
+    "minimal"
+   ],
+   "needs": [
+    "type"
+   ],
+   "duration": 5,
+   "motion": "one-shot",
+   "difficulty": 3,
+   "taught_by": 1,
+   "variants": [],
+   "provides": [
+    "type: terminal",
+    "type: reveal",
+    "camera: push"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
+   "section": {
+    "document": "arsenal-line-2",
+    "heading": "Typed-on note text that deletes and retypes, with word-by-word fade and a hold-key camera push"
+   },
+   "still": {
+    "path": "arsenal/stills/09-typewriter-rewrite-text-effect.jpg",
+    "sha256": "f0b5d46e32d3c689d749ae524e31a470ed9a002f1490e0eaeaa0a222314493bf"
+   }
+  },
+  {
+   "id": "10-liquid-gradient-orb",
+   "revision": "bdb6d91a",
+   "level": "recipe",
+   "name": "Glowing liquid orb from blurred wiggling shapes and a sphere",
+   "line": "A designer reaches for this when a voice or AI assistant needs a living, colourful, soft-lit ball that can pop up from a small dot, wobble and pulse while it \"speaks\".",
+   "status": "proven",
+   "kind": "technique",
+   "job": "light-the-hero",
+   "support": [
+    "keep-it-alive"
+   ],
+   "mood": [
+    "dark",
+    "glow",
+    "soft",
+    "abstract"
+   ],
+   "needs": [
+    "shapes"
+   ],
+   "duration": 6,
+   "motion": "loop",
+   "difficulty": 3,
+   "taught_by": 2,
+   "variants": [],
+   "provides": [
+    "light: glow",
+    "finish: blur",
+    "motion: loop",
+    "motion: bounce"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
+   "section": {
+    "document": "arsenal-picture-2",
+    "heading": "Glowing liquid orb from blurred wiggling shapes and a sphere"
+   },
+   "still": {
+    "path": "arsenal/stills/10-liquid-gradient-orb.jpg",
+    "sha256": "4f0bf484fe96b27b2e08e6b91d571f74cb94644bc196634722d642aa80df08d9"
+   }
+  },
+  {
+   "id": "11-scale-through-dot-null-link",
+   "revision": "a9bfba0f",
+   "level": "recipe",
+   "name": "Grow an orb out of a small dot through a chain of linked nulls",
+   "line": "Use it when a pre-made glowing orb has to appear from a tiny marker already on screen and then swell to fill the frame, while its position and size keep moving without a jump.",
+   "status": "proven",
+   "kind": "technique",
+   "job": "hand-over",
+   "support": [
+    "light-the-hero",
+    "add-impact"
+   ],
+   "mood": [
+    "glow",
+    "dark",
+    "abstract"
+   ],
+   "needs": [
+    "shapes"
+   ],
+   "duration": 2,
+   "motion": "transition",
+   "difficulty": 3,
+   "taught_by": 1,
+   "variants": [],
+   "provides": [
+    "transition: morph"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
+   "section": {
+    "document": "arsenal-connective",
+    "heading": "Grow an orb out of a small dot through a chain of linked nulls"
+   },
+   "still": {
+    "path": "arsenal/stills/11-scale-through-dot-null-link.jpg",
+    "sha256": "efd61ec45fa45d5170c2721cc526a283a280e4a90b1a37ad479c5379e3dd64a8"
+   }
+  },
+  {
+   "id": "12-ring-orb-matte-and-echo",
+   "revision": "8a48e458",
+   "level": "recipe",
+   "name": "Hollow glowing ring from a filled orb: inverted-matte cut-out, soft blur, then echo trails",
+   "line": "Reach for it when a soft glowing orb needs to become a thin outline so a headline can sit in its middle, and the outline should then multiply into a few lagging copies as it appears.",
+   "status": "proven",
+   "kind": "technique",
+   "job": "fill-the-backdrop",
+   "support": [
+    "light-the-hero",
+    "add-impact"
+   ],
+   "mood": [
+    "dark",
+    "glow",
+    "soft",
+    "abstract"
+   ],
+   "needs": [
+    "shapes"
+   ],
+   "duration": 3,
+   "motion": "one-shot",
+   "difficulty": 4,
+   "taught_by": 2,
+   "variants": [],
+   "provides": [
+    "light: glow",
+    "finish: blur"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
+   "section": {
+    "document": "arsenal-picture-2",
+    "heading": "Hollow glowing ring from a filled orb: inverted-matte cut-out, soft blur, then echo trails"
+   },
+   "still": {
+    "path": "arsenal/stills/12-ring-orb-matte-and-echo.jpg",
+    "sha256": "b6408e45fb34614a76b00a4ec88877ca0d2c6f1577ea899177900fab86b3e783"
+   }
+  },
+  {
+   "id": "13-text-fill-in-blur-and-scale-finish",
+   "revision": "e5af270d",
+   "level": "recipe",
+   "name": "Caption that fades in dim, fills to full word by word, sharpens from a blur and keeps growing",
+   "line": "Closing caption for a hero graphic. The words are readable only as a faint ghost at first, then light up one word at a time while the block sharpens and slowly swells, so the shot never stops moving.",
+   "status": "proven",
+   "kind": "technique",
+   "job": "reveal-headline",
+   "support": [
+    "keep-it-alive"
+   ],
+   "mood": [
+    "dark",
+    "glow",
+    "premium"
+   ],
+   "needs": [
+    "type"
+   ],
+   "duration": 3,
+   "motion": "one-shot",
+   "difficulty": 3,
+   "taught_by": 3,
+   "variant_of": "18-smooth-text-reveal",
+   "variants": [],
+   "provides": [
+    "type: reveal",
+    "finish: blur"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
+   "section": {
+    "document": "arsenal-line",
+    "heading": "Caption that fades in dim, fills to full word by word, sharpens from a blur and keeps growing"
+   },
+   "still": {
+    "path": "arsenal/stills/13-text-fill-in-blur-and-scale-finish.jpg",
+    "sha256": "a1f8b14bf52d0113b12950ce89c32024bd2e74a829676e4d0cf37f1d60813641"
    }
   },
   {

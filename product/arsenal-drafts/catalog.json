@@ -1,6 +1,6 @@
 {
   "vocab": "jobs-v1",
-  "version": "11551809",
+  "version": "63db6ee1",
   "jobs": [
     "land-number",
     "count-things",
@@ -62,7 +62,7 @@
       },
       "revision": "d073f30e",
       "still": "quality/renders/channel-study/201iywIy74c/proof/01/build.png",
-      "taught_by": 6,
+      "taught_by": 8,
       "variant_of": "03-step-icons-pop-with-bounce-in-sequence",
       "variants": []
     },
@@ -169,7 +169,7 @@
       },
       "revision": "e51aa5c0",
       "still": "quality/renders/channel-study/201iywIy74c/proof/04/build.png",
-      "taught_by": 7,
+      "taught_by": 8,
       "variants": []
     },
     {
@@ -1143,7 +1143,7 @@
       },
       "revision": "3e9d01cb",
       "still": "quality/renders/channel-study/Tf0EiCGOEYs/proof/05/build.png",
-      "taught_by": 6,
+      "taught_by": 8,
       "variants": []
     },
     {
@@ -1248,7 +1248,7 @@
       },
       "revision": "b061556e",
       "still": "quality/renders/channel-study/Tf0EiCGOEYs/proof/08/build.png",
-      "taught_by": 6,
+      "taught_by": 8,
       "variants": []
     },
     {
@@ -1419,7 +1419,7 @@
       },
       "revision": "9201d48e",
       "still": "quality/renders/channel-study/YBeMmC43Q1U/proof/05/build.png",
-      "taught_by": 6,
+      "taught_by": 8,
       "variants": []
     },
     {
@@ -1868,9 +1868,10 @@
       },
       "revision": "8c8e30dd",
       "still": "quality/renders/channel-study/YBeMmC43Q1U/proof/18/build.png",
-      "taught_by": 2,
+      "taught_by": 3,
       "variants": [
-        "05-per-character-3d-fly-in-ramp-up"
+        "05-per-character-3d-fly-in-ramp-up",
+        "13-text-fill-in-blur-and-scale-finish"
       ]
     },
     {
@@ -2667,7 +2668,7 @@
       },
       "revision": "95094a0c",
       "still": null,
-      "taught_by": 2,
+      "taught_by": 3,
       "variant_of": "18-smooth-text-reveal",
       "variants": []
     },
@@ -3224,7 +3225,7 @@
       },
       "revision": "aa3d7518",
       "still": "quality/renders/channel-study/nHh0NRo8G2U/proof/01/build.png",
-      "taught_by": 7,
+      "taught_by": 8,
       "variants": []
     },
     {
@@ -3293,9 +3294,10 @@
       },
       "revision": "326c36ad",
       "still": "quality/renders/channel-study/nHh0NRo8G2U/proof/03/build.png",
-      "taught_by": 6,
+      "taught_by": 8,
       "variants": [
-        "01-bounce-keyframes-word-stagger"
+        "01-bounce-keyframes-word-stagger",
+        "02-bounce-expression-pop-in"
       ]
     },
     {
@@ -3329,7 +3331,7 @@
       },
       "revision": "71fe9a82",
       "still": "quality/renders/channel-study/nHh0NRo8G2U/proof/04/build.png",
-      "taught_by": 7,
+      "taught_by": 8,
       "variants": []
     },
     {
@@ -3397,7 +3399,7 @@
       },
       "revision": "089b44ae",
       "still": "quality/renders/channel-study/nHh0NRo8G2U/proof/06/build.png",
-      "taught_by": 2,
+      "taught_by": 3,
       "variants": []
     },
     {
@@ -3433,7 +3435,7 @@
       },
       "revision": "4731c114",
       "still": "quality/renders/channel-study/nHh0NRo8G2U/proof/07/build.png",
-      "taught_by": 7,
+      "taught_by": 8,
       "variants": []
     },
     {
@@ -3467,7 +3469,7 @@
       },
       "revision": "24d327a4",
       "still": "quality/renders/channel-study/nHh0NRo8G2U/proof/08/build.png",
-      "taught_by": 7,
+      "taught_by": 8,
       "variants": []
     },
     {
@@ -3502,7 +3504,7 @@
       },
       "revision": "6216762b",
       "still": "quality/renders/channel-study/nHh0NRo8G2U/proof/09/build.png",
-      "taught_by": 2,
+      "taught_by": 3,
       "variants": []
     },
     {
@@ -3537,7 +3539,7 @@
       },
       "revision": "e2f0e818",
       "still": "quality/renders/channel-study/nHh0NRo8G2U/proof/10/build.png",
-      "taught_by": 7,
+      "taught_by": 8,
       "variants": []
     },
     {
@@ -3571,7 +3573,7 @@
       },
       "revision": "6464b2db",
       "still": "quality/renders/channel-study/nHh0NRo8G2U/proof/11/build.png",
-      "taught_by": 6,
+      "taught_by": 8,
       "variants": []
     },
     {
@@ -3711,7 +3713,460 @@
       },
       "revision": "7eb6b455",
       "still": "quality/renders/channel-study/nHh0NRo8G2U/proof/15/build.png",
-      "taught_by": 7,
+      "taught_by": 8,
+      "variants": []
+    },
+    {
+      "id": "01-gradient-pill-button-3d-entrance",
+      "video": "tYRvoI04pJk",
+      "n": 1,
+      "name": "Glossy red pill button that swings up from below in 3D",
+      "line": "A hook moment where a call-to-action button should arrive as a big event rather than just fade or pop. The button comes up from below, near the camera and tipped back, and settles flat in the middle.",
+      "status": "proven",
+      "kind": "technique",
+      "job": "call-to-action",
+      "support": [
+        "add-impact",
+        "add-depth"
+      ],
+      "mood": [
+        "bold",
+        "3D",
+        "dark",
+        "sleek"
+      ],
+      "needs": [
+        "shapes",
+        "type"
+      ],
+      "duration": 1,
+      "motion": "one-shot",
+      "difficulty": 3,
+      "group": "3D fly-in",
+      "why": "'a call-to-action button should arrive as a big event rather than just fade or pop': it rises from below, near the camera and tipped back, and settles flat in the middle",
+      "section": {
+        "file": "tYRvoI04pJk.md",
+        "heading": "Glossy red pill button that swings up from below in 3D"
+      },
+      "revision": "9bd8db71",
+      "still": "quality/renders/channel-study/tYRvoI04pJk/proof/01/build.png",
+      "taught_by": 1,
+      "variants": []
+    },
+    {
+      "id": "02-bounce-expression-pop-in",
+      "video": "tYRvoI04pJk",
+      "n": 2,
+      "name": "Overshoot-bounce pop-in for an icon, with a letter-by-letter text rise",
+      "line": "Reach for it when a button, icon or label should land with a springy settle instead of a flat scale-up, and when its words should rise in one letter after another.",
+      "status": "proven",
+      "kind": "technique",
+      "job": "add-impact",
+      "support": [],
+      "mood": [
+        "playful",
+        "clean",
+        "bold"
+      ],
+      "needs": [
+        "type",
+        "shapes"
+      ],
+      "duration": 2,
+      "motion": "one-shot",
+      "difficulty": 3,
+      "group": "time stagger",
+      "why": "'a button, icon or label should land with a springy settle instead of a flat scale-up, and when its words should rise in one letter after another': Scale bounce on the icon plus a per-letter rise",
+      "section": {
+        "file": "tYRvoI04pJk.md",
+        "heading": "Overshoot-bounce pop-in for an icon, with a letter-by-letter text rise"
+      },
+      "revision": "fb747e70",
+      "still": "quality/renders/channel-study/tYRvoI04pJk/proof/02/build.png",
+      "taught_by": 8,
+      "variant_of": "03-step-icons-pop-with-bounce-in-sequence",
+      "variants": []
+    },
+    {
+      "id": "03-glowing-gradient-stroke-line-draw",
+      "video": "tYRvoI04pJk",
+      "n": 3,
+      "name": "Glowing blue gradient line that draws on from a button",
+      "line": "Reach for it when a button or card needs a connector that grows out of it towards the next idea, with a neon look that stays soft rather than harsh. The curve is drawn with the pen tool, coloured with a multi-stop gradient stroke, lit with stacked built-in Glows and revealed with Trim Paths.",
+      "status": "proven",
+      "kind": "technique",
+      "job": "relate-things",
+      "support": [],
+      "mood": [
+        "dark",
+        "glow",
+        "sleek"
+      ],
+      "needs": [
+        "shapes"
+      ],
+      "duration": 1,
+      "motion": "one-shot",
+      "difficulty": 3,
+      "group": "trim paths draw-on",
+      "why": "'a button or card needs a connector that grows out of it towards the next idea, with a neon look that stays soft': a pen-drawn gradient stroke under three stacked Glows, revealed with Trim Paths",
+      "section": {
+        "file": "tYRvoI04pJk.md",
+        "heading": "Glowing blue gradient line that draws on from a button"
+      },
+      "revision": "7854bb63",
+      "still": "quality/renders/channel-study/tYRvoI04pJk/proof/03/build.png",
+      "taught_by": 8,
+      "variants": []
+    },
+    {
+      "id": "04-light-sweep-edge-on-buttons",
+      "video": "tYRvoI04pJk",
+      "n": 4,
+      "name": "Moving edge highlight and liquid bounce on a glass button",
+      "line": "Reach for it when a dark rounded button or label card needs a rim of light where a glowing line meets it, and a springy pop-in that also squeezes sideways. Cheap way to make UI cards feel glassy and alive.",
+      "status": "proven",
+      "kind": "technique",
+      "job": "light-the-hero",
+      "support": [
+        "add-impact"
+      ],
+      "mood": [
+        "dark",
+        "glow",
+        "sleek"
+      ],
+      "needs": [
+        "shapes",
+        "type"
+      ],
+      "duration": 2,
+      "motion": "one-shot",
+      "difficulty": 3,
+      "group": "edge light sweep",
+      "why": "'a dark rounded button or label card needs a rim of light where a glowing line meets it, and a springy pop-in that also squeezes sideways': stacked CC Light Sweeps as edge-only light, plus a bounce on Scale and rectangle Size",
+      "section": {
+        "file": "tYRvoI04pJk.md",
+        "heading": "Moving edge highlight and liquid bounce on a glass button"
+      },
+      "revision": "59a070f6",
+      "still": "quality/renders/channel-study/tYRvoI04pJk/proof/04/build.png",
+      "taught_by": 1,
+      "variants": []
+    },
+    {
+      "id": "05-duplicate-and-stagger-layout",
+      "video": "tYRvoI04pJk",
+      "n": 5,
+      "name": "Duplicate, mirror and stagger a button-and-line layout",
+      "line": "Turn one glowing button with a curved line into a branching diagram (two columns, two rows) and then retime it so each piece starts before the previous one has finished, all riding on one parent null that scrolls the view.",
+      "status": "proven",
+      "kind": "technique",
+      "job": "one-to-many",
+      "support": [
+        "relate-things"
+      ],
+      "mood": [
+        "dark",
+        "glow",
+        "sleek"
+      ],
+      "needs": [
+        "shapes",
+        "type"
+      ],
+      "duration": 5,
+      "motion": "one-shot",
+      "difficulty": 4,
+      "group": "time stagger",
+      "why": "'Turn one glowing button with a curved line into a branching diagram (two columns, two rows) and then retime it so each piece starts before the previous one has finished'",
+      "section": {
+        "file": "tYRvoI04pJk.md",
+        "heading": "Duplicate, mirror and stagger a button-and-line layout"
+      },
+      "revision": "95d4ae6c",
+      "still": "quality/renders/channel-study/tYRvoI04pJk/proof/05/build.png",
+      "taught_by": 8,
+      "variants": []
+    },
+    {
+      "id": "06-subtle-gradient-overlay-and-lens-finish",
+      "video": "tYRvoI04pJk",
+      "n": 6,
+      "name": "Faint ghost label with reversed gradient overlay, plus a vignette finish layer",
+      "line": "Reach for it when a button or card shows one word and you want a dim, secondary word hovering beneath it (a \"what's happening\" hint) that fades off instead of competing, then close the scene with a top adjustment layer carrying a vignette.",
+      "status": "proven",
+      "kind": "technique",
+      "job": "finish-the-look",
+      "support": [],
+      "mood": [
+        "dark",
+        "cinematic",
+        "soft"
+      ],
+      "needs": [
+        "type"
+      ],
+      "duration": 5,
+      "motion": "still",
+      "difficulty": 2,
+      "group": "vignette finish",
+      "why": "'a dim, secondary word hovering beneath it that fades off instead of competing, then close the scene with a top adjustment layer carrying a vignette'",
+      "section": {
+        "file": "tYRvoI04pJk.md",
+        "heading": "Faint ghost label with reversed gradient overlay, plus a vignette finish layer"
+      },
+      "revision": "b8191fd0",
+      "still": "quality/renders/channel-study/tYRvoI04pJk/proof/06/build.png",
+      "taught_by": 1,
+      "variants": []
+    },
+    {
+      "id": "07-shape-morph-into-app-window",
+      "video": "tYRvoI04pJk",
+      "n": 7,
+      "name": "Four buttons slide together and melt into one large app-window card",
+      "line": "Use it when a scene of several rounded buttons or cards must turn into one large panel (a notes or dashboard window) without a visible cut. A match cut hides the swap.",
+      "status": "proven",
+      "kind": "technique",
+      "job": "hand-over",
+      "support": [
+        "one-to-many",
+        "show-real-screen"
+      ],
+      "mood": [
+        "dark",
+        "clean",
+        "sleek"
+      ],
+      "needs": [
+        "shapes",
+        "type"
+      ],
+      "duration": 2,
+      "motion": "transition",
+      "difficulty": 4,
+      "group": "shape swap into window",
+      "why": "'a scene of several rounded buttons or cards must turn into one large panel (a notes or dashboard window) without a visible cut. A match cut hides the swap.'",
+      "section": {
+        "file": "tYRvoI04pJk.md",
+        "heading": "Four buttons slide together and melt into one large app-window card"
+      },
+      "revision": "d9215d5c",
+      "still": "quality/renders/channel-study/tYRvoI04pJk/proof/07/build.png",
+      "taught_by": 1,
+      "variants": []
+    },
+    {
+      "id": "08-bouncing-dots-and-soft-grid-panel",
+      "video": "tYRvoI04pJk",
+      "n": 8,
+      "name": "Three popping window dots and a faint feathered grid inside a card",
+      "line": "Turns a plain rounded card into an app window: three coloured dots pop in at the top-left with a springy overshoot, and a very light grid sits behind the content, fading out towards the edges.",
+      "status": "proven",
+      "kind": "technique",
+      "job": "fill-the-backdrop",
+      "support": [
+        "finish-the-look"
+      ],
+      "mood": [
+        "light",
+        "clean",
+        "minimal",
+        "playful"
+      ],
+      "needs": [
+        "shapes",
+        "type"
+      ],
+      "duration": 3,
+      "motion": "one-shot",
+      "difficulty": 3,
+      "group": "graph-paper grid",
+      "why": "'Turns a plain rounded card into an app window': three coloured dots pop in with a springy overshoot and 'a very light grid sits behind the content, fading out towards the edges'",
+      "section": {
+        "file": "tYRvoI04pJk.md",
+        "heading": "Three popping window dots and a faint feathered grid inside a card"
+      },
+      "revision": "30ed84e3",
+      "still": "quality/renders/channel-study/tYRvoI04pJk/proof/08/build.png",
+      "taught_by": 3,
+      "variants": []
+    },
+    {
+      "id": "09-typewriter-rewrite-text-effect",
+      "video": "tYRvoI04pJk",
+      "n": 9,
+      "name": "Typed-on note text that deletes and retypes, with word-by-word fade and a hold-key camera push",
+      "line": "Reach for it when a fake notes or chat window needs its text to appear as if someone is writing it, changing their mind and retyping, and then the shot needs a little extra life so the held text is not static.",
+      "status": "proven",
+      "kind": "technique",
+      "job": "make-concrete",
+      "support": [
+        "reveal-headline",
+        "keep-it-alive"
+      ],
+      "mood": [
+        "light",
+        "clean",
+        "minimal"
+      ],
+      "needs": [
+        "type"
+      ],
+      "duration": 5,
+      "motion": "one-shot",
+      "difficulty": 3,
+      "group": "typewriter type-on",
+      "why": "'a fake notes or chat window needs its text to appear as if someone is writing it, changing their mind and retyping', then 'a little extra life so the held text is not static'",
+      "section": {
+        "file": "tYRvoI04pJk.md",
+        "heading": "Typed-on note text that deletes and retypes, with word-by-word fade and a hold-key camera push"
+      },
+      "revision": "10edb078",
+      "still": "quality/renders/channel-study/tYRvoI04pJk/proof/09/build.png",
+      "taught_by": 1,
+      "variants": []
+    },
+    {
+      "id": "10-liquid-gradient-orb",
+      "video": "tYRvoI04pJk",
+      "n": 10,
+      "name": "Glowing liquid orb from blurred wiggling shapes and a sphere",
+      "line": "A designer reaches for this when a voice or AI assistant needs a living, colourful, soft-lit ball that can pop up from a small dot, wobble and pulse while it \"speaks\".",
+      "status": "proven",
+      "kind": "technique",
+      "job": "light-the-hero",
+      "support": [
+        "keep-it-alive"
+      ],
+      "mood": [
+        "dark",
+        "glow",
+        "soft",
+        "abstract"
+      ],
+      "needs": [
+        "shapes"
+      ],
+      "duration": 6,
+      "motion": "loop",
+      "difficulty": 3,
+      "group": "blurred-shapes sphere orb",
+      "why": "'a living, colourful, soft-lit ball that can pop up from a small dot, wobble and pulse while it \"speaks\"': one lit orb alone on black, outline wobbling and colours swirling",
+      "section": {
+        "file": "tYRvoI04pJk.md",
+        "heading": "Glowing liquid orb from blurred wiggling shapes and a sphere"
+      },
+      "revision": "bdb6d91a",
+      "still": "quality/renders/channel-study/tYRvoI04pJk/proof/10/build.png",
+      "taught_by": 2,
+      "variants": []
+    },
+    {
+      "id": "11-scale-through-dot-null-link",
+      "video": "tYRvoI04pJk",
+      "n": 11,
+      "name": "Grow an orb out of a small dot through a chain of linked nulls",
+      "line": "Use it when a pre-made glowing orb has to appear from a tiny marker already on screen and then swell to fill the frame, while its position and size keep moving without a jump.",
+      "status": "proven",
+      "kind": "technique",
+      "job": "hand-over",
+      "support": [
+        "light-the-hero",
+        "add-impact"
+      ],
+      "mood": [
+        "glow",
+        "dark",
+        "abstract"
+      ],
+      "needs": [
+        "shapes"
+      ],
+      "duration": 2,
+      "motion": "transition",
+      "difficulty": 3,
+      "group": "null chain link",
+      "why": "'a pre-made glowing orb has to appear from a tiny marker already on screen and then swell ... while its position and size keep moving without a jump': a dot at the end of a line of text grows on a spiky speed curve into the orb",
+      "section": {
+        "file": "tYRvoI04pJk.md",
+        "heading": "Grow an orb out of a small dot through a chain of linked nulls"
+      },
+      "revision": "a9bfba0f",
+      "still": "quality/renders/channel-study/tYRvoI04pJk/proof/11/build.png",
+      "taught_by": 1,
+      "variants": []
+    },
+    {
+      "id": "12-ring-orb-matte-and-echo",
+      "video": "tYRvoI04pJk",
+      "n": 12,
+      "name": "Hollow glowing ring from a filled orb: inverted-matte cut-out, soft blur, then echo trails",
+      "line": "Reach for it when a soft glowing orb needs to become a thin outline so a headline can sit in its middle, and the outline should then multiply into a few lagging copies as it appears.",
+      "status": "proven",
+      "kind": "technique",
+      "job": "fill-the-backdrop",
+      "support": [
+        "light-the-hero",
+        "add-impact"
+      ],
+      "mood": [
+        "dark",
+        "glow",
+        "soft",
+        "abstract"
+      ],
+      "needs": [
+        "shapes"
+      ],
+      "duration": 3,
+      "motion": "one-shot",
+      "difficulty": 4,
+      "group": "blurred-shapes sphere orb",
+      "why": "'a soft glowing orb needs to become a thin outline so a headline can sit in its middle, and the outline should then multiply into a few lagging copies as it appears': a wobbling glowing ring with echo trails behind the text",
+      "section": {
+        "file": "tYRvoI04pJk.md",
+        "heading": "Hollow glowing ring from a filled orb: inverted-matte cut-out, soft blur, then echo trails"
+      },
+      "revision": "8a48e458",
+      "still": "quality/renders/channel-study/tYRvoI04pJk/proof/12/build.png",
+      "taught_by": 2,
+      "variants": []
+    },
+    {
+      "id": "13-text-fill-in-blur-and-scale-finish",
+      "video": "tYRvoI04pJk",
+      "n": 13,
+      "name": "Caption that fades in dim, fills to full word by word, sharpens from a blur and keeps growing",
+      "line": "Closing caption for a hero graphic. The words are readable only as a faint ghost at first, then light up one word at a time while the block sharpens and slowly swells, so the shot never stops moving.",
+      "status": "proven",
+      "kind": "technique",
+      "job": "reveal-headline",
+      "support": [
+        "keep-it-alive"
+      ],
+      "mood": [
+        "dark",
+        "glow",
+        "premium"
+      ],
+      "needs": [
+        "type"
+      ],
+      "duration": 3,
+      "motion": "one-shot",
+      "difficulty": 3,
+      "group": "ramped range reveal",
+      "why": "'Closing caption for a hero graphic. The words are readable only as a faint ghost at first, then light up one word at a time while the block sharpens and slowly swells, so the shot never stops moving.'",
+      "section": {
+        "file": "tYRvoI04pJk.md",
+        "heading": "Caption that fades in dim, fills to full word by word, sharpens from a blur and keeps growing"
+      },
+      "revision": "e5af270d",
+      "still": "quality/renders/channel-study/tYRvoI04pJk/proof/13/build.png",
+      "taught_by": 3,
+      "variant_of": "18-smooth-text-reveal",
       "variants": []
     }
   ]

@@ -143,7 +143,16 @@ const findFile = (dir, re) => { try { const f = fs.readdirSync(dir).filter((n) =
 const recipeFile = (ctx, n) => findFile(path.join(ctx.study, 'recipes'), new RegExp(`^${n}-.*\\.md$`));
 /** A technique's build script: SCRIPTS/<n>-<slug>.jsx, never the finished example copied into every scripts folder. */
 const EXAMPLE_SCRIPT = '01-dotted-line.jsx';
-const scriptFile = (ctx, n) => { try { const f = fs.readdirSync(ctx.scripts).filter((x) => x !== EXAMPLE_SCRIPT && new RegExp(`^${n}-.*\\.jsx$`).test(x)).sort()[0]; return f ? path.join(ctx.scripts, f) : null; } catch { return null; } };
+/** An earlier script kept under its label (`prove-run.md` step 3): `-first` ... `-twentieth`, `-<label>-prior`, or a dated `-2026-11-19a`. */
+const KEPT_LABEL = /-(first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth|eleventh|twelfth|thirteenth|fourteenth|fifteenth|sixteenth|seventeenth|eighteenth|nineteenth|twentieth|\d{4}-\d{2}-\d{2}[a-z]?)(-prior)?\.jsx$/;
+/** The technique's current script. A kept copy sorts before it ("-" before "."), so copies under a label are passed over (lesson 49). */
+const scriptFile = (ctx, n) => {
+  try {
+    const all = fs.readdirSync(ctx.scripts).filter((x) => x !== EXAMPLE_SCRIPT && new RegExp(`^${n}-.*\\.jsx$`).test(x)).sort();
+    const f = all.find((x) => !KEPT_LABEL.test(x)) || null;
+    return f ? path.join(ctx.scripts, f) : null;
+  } catch { return null; }
+};
 const checkFile = (ctx, n) => path.join(ctx.study, 'checks', `${n}.md`);
 
 /** What a check file says: { verdict: 'pass'|'fail'|null, round } (null when there is none). */
@@ -214,12 +223,17 @@ function runBlock(stage, unit, ctx) {
   L.push('');
   if (ctx.study) L.push(`- STUDY: \`${ctx.study}\``);
   if (/^(art|prove)/.test(stage)) L.push(`- PROOF: \`${ctx.proof}\``);
+  if (stage === 'prove-run') {
+    let real = null;
+    try { real = fs.realpathSync(ctx.proof); } catch { /* no proof folder yet */ }
+    if (real && real !== ctx.proof) L.push(`- PROOF's real path: \`${real}\` (the same folder through the study link, so a project open from \`${path.join(real, 'proofs.aep')}\` is \`PROOF/proofs.aep\`)`);
+  }
   if (/^prove-(author|run)$/.test(stage)) L.push(`- SCRIPTS: \`${ctx.scripts}\``);
   if (stage === 'prove-run') { const sf = scriptFile(ctx, unit); if (sf) L.push(`- Script: \`${sf}\` (yours to run; \`${EXAMPLE_SCRIPT}\` is only the finished example)`); }
   if (stage === 'prove-run') {
     const rv = path.join(ctx.proof, unit, 'review.md');
     const v = fs.existsSync(rv) ? (fs.readFileSync(rv, 'utf8').match(/^verdict:\s*(.+)$/m) || [])[1]?.trim() : null;
-    if (v && !/^matches\b/.test(v)) L.push(`- This is a rebuild: the last build was reviewed "${v}". Read \`${rv}\`, its \`the look\`, \`missing from the recipe\` and \`to fix\` lines, and aim for its targets (estimates: measure your own render). Keep the earlier build's files under their label, as step 3 says.`);
+    if (v && !/^matches\b/.test(v)) L.push(`- This is a rebuild: the last build was reviewed "${v}". Read \`${rv}\`, its \`the look\`, \`missing from the recipe\` and \`to fix\` lines, and aim for its targets. Before you stop, measure each figure in \`to fix\` on your own render (\`ae_render_frame\` \`sample\` or \`analyze\`, or a crop), never by eye, and list each in \`build-notes.md\` as target against measured; measure the figures its \`what matches\` line gives the same way, so a fix does not undo them; a figure out of range is another round, up to five rounds (step 4). Keep the earlier build's files under their label, as step 3 says.`);
   }
   if (stage === 'menu') L.push(`- DRAFTS: \`${ctx.drafts}\``);
   const v = ctx.video;

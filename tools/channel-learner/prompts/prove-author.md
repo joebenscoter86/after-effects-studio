@@ -12,6 +12,7 @@ After Effects is not available to you. You write the scripts now; someone else r
 ## Rules
 
 - One script per technique: `SCRIPTS/<n>-<slug>.jsx`, run later as a function body with `args` (`args.prelude` is the prelude's path; start with `$.evalFile(args.prelude);`) and ending in `return { comp: c.name, ... };`.
+- File paths in a script come from `args` (art from `args.artDir` or `args.art`), or start with `~/`; never a home folder spelled out (`/Users/<name>/...`). The scripts are committed to a public repository.
 - ExtendScript, ES3: `var` only, no arrow functions, no template strings, no `let`/`const`, no trailing commas, no `Array.prototype.forEach/map`, no `JSON` unless you guard it. After any `addProperty`, fetch properties again by name or index.
 - One comp per technique, named `<n> <short name>`, 1080 by 1920 (9:16: the owner reviews proofs on a phone; a 16:9 scene is framed for it as `prove-run.md` says under "What earlier builds learned"), 24 frames a second unless the recipe says otherwise, 3 to 6 seconds, our own stand-in content (text, shapes, solids, gradients made from effects such as Gradient Ramp).
 - When the technique is a finish or a fix, build it so it can be switched off: put the technique's effects or layers under names starting with `TECH ` so the runner can disable them for a "before" frame.

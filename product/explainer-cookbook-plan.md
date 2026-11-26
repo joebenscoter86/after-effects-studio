@@ -38,7 +38,7 @@ The picks were chosen from titles, chapter lists and descriptions. Nobody has wa
 | 1 | SonduckFilm, [5 Infographic Edits You Should Know](https://www.youtube.com/watch?v=SKU3QdqKLOs) | land-number, compare, show-proof (not count-things) | 5 min | low | done: 5 written, 5 proven (accepted by Joe 2026-11-21), 0 held |
 | 2 | Mavi Design, [Animate a Simple Call-To-Action Button Scene](https://www.youtube.com/watch?v=Tf0EiCGOEYs) | call-to-action | 15 min | low | done: 8 written, 8 proven (accepted by Joe 2026-11-21), 0 held |
 | 3 | Mapal, [How To Animate Infographics Like VOX](https://www.youtube.com/watch?v=nHh0NRo8G2U) | step-through-process, show-proof, compare | 41 min | medium | done: 15 written, 15 proven (accepted by Joe 2026-11-21), 1 held |
-| 4 | TomsProject, [SaaS Motion Graphics Masterclass](https://www.youtube.com/watch?v=tYRvoI04pJk) | introduce-tool, flag-a-problem, make-concrete | 52 min | medium | not started |
+| 4 | TomsProject, [SaaS Motion Graphics Masterclass](https://www.youtube.com/watch?v=tYRvoI04pJk) | make-concrete (not introduce-tool or flag-a-problem) | 52 min | medium | done: 13 written, 13 proven (accepted by Joe 2026-11-26), 0 held |
 | 5 | Move Shapes, [Simple Before & After Transition](https://www.youtube.com/watch?v=SSAsTdXmKl0) | before-after | 3 min | low | not started |
 | 6 | Flat Pack FX, [Stylized Timeline Animation](https://www.youtube.com/watch?v=9AtjrBHF560) | step-through-process | 14 min | low | not started |
 | 7 | SonduckFilm, [5 Trendy SaaS Motion Graphics](https://www.youtube.com/watch?v=qe8_xGizSF0) | probably introduce-tool | 7 min | unknown | not started |
@@ -46,7 +46,7 @@ The picks were chosen from titles, chapter lists and descriptions. Nobody has wa
 | 9 | SonduckFilm, [Create Callout Titles](https://www.youtube.com/watch?v=VZuHQVaC7oA) | flag-a-problem | 8 min | high | not started |
 | 10 | fail-then-fix, built from pieces 4, 5 and 9 | fail-then-fix | none | none | not started |
 
-**After piece 3, 7 of the 11 empty jobs are still empty (step-through-process is filled; show-proof and compare gained recipes).** **After piece 2, 8 of the 11 empty jobs were still empty (call-to-action is filled).** **After piece 1, 9 of the 11 empty jobs were still empty. After pieces 1–4, only before-after and fail-then-fix are.** If you only have time for a few, do those four.
+**After piece 4, no empty job was filled: introduce-tool and flag-a-problem are still empty (make-concrete gained a second recipe).** **After piece 3, 7 of the 11 empty jobs were still empty (step-through-process is filled; show-proof and compare gained recipes).** **After piece 2, 8 of the 11 empty jobs were still empty (call-to-action is filled).** **After piece 1, 9 of the 11 empty jobs were still empty.** **The plan expected only before-after and fail-then-fix to be empty after pieces 1–4; that did not hold, so pieces 7 and 9 are still needed for introduce-tool and flag-a-problem.** If you only have time for a few, do those four.
 
 **Off the plan (2026-11-25):** Bart_VFX, [5 Editing Ideas You Should Try](https://www.youtube.com/watch?v=201iywIy74c), learned at Joe's request: 5 written, 5 proven (accepted by Joe 2026-11-25), 0 held. The new recipes serve reveal-headline, fill-the-backdrop and add-depth, so no empty job is filled. The run record is `quality/reports/2026-11-25-channel-learner-201iywIy74c/report.md`.
 
@@ -107,6 +107,17 @@ The picks were chosen from titles, chapter lists and descriptions. Nobody has wa
 
 - **Why:** product-launch style. An upload button (introduce-tool, call-to-action), a "bottleneck" graphic (flag-a-problem, make-concrete) and a Notes app screen (show-real-screen, which only has 2 recipes today).
 - **Watch for:** the expressions it uses are in the video's pinned comment, not on screen. Copy them into the study folder during gather, because the learner only reads the screen and the speech. Skip the glowing-orb chapter if it's the same technique as the Hyper-Cinematic orb, which is already in the cookbook.
+- **Done (2026-11-26):** the video teaches what its chapters say. Thirteen recipes, all passed, none held. 02 and 13 are variants (of nHh0NRo8G2U #03 and YBeMmC43Q1U #18); the rest are new entries.
+  - Upload button: 01 red gradient pill swings up in 3D (call-to-action), 02 bounce-expression pop-in of the icon and letters (add-impact; the expression is the author's pinned comment, copied word for word).
+  - Bottleneck: 03 glowing gradient line draws on out of the button (relate-things).
+  - Workflow: 04 CC Light Sweep edge light on dark buttons (light-the-hero), 05 duplicate and stagger the layout with glowing links (one-to-many), 06 reversed gradient overlay and lens finish (finish-the-look).
+  - Notes app: 07 buttons slide together and morph into an app window (hand-over; show-real-screen as support), 08 window dots and a soft grid panel (fill-the-backdrop), 09 typewriter that types, deletes and retypes (make-concrete).
+  - Orb: 10 liquid gradient orb from wiggled shapes, spin blur and CC Sphere (light-the-hero), 11 orb grows from a dot through linked nulls (hand-over), 12 hollow ring by inverted matte and Echo (fill-the-backdrop), 13 text fills in from a soft ghost (reveal-headline). The orb was kept: it is built differently from the Hyper-Cinematic orb, and the merge step found no parent.
+  - 04, 06, 07, 12 and 13 were held after round 3 and revived by the lead for one more fix; all passed.
+- **Proofs (2026-11-26):** all thirteen built at 9:16 on generated art. 13 matched on its first build; 01, 03, 04, 06, 07, 08, 09 and 11 on their second; 02 on its fourth; 05 and 12 on their fifth. 11 of the 13 first builds came back partly, six of them on sizes that held only in the 16:9 frame (lesson 44). 10 stayed partly after eleven builds: texture, spin, lumpiness and the blue outer rings match, but not the broad cyan glow or a rim that stays at the edge, whose cause the tutorial never shows. Phone MP4s sent; Joe accepted all thirteen, 10 included ("approved"). The build scripts are in `tools/channel-learner/proofs/tYRvoI04pJk`.
+- **Final proof:** a 19-second Comp Room promo that chains all thirteen (button, stalled line, flow, app window, typed brief, orb, ring with the promise), built from the proven scripts and reviewed independently: `~/Assets/comp-room-tests/2026-11-26-saas-showcase/`.
+- **Not filled:** introduce-tool and flag-a-problem. The upload button is a call-to-action, and the bottleneck chapter teaches only the glowing line; nothing reads as a named product or as a warning. Pieces 7 and 9 stay on the plan for them.
+- **Open:** 10's rim cause. The run record is `quality/reports/2026-11-25-channel-learner-tYRvoI04pJk/report.md`.
 
 ### 5. Move Shapes, before & after transition
 

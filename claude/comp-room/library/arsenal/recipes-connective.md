@@ -734,3 +734,115 @@ variations: Cut to any second framing of the same precomp (other label, other si
 pitfalls: The cut must land while things are moving fast. If it lands on a still moment, it reads as a jump cut. (said, in effect: "pretty rough cut" before the drift was added) The two pieces must drift the same way, or the cut breaks. (said, in effect)
 build notes: Split by script: `var b = layer.duplicate(); layer.outPoint = t; b.inPoint = t;` (equivalent to Split Layer) with t = 25/23.976 s. Second piece: `transform.scale.setValue([206,206])`. Position keys as above, then `setTemporalEaseAtKey(k, [new KeyframeEase(s, 88)], [new KeyframeEase(s, 88)])`. The drift keys' speeds are not shown; use the S-curve conversion (s = 0.159 × 153/16 × 23.976 ≈ 36 px/s for the first piece and 0.159 × 199/16 × 23.976 ≈ 47 px/s for the second). Posterize Time match name "ADBE Posterize Time" (Frame Rate 12).
 unknowns: The ease on the drift keys (eased icons and the S-curve preset are visible, but applying it is not shown). The drift key times are read from the ruler (±1 f). The comp's duration and work area. A full real-time playback of the finished cut with the slide down is not shown.
+
+## Four buttons slide together and melt into one large app-window card
+id: 07-shape-morph-into-app-window
+revision: d9215d5c
+job: hand-over; support: one-to-many, show-real-screen
+status: proven (accepted 2026-11-26)
+what it does for a beat: Use it when a scene of several rounded buttons or cards must turn into one large panel (a notes or dashboard window) without a visible cut. A match cut hides the swap.
+what it looks like: Four dark rounded buttons in a 2x2 grid slide toward the centre until they touch. A white rounded card replaces them while the background flips from near-black to pale grey, and the card then grows to fill about two thirds of the picture's width. Its edge is a thin light-grey line and its corners are softly rounded.
+
+ingredients:
+- Four rounded-rectangle shape layers (the buttons), each with text and each parented to a null — built-in; made earlier in the video (see 01 and 05)
+- Position keyframes plus the bounce expression already sitting on those layers — built-in; expression from the pinned comment, said (pinned comment) for the first use in technique 02
+- One more rounded-rectangle shape layer, a duplicate of a button — built-in
+- Solid layer — built-in; Layer > New > Solid (inferred; the dialog is on screen but the menu is not)
+- Null object with Scale and Position keys, set as parent of the original null — built-in; Layer > New > Null Object (inferred)
+- Graph Editor (F9 for Easy Ease) — built-in
+
+steps:
+1. Start from the 2x2 grid of buttons on a dark ground, with the layer stack already built (shown).
+2. Select the four button shape layers, press P, and key Position at the grid's resting time (said; shown).
+   - Key time: 5:20 on the comp clock (shown, time display 0:00:05:20)
+   - Resting positions in this comp: 642.1,3041.8 / -638.9,3044.8 / 642.1,2486.8 / -638.9,2486.8, each on its button's own parent null (shown; the numbers depend on the parent null's offset, so treat them as scene values)
+3. Move to a later key (about 14 frames on, 6:09) and drag each button toward the middle so the four touch as one block (said "move them a bit to the center"; shown for end positions 427.8,2941.8 / -453.2,2941.9 / 427.8,2566.8 / -453.2,2563.9).
+   - The size of the touching block is not measured anywhere in the video (at 5:16 still shows the buttons at rest). At rest the four buttons span about 57% of the picture width x 43% of its height, each about 22% wide (measured, viewer x453–1460, y151–717 of the 1920 copy); the end positions below are the only data for the touching block
+   - Pairs sit about 880 px apart horizontally in layer units and about 375 px vertically (inferred from the numbers above)
+4. The bounce expression already on those position keys stays; nothing re-pasted (said).
+5. Duplicate one button shape (said; the author says any one will do). Delete the copy's keyframes (said), keep its effects (visible Light Sweep in the effect panel).
+   - Fill: solid white (said; shown white swatch in the toolbar). Narrator talks of a gradient fill and then turns it into solid.
+   - Stroke: left at 4 px, later changed to light grey (said; the swatch is on screen but its exact value is not readable)
+   - Scale: 72% (shown → panel reads 72,0 %)
+6. Key the shape's Size at the start, jump a couple of frames ahead and enlarge it so it covers all four buttons (said). While dragging with Cmd/Ctrl held, centre it among the four (said).
+   - Size is dragged wider; the reading is mid-drag with leading digits hidden by the cursor, so no first value is given
+   - Size at the 6:09 key: 2422.5 x 1056.2 (shown)
+   - Position: -6.2, 2749 (shown)
+   - Roundness: no Roundness row is visible; the first reading is 147.0 at comp time 6:24 (shown)
+7. Select all four button position keys and set Easy Ease (F9), then in the Graph Editor shape each speed curve the reverse of the entrance: slow start, fast finish (said). The author says to make it even quicker. Exact influences are not shown.
+7b. After the easing, drag the card shape layer all the way up the stack, above the adjustment layer (said at 28:31, later than the size keys and the easing; shown at layer 6, at layer 1). Final order: card, solid, adjustment layer (shown).
+8. Add a solid the size of the comp (shown : 3840 x 2160, Square Pixels) and name it as a white solid. Colour typed in its dialog: hex F4F4F4 (shown; the narrator mentions "a bit darker", so the screen's pale grey is what was used).
+   - Put it directly under the card shape layer and above the adjustment layer (said "move this below the shape"; shown stack order)
+9. Trim both the card and the solid so they begin at the last key (6:09): Alt+[ at the playhead (inferred; the narrator names the shortcut but the result is shown where both layer bars start at 6:09).
+   - Result: at 6:09 the four buttons are replaced in one frame by the white card on the pale ground (said that no transition is visible)
+10. The line around the card looks ugly at this stage (said). Change the card's stroke to light grey (said) so it separates from the grey ground (said).
+11. Make the card bigger without touching the button animation: add a new null above the original null and make the original null its child (said; shown stack, original null parented to "Null 2").
+    - New null Scale: keyed 100% → 300% (shown start 100%, end 300%)
+    - New null Position: keyed 1920,1080 → 1920,765 (shown)
+    - Keys begin around 5:12 and end near 7:02 on the clock at first (timeline, inferred from key positions); the author then drags them left and aligns the arrival (said), then Easy Ease and more ease influence in the Graph Editor (said)
+12. Key the card's Roundness on the shape layer and lower it while the card is arriving (said).
+    - Key at 6:24: Roundness 147.0 and Size 1229.4 x 822.5 (shown)
+    - Roundness 45.7 (shown), 48 at the end (shown)
+    - Size later: 1144.9 x 805.9 (shown), final 1161.5 x 809.2 (shown, same); with layer Scale 72% and the null at 300% this gives the final card width below
+13. Go to the end where nothing moves any more (said), and the card is ready for content (the author goes on to add elements in the next technique).
+
+layout: all measured (viewer shows the picture at x 572–1291, y 272–676 of the 1920-wide copy, 719 x 404).
+- Card: 65% of the picture width (x 16.8%–82.2%) and 81% of the height (y 9%–91%), centred horizontally; its centre sits about 1% above the picture centre. measured
+- Corner radius against the card itself: about 33 px on the 1440 px wide result crop (straight top edge starts about 31 px in from the corner, straight side about 33 px down), card 942 px wide x 656 px tall there (x 241–1183, y 75–731 of crop 1143,543), so the radius is about 3.5% of the card's width (4% of its height; a cruder read of the outer arc gave 4.3%). Aim for a radius near 3.5–4.3% of the card's own width, not of the picture's. measured. Earlier read, same corner as a share of the picture: about 2.8% of the picture width (arc about 40 px in the 1440 px wide viewer, about 20 px of the 719 px copy). measured. Settings agree: Roundness 48 x layer Scale 0.72 x null 3 = about 104 px of 3840 = 2.7%. Both figures describe the same corner at different image sizes.
+- Fill almost white (about FC); ground pale grey about F0 to F2; edge line a thin light grey (darkest about C8, 200), about 3 px wide on the 1440 px crop (full-width half depth), i.e. about 0.3% of the card's width and 0.2% of the picture's, so in 3840 px terms about 8 px rendered (4 px stroke x 0.72 x 3 = 8.6 px agrees). Measured. measured; these come from the render and are not the typed values
+- The typed ground value is F4F4F4 (shown); the measured ground is about 240. The adjustment layer sits below the solid, so it cannot explain the difference; the cause is unexplained.
+- Faint white glints on the card's top and bottom edge near 70% of its width: left-over Light Sweep effects copied with the duplicated button (visible crops).
+- A thin square outline in the middle of the card is the null's bounding box; it belongs to the editor, not to the picture.
+- Consistency check: 1161.5 x 0.72 x 3 = 2509 px = 65.3% of 3840. matches the measured width.
+- Before the swap (5:16): the four buttons at rest span about 57% x 43% of the picture, each about 22% wide; the white card over them is 45% x 35%. measured
+- Motion: buttons travel inward toward the centre; the card then grows from the centre outward (scale and Position pull it slightly upward). The speed per frame is not measured; nothing in the video plays the finished move at real time inside the kept frames.
+
+timing and easing: Button keys 5:20 → 6:09 (14 frames, shown). Easy Ease then a graph edit to ease slowly out and arrive fast (said), exact influence not shown. Card/null keys: roughly 5:12 → 7:02 before the author drags them; final times not read. The null's easing: Easy Ease, then more influence (said).
+variations: Colour of the card and ground can change ("white for now", said); stroke colour; roundness; the card can copy an existing app design or be custom (said). Gradient fill was considered and dropped.
+pitfalls: The outline around the card looks bad at first (said). The author warns that the ease must run opposite to the entrance, otherwise the swap is visible. The card must start on the last key so the swap lands in one frame.
+build notes: In a script: add a rectangle shape layer (Rect Path Size and Roundness are animatable, Fill and Stroke under Contents), set Scale 72. Add a Solid via comp.layers.addSolid with colour [244,244,244]/255 at comp size, set its inPoint to the last key time and place it directly under the card; set the card's inPoint to the same time. Add a Null, parent the old null to it, key Scale [100,100]→[300,300] and Position [1920,1080]→[1920,765] with Easy Ease (KeyframeEaseDefaults, then raise influence by hand). The speed shaping in the Graph Editor and the drag alignment are hand work. The bounce is the pinned-comment expression on Position (see 02).
+unknowns: Exact times of the null's final keys; button size and exact first Size key value; speed influences; the stroke colour value; the card layer's start-of-clip frame (said to be trimmed, the in-point value is inferred as 6:09); light-sweep settings on the card; why the ground renders at about 240 while F4F4F4 (244) was typed. The narrator says the solid is "a bit darker" while the screen shows F4F4F4; the screen wins. Result crop (full-size frame, picture edges x1143–2583, y543–1353) verified; the null's thin square box shows in its centre. Result checked: crop identical (time clock in the display reads 8:12 at the latter; picture holds still). Result crop: the crop cannot be made clean. The null's red dotted square (about 114 px wide, full-frame x1863–1977, y832–946, just right of the card's middle; the box spans crop x720–833 and the card's middle is crop x713) stays on screen in every kept frame and in; ignore it when comparing. is the cleanest kept frame.
+
+## Grow an orb out of a small dot through a chain of linked nulls
+id: 11-scale-through-dot-null-link
+revision: a9bfba0f
+job: hand-over; support: light-the-hero, add-impact
+status: proven (accepted 2026-11-26)
+what it does for a beat: Use it when a pre-made glowing orb has to appear from a tiny marker already on screen and then swell to fill the frame, while its position and size keep moving without a jump.
+what it looks like: A small teal-and-violet blob sits as a dot at the end of a line of text on a pale window. It swells on a spiky speed curve, over a near-black ground, into a soft blob a few times its starting size. The viewer is full of guide lines and selection handles at the end, so the finished play is never shown clean.
+
+ingredients:
+- Pre-composed orb comp placed in the main comp — built-in; drag the comp into the main comp (shown)
+- Null object — built-in; Layer > New > Null Object (inferred; menu not on screen)
+- Parenting (pick-whip or Parent column drop-down) — built-in; the Parent column menu is on screen
+- Solid layer, 3840 x 2160, colour #111111 — built-in; Layer > New > Solid (inferred; dialog shown)
+- Keyframes, Easy Ease, Graph Editor — built-in
+
+steps:
+1. Drop the orb comp into the main comp and move it to the point on the timeline where the scene's other shape appears; its own transparency lets the scene show through. (said: "drag it in", "we even have transparency"; frame region; the exact frame is inferred)
+2. Align the orb comp on the small marker dot at the end of the text, and scale it down a little. (said; shown as a small orb at the text's end)
+3. Make a new null. Before linking anything to it, put the null exactly on the dot. (said; shown)
+   - Null 3 Position: 2004, 1275 (shown)
+   - Null 3 Scale: 100 % (shown)
+   - Null 3 Opacity: 0 % in its panel (shown)
+4. Parent the existing null at the top of the orb's chain to this new null. The chain on screen reads: shape layer 7/6/3/5 -> Null 1 -> Null 2 -> Null 3 (said; shown for Null 2 -> Null 3, for the shape layers following Null 1)
+5. Put a keyframe on Scale and on Position of the new null at one frame, then press U to show the keys. (said; shown : both stopwatches on, Position 2004, 1272)
+   - Position at that key: 2004, 1272 (shown)
+   - Scale at that key: 100 % (shown)
+6. Move a little later in time and raise Scale to enlarge the orb. Position is moved with it so the swell stays centred on the dot. (said "time this a bit around here and scale it up"; later key values not read)
+7. Link the orb layer to something already in the chain, not to the new null directly: choose a shape layer that is already parented. (said; shown, Parent menu with "Shape Layer 8" highlighted)
+   - After linking, the orb layer reads Anchor 1920, 1080 / Position -108, -118.9 / Scale 7.1 % (shown)
+8. Add a solid under the orb for the background: full comp size 3840 x 2160, colour #111111 (said "black background"; size shown; colour typed shown hex 111111). Place it below the orb layer in the stack (said "make sure this is below the orb"). It has no parent (shown : parent "None").
+9. Preview. The orb now grows from the dot with continuous motion. (said; the play is not shown clean)
+10. Ease the keys: select them and apply Easy Ease, then in the Graph Editor pull the speed handles to a tall narrow peak ("spiky"). (said; shown, a red/white bell-shaped speed curve with flat ends)
+   - Graph: keys at 9 s 17 f and 10 s 06 f, peak in the middle at 9 s 24 f (shown, read from the ruler)
+   - Same moment, Position 1972.5, 1174.5; Scale 258 % (shown)
+11. Move the end position of the null further right, and reduce the end scale because it was too big. (said; values not read)
+12. Pull the animation to start earlier and reshape the graph again. In the graph is narrower and Position 1998.3, 1254.5 / Scale 128.4 % at 9 s 14 f. (said; shown)
+
+layout: Two orb sizes are on screen, both measured (pixels where green or blue clearly exceeds red, 1st-99th percentile, inside the picture crop 680,394,1920,1080 of the full-size frame). Mid-swell, (time 9 s 24 f, Null 3 Scale 258 %, the speed peak of the first version): the orb is 181 px wide by 184 px tall, which is 9.4 % of the picture width and 17 % of the picture height (measured), centre about 51 % across and 57 % down. Largest orb on screen, (time 10 s 02 f, the key pair's second key is at 10 s 06 f, so this is at or near the end of the swell; Null 3's own values are not readable in that frame, the panel shows the orb layer): about 600 px wide by 654 px tall, which is 31 % of the picture width and 61 % of the picture height (measured), centre about 51 % across and 50 % down. Aim for the end-of-swell figure: the orb about 60 % of the picture height (the picture's short side here), about 3.5 times the mid-swell orb in linear size. (also 10 s 02 f, the orb layer's own Scale edited to a negative 1.9 %) shows a small 170 px orb and is not an end state; the viewer in these frames is being scrubbed and edited, so which frame is the final state is inferred. The orb is elongated slightly vertically because its art is not round. It carries a teal core fading to blue-violet at the lower edge and a soft dark rim (shown). Faint guide lines and the null's red handles sit on the picture (editor overlay, not part of the look). The ground is the #111111 solid, which renders near-black in the frame. Before the swell the same orb is a dot about 1/60 of the picture width, at the end of a line of dark text on a near-white window with three coloured dots at the top left. No shadow is cast. The window and text scene belong to the finished example and are not described in this recipe. Speed of motion and direction on the played preview were not measured; the played finished motion is never shown.
+timing and easing: Two keys per property about 49 frames (9 s 17 f to 10 s 06 f) apart in the first version (read ruler, shown). Easy Ease on both ends, then a spiky speed graph with a narrow peak (shown). Final timing was moved earlier (said; new numbers not read).
+variations: Put the orb comp on a layer linked to any already-linked object. Alter end position and end scale. Scale less if the orb is too big (said).
+pitfalls: Position the new null on the dot before parenting anything to it (said). Make sure the second comp is linked into the same chain (said). Keep the background solid below the orb (said).
+build notes: Null object "Null 3" with Position and Scale keys (property names Position, Scale); parent via layer.parent = Shape Layer 8 style chain. Apply Easy Ease with KeyframeEase on the keys and reshape influence in the Graph Editor by hand. Solid: addSolid([17/255,17/255,17/255], name, 3840, 2160, 1) placed below the orb layer. The comp-in-comp is Orb pre-comp as a layer. Parenting without Alt makes the child jump, so the odd Position/Scale values after linking are expected.
+unknowns: End-key position and scale; second-key time of the final version; keys' influence values; the played preview speed; null opacity reason (0 % is shown, probably only so it stays invisible); orb comp contents; whether the viewer had redrawn after the last change; position of the dot in comp pixels beyond Null 3's values; the result is a held frame with overlay handles, a clean play was not found.
