@@ -44,6 +44,6 @@ Written 2026-11-19. Joe's plan: ship 0.4.2 (the 57 proven cookbook recipes plus 
 ## Housekeeping
 
 14. **Five old directory-submission commits** on `claude/after-effects-anthropic-plugin-491bba`.
-15. **Two merged remote branches** to delete on `public`.
+15. **Done (2026-11-25): no merged branches left on `public`.** The two merged remote branches are gone and only `main` remains. The repository deletes a branch when its pull request merges (`delete_branch_on_merge`), so merged branches no longer collect there.
 
 Study material for all of this lives in `~/Assets/comp-room-studies/`, outside the repo.
