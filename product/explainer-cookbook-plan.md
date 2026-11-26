@@ -154,6 +154,14 @@ The picks were chosen from titles, chapter lists and descriptions. Nobody has wa
 - **Why (added 2026-11-26):** no proven technique serves introduce-tool ("the app's name with its real logo"). Piece 7's captions turned out to show only finishing looks, so this short, plugin-free tutorial was picked instead. A notification card that drops in carrying an app's mark and name is introduce-tool; the same card as a warning gives flag-a-problem and fail-then-fix something to stand on.
 - **What the captions say it teaches:** a 1350 × 350 rounded card (roundness 110) with a depth copy at 5 % opacity and a stroke copy at 4 px; the card itself made an adjustment layer with Fast Box Blur 30 for a frosted look; nulls for the card, the text and the logo under one main null, each dropping in over 4 frames of Position and Scale keys with a bounce expression; logo and text staggered 2–3 frames behind the card; a second notification 15–20 frames later, the first stepping down and shrinking as it lands.
 - **Watch for:** the expression is in a Google Doc linked from the description, not on screen: copy it word for word into `extras.md` during gather (lesson 36). It may match the inertial bounce of nHh0NRo8G2U #03, 201iywIy74c 01 and tYRvoI04pJk 02; the merge step decides. The font is SF Pro: prove with a free stand-in such as Inter and say so. Generate an app mark that looks real but is no real brand. Prove one card as a warning too, so flag-a-problem and fail-then-fix (support) can be judged.
+- **Done so far (2026-11-26):** the video teaches what its captions say. Five recipes, all passed, none held:
+  - 01 frosted card (add-depth; a variant of 201iywIy74c #05);
+  - 02 null grouping (build aid);
+  - 03 bounce drop-in (add-impact, supports introduce-tool; a variant of nHh0NRo8G2U #03);
+  - 04 logo and text stagger (reveal-headline; a variant of Tf0EiCGOEYs #05);
+  - 05 second card with push-back (list-items).
+  The expression is the description's Google Doc, the same text as tYRvoI04pJk's pinned "Bounce"; the recipes now quote it word for word (lesson 51). Lessons 50–52 came from this run.
+- **Proofs (2026-11-26):** all five built at 9:16 on generated art for an invented app, Larkvault, with Inter Tight standing in for SF Pro. 05's first card is a red "Backup failed" warning that the "Backup complete" card lands over. Every review ends "matches": 04 and 05 on their first builds, 01 and 02 on their second, 03 on its third. Phone MP4s sent; waiting for Joe. The run record is `quality/reports/2026-11-26-channel-learner-tYjqtArZtds/report.md`.
 
 ## How to run one piece in a fresh session
 
