@@ -50,6 +50,8 @@ The picks were chosen from titles, chapter lists and descriptions. Nobody has wa
 | 12 | Motion Nations, [This LOGO Animation Method is so POWERFUL](https://www.youtube.com/watch?v=Nh3TenxxQzQ) (glow outline logo reveal) | introduce-tool | 12 min | low | done: 6 written, 6 proven (accepted by Joe 2026-11-26), 0 held |
 | 13 | After Effects Channel, [Cross animation in after effects with trim paths](https://www.youtube.com/watch?v=UehuuNiZVuk) | flag-a-problem (through 02; 01 is add-impact) | 3½ min | low | done: 2 written, 2 proven (accepted by Joe 2026-11-26), 0 held |
 | 14 | Smertimba Graphics, [Countdown Timer Tutorial](https://www.youtube.com/watch?v=99FUeOo4fiQ) | show-time | 2 min | low | done: 1 written, 1 proven (accepted by Joe 2026-11-26), 0 held |
+| 15 | Editing Empire, [Animate Screenshots Like A Pro in After Effects](https://www.youtube.com/watch?v=vwpYzXOXeuA) | show-real-screen | 8½ min | medium | next (picked by Joe 2026-11-26; the plan is paused) |
+| 16 | Flat Pack FX, [Vox Dots Graph Animation](https://www.youtube.com/watch?v=qsBUdGn9ZEQ) | count-things | 11 min | low | not started |
 
 **After piece 10, fail-then-fix is filled: one proven main recipe, composed 01 (13's red X, 5's wipe and piece-tick chained into one beat). count-things is the only job with no main recipe.** **After pieces 5, 13 and 14, before-after, flag-a-problem and show-time are filled, one proven main recipe each: 5 #01 (the sliding-matte wipe; before-after had only paper pieces before), 13 #02 (the red X) and 14 #01 (the slider countdown). Two jobs still have no main recipe: count-things and fail-then-fix.** **After piece 12, introduce-tool is filled: four proven recipes take it as their main job (02, 04, 05 and 06, the glow-outline logo reveal), and 01 supports it. Five jobs still have no main recipe: count-things, show-time, before-after, fail-then-fix and flag-a-problem.** **After piece 11, no job gained a main recipe: introduce-tool has a proven recipe only as a support job (03, the bounce drop-in, whose main job is add-impact), and flag-a-problem and fail-then-fix gained nothing (05's proof plays a warning card and its fix, but 05 is tagged list-items).** **After piece 4, no empty job was filled: introduce-tool and flag-a-problem are still empty (make-concrete gained a second recipe).** **After piece 3, 7 of the 11 empty jobs were still empty (step-through-process is filled; show-proof and compare gained recipes).** **After piece 2, 8 of the 11 empty jobs were still empty (call-to-action is filled).** **After piece 1, 9 of the 11 empty jobs were still empty.** **The plan expected only before-after and fail-then-fix to be empty after pieces 1–4; that did not hold, so pieces 7 and 9 are still needed for introduce-tool and flag-a-problem.** If you only have time for a few, do those four.
 
@@ -62,11 +64,21 @@ The picks were chosen from titles, chapter lists and descriptions. Nobody has wa
 1. Piece 12, the logo reveal (introduce-tool). Done 2026-11-26.
 2. Pieces 5, 13 and 14 in one session, one after another: before-after, flag-a-problem, show-time. Each is under 4 minutes. Done 2026-11-26.
 3. Piece 10, the fail-then-fix recipe. It chains a problem marked as wrong (13's cross), the change (piece 5's wipe), and the fixed state (piece-tick). Done 2026-11-26.
-4. Piece 8 (make-concrete, which has 2 recipes).
-5. Piece 6 (step-through-process, which has 4; for variety).
-6. count-things: search for a tutorial whose result is objects you can count (an icon array, a unit chart). Add it as a piece and learn it if one is found.
+4. Piece 15, screenshots (show-real-screen, which has 2 main recipes). Joe picked it over the planned order: his screenshots are almost always Claude, and this video "would give us something that i never see on my timeline".
+5. Piece 16, the Vox dots graph (count-things, the one job with no main recipe). It replaces the count-things search.
+6. Piece 8 (make-concrete, which has 3 main recipes).
+7. Piece 6 (step-through-process, which has 4; for variety).
+
+**Paused 2026-11-26 after piece 10** (Joe: "after this we have to pause for a bit"). Resume with piece 15.
 
 Skipped on their captions (rule 5): pieces 7 and 9. A run stops and asks Joe before going past its video's $40 budget.
+
+**Gaps after piece 10** (catalog on main, proven main recipes per job):
+- count-things has none.
+- show-time, flag-a-problem, fail-then-fix and one-to-many have 1 each.
+- compare, show-real-screen, move-camera and establish-place have 2 each.
+
+Compare still has no candidate whose result is this against that: SonduckFilm's split screen (`Go9SF4jr-48`) is a montage grid of clips (rule 5).
 
 **Off the plan (2026-11-25):** Bart_VFX, [5 Editing Ideas You Should Try](https://www.youtube.com/watch?v=201iywIy74c), learned at Joe's request: 5 written, 5 proven (accepted by Joe 2026-11-25), 0 held. The new recipes serve reveal-headline, fill-the-backdrop and add-depth, so no empty job is filled. The run record is `quality/reports/2026-11-25-channel-learner-201iywIy74c/report.md`.
 
@@ -290,6 +302,42 @@ Skipped on their captions (rule 5): pieces 7 and 9. A run stops and asks Joe bef
 - **Done so far (2026-11-26):** the expression is in the channel's pinned comment, copied word for word into `extras.md`. The creator's roll-up captions first read scrambled (61 % agreement with whisper); the parser now ends each caption event at the next one's start, and align falls back to whisper under 80 % (lesson 60). One recipe, passed in round 3, none held: 01, a Slider Control keyed in seconds driving a padded MM:SS Source Text expression, the pinned code quoted whole (show-time, supports land-number; a variant of SKU3QdqKLOs #01).
 - **Proof (2026-11-26):** "ready in 15 minutes", a kitchen timer counting 15:05 down to 15:00 and holding, on a generated dark kitchen. The first build rendered "0": the lead had set the Legacy ExtendScript engine by script, and renders keep the old engine until the project is reopened (lesson 61). After a reopen the same comp reviews "matches", with nothing to fix. Joe accepted it on 2026-11-26 ("accepted"), and its still is in the arsenal. $2.69 of the $40 was spent. The run record is `quality/reports/2026-11-26-channel-learner-99FUeOo4fiQ/report.md`.
 - **Filled:** show-time, with one main recipe (01).
+
+### 15. Editing Empire, animate screenshots
+
+- **Why (picked by Joe 2026-11-26):** Joe's screenshots are almost always Claude, and he said this video "would give us something that i never see on my timeline". The author's result is a still screenshot (an Instagram profile) brought to life, which is show-real-screen (rule 5). 8½ minutes, narrated, 412,000 views. It is no camera-only tutorial: most of its moves work on a Claude screen.
+- **What it teaches (from the captions):**
+  1. The screenshot is cut into parts: masks per element, one copy of the layer per mask with one mask on, and each part animated on its own.
+  2. A number on the screen is covered with a box in the background colour, retyped in a matched font, and counted up, with Deep Glow.
+  3. A line is covered and retyped, and Typewriter types it in place.
+  4. A two-node camera flies over the layers made 3D, with depth of field keyed, then CC Vignette and CC Force Motion Blur.
+  5. A tilt: the screenshot is turned in X and Y, CC RepeTile fills the empty edges, and focus and aperture are keyed so the content comes into focus.
+  6. A screenshot over the talking head: a black solid fades up, then a brush matte reveals the screenshot as a luma matte.
+  7. CC Page Turn flies the page.
+  8. An Optics Compensation zoom, with field of view keyed.
+- **Watch for:**
+  - The counter is a preset downloaded from a file-sharing link. Don't download it: write the count as an expression on a Slider Control, and say in the recipe that the author used a preset.
+  - The Flow plugin is only for eases, so it isn't needed. Deep Glow is installed.
+  - The camera and depth-of-field moves may merge into existing camera recipes as variants. Lesson 43 keeps them findable for show-real-screen.
+  - With eight moves, the $40 may be tight (piece 12 spent $38 on six). Ask Joe before going past it.
+- **Proof screens (Joe, 2026-11-26: "real claude screenshot. there should be plenty to choose from in the content repo assets"):** not Higgsfield art and not an invented app.
+  - Use the Claude reel screens in `~/Projects/Content/reels/*/screens/`. They are dark, 2736 × 1578, recreated in HTML with invented chats and people (for example `2026-10-27-job-applications-check/screens/claude-tailor-answer.png` and `2026-11-22-done-by-lunch/screens/chat-build-connector.png`).
+  - About a dozen come in `-empty` and filled pairs, which suit the Typewriter move.
+  - Never use the raw signed-in references in `~/Assets/joeb/screens/refs/`, which show private things.
+  - The screens show "Joe · Max" in the sidebar, and the proof stills ship in the public plugin. Crop it out if Joe asks.
+- **Other candidates (2026-11-26):** Motion Nations, [Vox Style Screen Recording Animation](https://www.youtube.com/watch?v=L-fVQ9cG2R8), 12 min: a page pushed in with a 3D tilt, scan lines, a chromatic split and a rough yellow highlighter that grows across words and rides with the page. It's a later maybe, for its highlighter (point-at-detail).
+
+### 16. Flat Pack FX, Vox dots graph
+
+- **Why (picked 2026-11-26):** each year arrives with its count, and the dots are that many: 1, then 3, then a grid of 66, then 378. That is objects the eye can count, which is count-things (rule 5), the one job with no main recipe. 11 minutes, narrated, no plugins, and the same channel as piece 6. Count-things serves lines like "9 out of 10", "only 3 of 20" and "from a handful to hundreds".
+- **What it teaches (from the captions):**
+  - the year rising in from below behind an inverted alpha matte;
+  - a dot dropping in with a fade;
+  - a ring drawing round the count, with Dashes and Offset keyed;
+  - two Repeaters making the grid (11 × 6 for 66, 21 × 18 for 378), centred with the anchor point;
+  - the largest grid revealed by a growing circle used as an alpha matte.
+- **Watch for:** it is built at 16:9, so the proof lays the grid out again for 9:16. Prove it on a count from an AI-tool explainer, a few dots growing to hundreds.
+- **Backup:** Move Shapes, [Infographics Human Progress Bar](https://www.youtube.com/watch?v=iYU73Rb_us0) (4½ min, a row of figures filling up). It has no narration.
 
 ## How to run one piece in a fresh session
 
