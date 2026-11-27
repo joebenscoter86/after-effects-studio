@@ -304,6 +304,9 @@ test('builders read an effect menu by its default before setting it by number (l
   assert.match(text, /Composite Original/);
   assert.match(text, /default value/i);
   assert.match(text, /before (?:you )?(?:replace|substitute|swap)/i, 'a mechanism is not swapped before the setting is tested');
+  // And Glow Colors: a fresh Glow's default (2, A & B Colors) is not the tutorial's Original Colors (1).
+  assert.match(text, /Glow Colors/);
+  assert.doesNotMatch(text, /"left at default" setting is that value/, 'a fresh default is not taken for the tutorial\'s setting');
 });
 
 // Lesson 56: 03's builder set Glow Threshold 24 for the recipe's 24 %; by script the scale is 0-255.
