@@ -327,6 +327,13 @@ test('art that a light traces matches the reference outline, and a glow sits on 
   assert.match(lead, /art\.md rule 2/, 'art the lead hands over in lead notes meets the same rule');
 });
 
+test('a lead note that names a cause for a rebuild is tested on a scratch comp first (lesson 58)', () => {
+  const lead = fs.readFileSync(path.join(PROMPTS, 'video-lead.md'), 'utf8');
+  assert.match(lead, /names a cause/, 'the rule is about a lead note that names a cause');
+  assert.match(lead, /scratch comp/, 'the cause is tested on a scratch comp');
+  assert.match(lead, /what (the|your) test measured/, 'and the note gives the figures the test measured');
+});
+
 test('proofs are built at 9:16, the phone frame the owner reviews on: the art, script and comp rules all say so', () => {
   for (const f of ['prove-author.md', 'prove.md', 'art.md']) {
     const text = fs.readFileSync(path.join(PROMPTS, f), 'utf8');
