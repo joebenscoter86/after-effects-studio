@@ -321,6 +321,7 @@ test('art that a light traces matches the reference outline, and a glow sits on 
   const art = fs.readFileSync(path.join(PROMPTS, 'art.md'), 'utf8');
   assert.match(art, /long smooth curves/);
   assert.match(art, /straight sides/);
+  assert.match(art, /type weight/, 'and type a light traces matches the reference word\'s weight');
   assert.match(art, /ground/i);
   const lead = fs.readFileSync(path.join(PROMPTS, 'video-lead.md'), 'utf8');
   assert.match(lead, /art\.md rule 2/, 'art the lead hands over in lead notes meets the same rule');
