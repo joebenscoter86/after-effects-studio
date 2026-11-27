@@ -431,6 +431,76 @@ pitfalls: none given.
 build notes: Motion blur: `comp.shutterAngle = 680` (range 0–720) and check the smear against layout; the default 180° gives about a quarter of the measured smear. Artwork: Drop Shadow is "ADBE Drop Shadow"; by script its Opacity is on a 0–255 scale (50 % = 127.5, 40 % = 102, 24 % = 61.2; read it back); Shadow Color [0, 54/255, 1] for the pill; the label's second instance is "Drop Shadow 2". Fonts by PostScript name "Montserrat-ExtraBold" and "Montserrat-SemiBold" (check app.fonts; substitute and match the measured glyph boxes if missing). Script: for each layer, `layer.property("ADBE Transform Group").property("ADBE Position")`; `setValueAtTime(0, [restX-1063, y])` and `setValueAtTime(47/60, [restX, y])`; then shift the button layer's `startTime` by 5/60 s and the address layer's by 10/60 s (moving the layer moves its keys, which is how the video does it), or add the offsets to the key times instead. Easing: `setTemporalEaseAtKey(k, [new KeyframeEase(0, 65)], [new KeyframeEase(0, 65)])` on both keys (Position is spatial, so one KeyframeEase per side) and `setInterpolationTypeAtKey(k, KeyframeInterpolationType.BEZIER)`. Motion blur: `layer.motionBlur = true` for the three layers and `comp.motionBlur = true`; the shutter angle is not shown; see the first line of these notes. Check by reading Position at frame 27: headline X should be 217.2.
 unknowns: Whether the panel applies speed exactly 0 (the readouts match it to 0.1 px, so this is near certain). Motion blur shutter angle, phase and samples (never shown; the angle is inferred from the measured smear, see layout). Whether the first keys were made at frame 0 and copied or the rest keys moved from 0 to 30 (the frames show the result, not the gesture). The opening clip (0:00–0:12) shows the same comp presented on a rounded white card over a soft blue backdrop; that framing is the finished presentation, not part of this build, and its timing was not measured.
 
+## Offset the logo and text groups a few frames behind the card
+id: 04-staggered-element-offsets
+revision: ff96ebf7
+job: reveal-headline; support: add-impact
+status: proven (accepted 2026-11-26)
+variant of: 05-staggered-slide-in
+differs: Shared: the stagger is made by sliding whole layer bars later in the timeline so each layer's keys travel with it, the first element staying at frame 0 (the parent's step 6: "sliding whole layer bars along the timeline (keys travel with them)", headline at frame 0; its build notes shift each layer's `startTime`). Differences: here the parts are groups, each a null plus its child layers (logo with its null, three text layers with theirs), and the card's own layers stay at 0; in the parent step 1 lists three layers (headline, button precomp, web address) and no nulls. Here the offsets are about 2 f (logo) and about 4 f (text) at 30 fps; in the parent they are 5 f (button) and 10 f (address) at 60 fps (its step 6). Here every group does a drop and settle with a bounce expression (recipe 03) and the order is card, logo, text; in the parent each layer does a left-to-right slide of two Position keys 47 frames apart with 65 % influence easing (its steps 2 to 4), with no expression listed among its ingredients. Here the offsets were read off the timeline ruler (the narrator said two to three frames); the parent's 5 and 10 are measured on the zoomed ruler (its step 6).
+merge: confirmed (carried from checks/04-before-proof.md; the variant of and differs lines are unchanged)
+what it does for a beat: Reach for it when several parts of one card all get the same drop-and-settle move and read as a single stiff block. Sliding the start of each part a couple of frames later makes the parts land one after another.
+what it looks like: A pill-shaped grey card with a round logo at its left, a title and a subtitle line, and a small grey "NOW" label at the top right. Played, the card drops from high and small, overshoots to about 109 % of its settled width and settles; the logo follows from the card's upper-left corner a moment later, and the text arrives last, from well above the card, so the group builds in sequence.
+ingredients:
+- Parent nulls already carrying keys and the bounce expression (see recipes 02-null-hierarchy-for-grouped-motion and 03-expression-bounce-drop-in) — built-in
+- Layer start-time shift in the timeline — built-in
+steps:
+1. Select the logo layer together with its own null, then drag them later in the timeline by two to three frames, so their keys start after the card's. (said; the bars after the move start about 2 f in on the ruler, shown : bar edge x=740 against 0 f at x=709 and 5 f at x=786, 15.8 px a frame)
+   - Logo and logo null start: about 2 f after the card (shown, measured from the ruler)
+2. Select the three text layers (title, subtitle, "NOW" label) with their text null and shift them the same way, a little further than the logo. (said "do the same for all the text layers")
+   - Text layers and text null start: about 4 f after the card (shown : bar edge x=771 is 3.9 f). The narrator said two to three frames; the screen shows about 2 and about 4 for the two groups, so the screen decides.
+3. Leave at frame 0 the master null at the top of the stack (all the group nulls are parented to it), the card's own null, and the card's layers: the stroke, the pill layer that carries the effect and the adjustment switch, and the depth layer. (shown and the timeline: their bars start at the ruler's 0)
+4. Make sure every null in the groups (and the card's null) carries the author's bounce expression on both Position and Scale, so the drop settles with a wobble; it reads each layer's own keys, so it moves with the layer when the bar is slid. Pasted earlier in the video (narration, recipe 03), not in this stretch. (said (description) for the text; said for where it goes, and per extras.md)
+   - Expression text, word for word (said (description)):
+   ```
+   amp = .04;
+   freq = 1.8;
+   decay = 3;
+   n = 0;
+   time_max = 3;
+
+
+   if (numKeys > 0) {
+       n = nearestKey(time).index;
+       if (key(n).time > time) {
+           n--;
+       }
+   }
+
+
+   if (n == 0) {
+       t = 0;
+   } else {
+       t = time - key(n).time;
+   }
+
+
+   if (n > 0 && t < time_max) {
+       v = velocityAtTime(key(n).time - thisComp.frameDuration / 10);
+       
+       // Ease Out Factor (starts at 1, gradually reduces to 0)
+       easeFactor = easeOut(t, 0, time_max, 1, 0);
+       
+       value + v * amp * Math.sin(freq * t * 2 * Math.PI) / Math.exp(decay * t) * easeFactor;
+   } else {
+       value;
+   }
+   ```
+5. Scrub the first frames and check the order: card, then logo, then text. (shown, viewer and timeline both at 3 f: card and logo in, text not yet; inferred that this is the intended read)
+6. Preview the first second or so; the arrival is played as a looping preview (shown : the viewer's own time readout runs while the timeline's readout holds at 0). (shown)
+layout: All figures measured on the 960×540 picture crop (crop origin 555,131 in the 1920×1080 frame; the picture is 1920×1080 comp px, so double them for comp px). Settled card (comp 13 f): width 667 px = 69.5 % of the picture width, height about 157 px = 29 % of the picture height (about 0.235 of its width), centred horizontally, centre at about 49 % of the height (266 px from the top). Logo disc: 94 px across = 0.60 of the card's height (0.14 of its width), centre 81 px (0.12 of the card width) in from the card's left edge and level with the card's centre. Title and subtitle left-aligned to the right of the disc, title about 26 px above the card's centre; "NOW" label small, grey, at the card's top right. Card light grey with a thin lighter stroke and a soft inner shade; ground near white. Not a different file: the finished example is the build the author made.
+  Played arrival (redraws read from the video): the viewer redraws about once per comp frame on average (comp 1 f, readout 13 f), a loop restart at 0 f, then a hold of about 0.6 s on the start pose before the drop plays. Comp frames are skipped now and then (the scrub at 3 f shows a card at 81 % width, which no played redraw shows), so the frame labels below are good to about ±1.
+  - Start pose (0 f, no logo, no text): card 405 px wide = 61 % of its settled width, centre at 145 px from the top = 27 % of the picture height, 121 px (about 240 comp px) above the settled centre. Selection boxes of the nulls show here only (a small one at the card's centre, a larger one about 100 px below it).
+  - Card width then: 71 % (1 f), 91 % (about 2–3 f), 101 %, 108–109 % (peak, about 4–6 f; centre 28 px below its settled height), 104 % (about 8 f), 98 % (about 11–12 f), 100 % (about 13–14 f). Centre height follows: 27 % of the picture height at 0 f to 31 % at the peak, 48 % at the dip, 49 % settled.
+  - Logo: first seen about 1 redraw after the card starts to drop, at the card's upper-left corner. Measured on the 3 f scrub (picture crop 960×540; card there is 540 px wide = 81 % of settled, top edge y 144, bottom 270, centre y 207): disc centre y 150, x 267 (57 px in from the card's left edge at x 210), 78 px across (about 80 % of its final 94 px). So against the card's CURRENT centre it sits 57 px higher and about 6 px below the card's top edge; against its SETTLED spot (centre y 266) it is about 116 px higher. This is one scrub frame, not a played redraw. It reaches the card's level about 4 redraws later and then rides with the card.
+  - Text: first seen about 2 redraws after the logo, title about 136 px above the card's centre (about 110 px above its settled place), sliding down into place over about 6 redraws, level with its settled place at about 8 f; it fades or appears whole (opacity not read).
+  - The logo's path is its own, not the card's: it starts at the card's top left, not on the card's centre line.
+timing and easing: offsets of about 2 f (logo) and 4 f (text) after the card, at 30 fps. Eases of the underlying keys: none given. The overshoot of the card (about 109 % of settled width) comes from the bounce expression of recipe 03, not from this step.
+variations: none given
+pitfalls: none given
+build notes: Per group, set the layer's startTime on the null and on its child layers to the card's start plus 2/30 s (logo) and 4/30 s (text). Moving the layer moves its keys, so the bounce expression (which uses its own keys) shifts with it. Do it on every layer of the group, not on the null alone, or the children's own fades will still start at 0. The start poses (card at 61 % scale, 240 comp px high; logo and text higher still) come from the earlier recipes' keys; check against the measurements above. By hand: dragging in the timeline.
+unknowns: Exact comp frame of each redraw (played preview skips frames, labels ±1); the logo's and text's own start values and whether the text has an opacity key; any easing on the keys; the exact frame count of the work area (about 38 f read off the ruler). The played window holds the crop (card, logo and text all inside it, no mouse arrow, no dialog); nulls' selection boxes show only in the first two redraws, so start the compared window. is the clean settled still (comp 13 f); no kept frame is a clean mid-move frame, cut one from.
+
 ## Cursor glides in and taps the button
 id: 06-cursor-travels-and-taps-button
 revision: 2a41799f
@@ -1257,91 +1327,3 @@ variations: The narrator offers this as one example of how quickly the style can
 pitfalls: none given by the author. On screen, raising Specular Shininess to 100 % makes the sides whiter and less yellow, not more golden, although the narration presents it as the step that gives the gold (shown:). The cream tint comes from the #FFDCAD fill and is strongest while shininess is still 5 %. Judge the result on the near-white sides of the result frame, not on the narration (inferred from the measurements). The viewer redraws about 0.5 to 1 s after a value lands, so a frame taken right after a change shows the old state.
 build notes: By script, on the text layer: the Material Assignment group and its Side override are new in After Effects 27 (names exactly as shown: "Material Assignment", "Front", "Bevel", "Side", "Back"; set Side to "Default"); scripting access to these overrides may not exist yet, so plan to do step 2 by hand in the Timeline if the property cannot be found. Fill colour: set via the TextDocument fillColor [1, 0.863, 0.678]. Specular Shininess sits under "Material Options" as the timeline shows it and can be set to 100 by script; find it by its display name, as its match name is not known (walk the group by script to read it).
 unknowns: Whether the text colour was changed through the Character panel swatch or another route (only the dialog is seen); the light and floor settings are not shown again in this span, so the figures under ingredients are those last shown in 02 to 06 (the timeline lists the same layers: null, camera, point, parallel and environment lights, the text).
-
-## Hollow chrome outline title: faces hidden, bevels and walls remain
-id: 08-outline-only-3d-title
-revision: fdb05df9
-job: reveal-headline; support: light-the-hero
-status: unproven
-what it does for a beat: A cut-out, stroke-like 3D title for a sleek or dark mood: the letter faces vanish and only the rounded bevels and the extrusion walls remain, so the word reads as a hollow metal outline standing on a floor.
-what it looks like: The same chunky extruded word, now with see-through front and back faces. Each letter is outlined twice by a thin, bright, rounded metal tube (the convex bevel at the front edge and again at the back edge), with the darker, grainy side walls showing between the two tubes inside the hollow letters. First shown on the pale blue background, then on a near-black background where the tubes glint pale silver-gold, with only a thin dark contact line under the letters.
-ingredients:
-- Continues directly from technique 07's state, itself a variant of 01 (bevelled advanced-3D text with Material Assignment overrides) lit as in 02–04: the text fill is still pale yellow #FFDCAD (Character swatch shown) and Material Options > Specular Shininess is still 100% (set in 07, not changed here: inferred). These two settings give the rims their warm glint; starting from 01's white fill and low shininess will not match.
-- So this recipe stands alone, the scene it needs (figures from those recipes, each shown in its own span):
-  - Text (01, 05): one word, Poppins Black 100 px, layer Scale 472 %, 3D layer, comp renderer Advanced 3D, comp 1920x1080 at 23.976 fps. Geometry Options: Extrusion Depth 20, Bevel Style Convex, Bevel Depth 2, Hole Bevel Depth 100 % (01). The bevel is what makes the bright tubes: Front and Back Opacity hide only the flat front and back faces, not the bevel, so without a convex bevel the result is flat ribbon walls. Extrusion Depth sets how much grainy wall shows between the two tubes.
-  - Floor (02): a 3D comp-size solid, X Rotation 90°, Position 960,721,0, Scale 627 %, Material Options > Accepts Shadows: Only, so only shadows show on it; the 2D backdrop solid below it is replaced or covered by the dark solid of step 5.
-  - Parallel light (03, 04): Position 2920,−100,2663.3, Point of Interest 960,540,0, Intensity 216 % (03 sets 407 %, 04 lowers it to 216 %), Casts Shadows Off.
-  - Point light (04): Position 456,530,−666.7, Intensity 100 %, Falloff Smooth, Radius 589, Falloff Distance 373, Casts Shadows Off.
-  - Environment light (02, retuned in steps 6 and 7 here): X Rotation −25°, Intensity 187 %, Casts Shadows On, Shadow Darkness 100 %.
-  - Letter entrance (05) and camera (06): a 50 mm two-node camera with Depth of Field On, Aperture 30.3, Focus Distance 2343.7, parented to a 3D null whose Z Position goes 0 to 231 over 0 to 0:00:04:23. The result is at comp time 0:00:04:10, letters landed (shown in the). The entrance animator from 05 stays on the layer: when the author plays the comp from 0 s right after the still, the outlined letters tumble in as in 05 (shown).
-- The lights, floor and camera are not changed in this span apart from steps 6 and 7; the timeline lists null, camera, point, parallel and environment lights, the text, the floor and the dark solid (shown in a).
-- Advanced 3D text layer, Material Assignment overrides — built-in, After Effects 27 (shown)
-- Text animator properties Front Opacity and Back Opacity — built-in, After Effects 27; Animate > Front > Color > Opacity (shown), then the animator's Add > Property > Back > Color > Opacity (shown)
-- Solid layer for the background — built-in (Solid Settings dialog shown)
-- Environment Light (Light Options: Environment) — built-in (shown)
-steps:
-1. Remove every texture from the title: under the text layer's Material Assignment set Front, Bevel, Side and Back all to Default (said; partly done with Bevel, Side and Back on Default; all four Default).
-   - Front / Bevel / Side / Back: Default (shown)
-2. On the text layer click Animate and choose Front > Color > Opacity; this adds a new animator, Animator 2 (shown), beside the existing Animator 1 (inferred: the letter entrance from 05) holding Front Opacity (said; menu shown; Front Opacity 100% in Animator 2 shown).
-3. In that same animator use Add > Property > Back > Color > Opacity to add Back Opacity (said; menu shown).
-4. Set both to 0% so the flat front and back faces disappear; the convex bevels at both edges and the side walls are still drawn (said; shown; the bevels' survival measured on the result). The animator's Range Selector 1 is left at its defaults (inferred: it is not opened).
-   - Front Opacity: 0% (shown)
-   - Back Opacity: 0% (shown)
-5. Darken the background: a Solid Settings / Solid Color dialog is used to make a dark grey solid, and the bottom layer is a solid named as a second background; the panel already reads Effect Controls for that solid and the dialog is Solid Settings with "Affect all layers that use this solid", so the solid existed before its colour was set (said "change your background colour"; shown; the bottom layer reads as a new dark solid). The colour first tried is #0E0E0E (shown, dialog open; crop) and then #282828 (shown, dialog still open; crop).
-   - Solid colour: #282828 (shown, dialog open). The background in the result frame measures RGB 23,23,23 (#171717) everywhere, inside the letters too, matching neither dialog value, so the final colour is not settled; aim for #171717 (measured on the).
-6. On Environment Light 1, click the stopwatch of Y Rotation off, which deletes the keyframes it carried from technique 02; the value stays at 0x+198.5° and the light becomes static (not said; shown in cuts: the keyframe navigator and a keyframe are present, they are gone and the stopwatch is plain).
-7. Retune the now-static light so the rims catch light from a better angle: drag Y Rotation from 0x+198.5° down to 0x+120.5° (said "adjust your environment lights rotation"; shown).
-   - X Rotation: 0x-25.0° (shown, unchanged)
-   - Y Rotation: 0x+120.5°, no keyframes (shown)
-   - Intensity: 187% (shown; it was scrubbed down to 142% and 101% and left back at 187%)
-   - Casts Shadows: On; Shadow Darkness: 100% (shown)
-8. Not a step: the author briefly opens another comp holding a different textured word before returning; nothing there is changed (inferred).
-layout: (measured on the result frame, a. There the viewer panel spans x 661–2102, y 360–1120 at full size and the comp, at the same 44.7 % zoom as in 07, runs slightly past the panel, so its edges are not visible.) The word measures x 812–1979, y 574–866 at full size, about 1167 x 292 px (measured). It is the same word at the same comp time and camera as 07's result, where it spans about 10% to 92% of the comp width and its caps run from about 32% to 67% of the comp height (measured on 07's); use those shares. Background flat #171717 (23,23,23), inside the hollow letters too (measured). Outline: on each letter a bright rounded tube at the front edge and another at the back edge, about 5 px wide at full size (about 1.7 % of the letter height) where seen edge-on, brightest pixels about 208,203,191 (pale warm silver) with highlights near white (measured; zoom); between the tubes the side walls show as darker, grainy bands, about 89,85,75 on average (measured), visible inside the counters and on the inner walls of the L and E. Floor: a thin near-black contact line right under the letter bases (about 3 to 6 at y 868), then a faint shadow that rises from about 17 back to the background's 23 within about 25 px below the bases (measured); no long shadow is visible on the dark background. Light: the brightest glints sit on the S's right-hand curve and on the inner walls of the L and E (seen on the result crop), from the environment light at Y 120.5° plus 03's parallel light and 04's point light.
-timing and easing: none given. No keyframes on Front/Back Opacity, and the environment light's Y Rotation keyframes from 02 are deleted in step 6, so the light is static in this look (shown).
-variations: The background colour and the environment light's rotation should be set to suit your own build (said).
-pitfalls: none given
-build notes: By script: Material Assignment overrides are new in After Effects 27 and may not be exposed to scripting; set them to Default by hand if needed. The animator: add a Text Animator to the text layer ("ADBE Text Animators") and, if the AE 27 per-face colour properties are scriptable, add the properties shown as "Front Opacity" and "Back Opacity" and set both to 0; otherwise add them by hand via Animate > Front > Color > Opacity and Add > Property > Back > Color > Opacity. Background: comp.layers.addSolid([0.157,0.157,0.157], ...) placed at the bottom. Light: on Environment Light 1 remove all Y Rotation keyframes (while numKeys > 0 removeKey(1)), then set Y Rotation = 120.5 as a static value; Intensity 187. Keep the text fill [1, 0.863, 0.678] and Specular Shininess 100 from 07. Keep 01's Geometry Options (Bevel Style Convex, Bevel Depth 2, Hole Bevel Depth 100, Extrusion Depth 20): the bright tubes are the bevel. The dialog shows #282828 ([0.157,0.157,0.157]) but the result measures #171717; to match the picture use [0.09,0.09,0.09].
-unknowns: Whether the dark background is a new solid or the old one recoloured (the layer name changes, so a new solid is likely); which colour was kept (#0E0E0E and #282828 are seen in the dialog, the picture measures #171717); the Range Selector settings of the new animator.
-
-## Two-colour phase bar that draws on segment after segment
-id: 01-segmented-progress-bar-draws-in-order
-revision: aa3d7518
-job: step-through-process; support: show-time
-status: proven (accepted 2026-11-21)
-what it does for a beat: A process or timeline beat ("first this phase, then that one"): one straight bar split into coloured phases that fill left to right, the second phase starting just as the first slows down, with step pictures lined up underneath.
-what it looks like: On a black frame, a thick horizontal bar across the middle 62 % of the width, about seven tenths lime green and the rest pale sky blue, split by a hairline gap. A short white bold label sits above the start of each segment and six cut-out step pictures sit in a row under the bar. The green fills from the left in one second, and the blue continues from the gap.
-ingredients:
-- Shape layer drawn with the Pen tool (an open two-point path with a stroke, no fill) — built-in
-- Trim Paths (shape layer Contents > Add > Trim Paths; menu path inferred, "Trim Paths 1" under the layer's Contents shown) — built-in
-- Text layers (Satoshi Black, a free font) — built-in text; font shown
-- Six cut-out PNG step pictures (art, not technique)
-- Flow (keyframe-easing extension) — paid; only used to apply an S-curve ease, given below as numbers
-steps:
-1. Comp: 1920 x 1080, black background. The narrator says 24 fps; the project panel shows 23.976 for every comp, so build at 23.976 (the screen wins). The project is 16 bpc. (said 1920 x 1080; shown for 23.976 and 16 bpc, also; black background shown; background colour setting inferred)
-2. With the Pen tool, no fill and a stroke, click two points with Shift held to make a straight horizontal line, then centre the layer in the comp. (said; shown)
-   - Fill: none (shown)
-   - Stroke width: 54 px while drawing (shown), later 60 px (shown, Properties panel "Stroke Width 60"). Use 60.
-   - Stroke colour: #BFF06C (shown, the colour dialog opened on the duplicate before it was recoloured, H 82 S 55 B 94)
-   - Layer Position 960, 540; Anchor Point 9.1, 0.8 (shown)
-   - Path ends at about x 365 and x 1556 in comp pixels (1191 px long, butt caps), centred on y 540 (measured on the result frame; endpoint positions not shown as numbers)
-3. Add Trim Paths to the line. Set the first segment: Start 0 %, End 70 %. (said "trim paths"; values: Start 0 shown, End 70 % shown)
-4. Duplicate the layer. On the copy's Trim Paths set Start 71 %, End 100 %, so a 1 % gap separates the two segments. (duplicate said; Start 71.0 % shown; End 100 % shown)
-   - The author tried 20/25, 22/74, 80/81 and 68/69 before landing on 70/71 (shown). The gap is always 1–5 % of the whole line, so spacing stays even because it is a share of one path. (said)
-5. Recolour the copy pale blue. (said "bluish"; shown as the dialog moves through teal values)
-   - Typed value: not legible; the dialog's last visible value is #60BFAD and the video then cuts. The rendered bar measures RGB 143, 211, 224 (#8FD3E0) on the result frame; use that as the target. (measured; typed value unknown)
-6. Add two labels above the segments: Satoshi, Black weight, 40.9 px, tracking −95, fill #F3F3F3, left aligned, anchor at 0,0. (font said as "otoshi", screen reads Satoshi: shown; fill F3F3F3 shown; left alignment said)
-   - Label 1 position 366.6, 493 (shown); label 2 position 1212.1, 493 (shown) — each starts a few pixels right of its segment's left end, baseline 15 px above the bar.
-7. Import six cut-out PNG step pictures, scale each so they look the same size (their sources differ in size), and line them up in a row under the bar, numbered left to right; the last two sit under the blue segment. (said; shown)
-   - Scales used: 26, 14, 7, 7, 8, 7 % for pictures 1–6 (shown); these depend only on the source images' sizes, so aim for the sizes in `layout`, not the percentages.
-   - The 70/71 split was chosen after the pictures were placed, so the gap falls between picture 4 and picture 5. (said; shown)
-8. Animate the first segment: keyframe Trim Paths End 0 % at frame 0 and 70 % at frame 24 (1 s). (said "about one second"; keys shown crop)
-9. Animate the second segment: keyframe its End 71 % (equal to its Start, so nothing shows) to 100 %, over 24 frames. (71 said and shown at time 0; 100 % shown)
-10. Ease all four keys with an S-curve: cubic-bezier 0.88, 0.14, 0.12, 0.86 (a saved curve in Flow). (ease said by its preset name; the numbers shown)
-    - In After Effects terms (converted, inferred): every key Influence 88 %; speed at each key = 0.159 x the average speed of the move. First segment: speed 11.1 %/s at both keys; second segment: 4.6 %/s.
-11. Slide the second segment's two keys earlier so it starts as the first is slowing: first segment 0–24 f, second segment 20–44 f. (said "as soon as it starts to slow"; frames read from key positions, ±1 frame)
-layout: Measured on the settled result frame (comp 1920 x 1080, calibrated on the picture's own borders: 1804 x 1015 px in the recording = 1920 x 1080). measured: the bar runs from x 365 to x 1556 (19.0 % to 81.0 % of the width, 62 % of the width long), centred on y 540 (50 %), thickness 61 px (5.7 % of the height). Green segment 365–1199.5 (70 % of the bar); gap 10.6 px; blue 1210–1556. Labels: baseline y 494 (45.7 % of the height), cap-plus-ascender height 31–33 px (about 3 % of the height), the longer word 180 px wide (9.4 % of the width); bottom of the labels 15 px above the bar's top edge. Step pictures: six in a row, centres at 22.9, 33.1, 43.7, 55.9, 67.4 and 78.0 % of the width, centred about y 675–684 (62.5–63.3 % of the height); heights 103–144 px (9.6–13.3 % of the height), widths 85–160 px; their tops 32–60 px below the bar's bottom edge; the row starts 15 px inside the bar's left end and ends 16 px inside its right end. Background pure black (0, 0, 0), no grain, no vignette, no shadows except a soft dark shadow baked into one picture's PNG (a packaging cut-out). Colours: green renders 188, 237, 101; blue renders 143, 211, 224; labels near white. The labels' slide-up comes from recipe 02 (they rise 61 px from behind their segment, inverted track matte, keys 10–22 f and 32–44 f, ease cubic-bezier 0.04, 0.47, 0.53, 0.93). The pictures' pop comes from recipe 03 (scale 0 to full over 12 frames, same S-curve as here, a bounce expression with about 2.5 % overshoot, starting at 22 f and every 10 frames after). For this recipe alone, the labels and pictures simply sit at their final positions. Motion: both segments fill from their left end towards the right. The green's leading edge (with picture lag, ±1 frame) is at x 370 at frame 1, 547 at frame 10, 947 at frame 13 (70 % of its run; frame 12, the half-way point, is a dropped recording frame), 1164 at frame 20 (95 %); the blue appears at frame 20 and reaches the bar's right end by about frame 43.
-timing and easing: Segment 1 Trim End 0→70 % at 0–24 f; segment 2 Trim End 71→100 % at 20–44 f (24 f each, 4 frames overlap). Ease cubic-bezier(0.88, 0.14, 0.12, 0.86) on all keys: a strong S, the middle about 7 times the average speed. Measured play: about real time (the step pictures start 10 recording frames apart for keys 10 comp frames apart). Motion blur off: the motion-blur switch column is empty for every layer (shown).
-variations: One long segment is fine; any number of segments by duplicating and setting Start/End percentages with a small gap; labels may sit above the bar or inside it. (said)
-pitfalls: Key the second segment's End from its own Start value (71), not from 0, or it draws in behind the first segment. (said)
-build notes: Shape layer contents: "ADBE Vector Group" > "ADBE Vector Shape - Group" (path with two vertices), "ADBE Vector Graphic - Stroke" (Stroke Width 60, Line Cap butt), then "ADBE Vector Filter - Trim" at the layer's Contents level (Start "ADBE Vector Trim Start", End "ADBE Vector Trim End"). Ease by script: `prop.setTemporalEaseAtKey(k, [new KeyframeEase(speed, 88)], [new KeyframeEase(speed, 88)])` with the speeds in step 10. Text: font PostScript name for Satoshi Black is likely "Satoshi-Black" (inferred); tracking −95, fontSize 40.9, justification LEFT_JUSTIFY. The pictures are any six cut-out PNGs of a process; scale each to the measured heights.
-unknowns: The blue's typed colour value (only its render is measured). The comp's background colour setting and duration (the ruler runs to about 15 s; preview stops at 4:00, work area inferred). The exact path vertex coordinates (only their rendered ends are measured).

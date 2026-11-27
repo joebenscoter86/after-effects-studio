@@ -1,6 +1,6 @@
 {
  "vocab": "jobs-v1",
- "version": "50a3bb54",
+ "version": "c5529514",
  "jobs": [
   "land-number",
   "count-things",
@@ -1806,7 +1806,7 @@
    "duration": 3,
    "motion": "one-shot",
    "difficulty": 3,
-   "taught_by": 8,
+   "taught_by": 10,
    "variant_of": "03-step-icons-pop-with-bounce-in-sequence",
    "variants": [],
    "provides": [
@@ -1987,8 +1987,10 @@
    "duration": 6,
    "motion": "one-shot",
    "difficulty": 3,
-   "taught_by": 1,
-   "variants": [],
+   "taught_by": 2,
+   "variants": [
+    "01-frosted-glass-pill-from-adjustment-shape"
+   ],
    "provides": [
     "material: glass",
     "backdrop: shapes",
@@ -3149,8 +3151,10 @@
    "duration": 1,
    "motion": "one-shot",
    "difficulty": 2,
-   "taught_by": 8,
-   "variants": [],
+   "taught_by": 10,
+   "variants": [
+    "04-staggered-element-offsets"
+   ],
    "provides": [
     "motion: stagger",
     "transition: slide"
@@ -3280,7 +3284,7 @@
    "duration": 1,
    "motion": "one-shot",
    "difficulty": 3,
-   "taught_by": 8,
+   "taught_by": 10,
    "variants": [],
    "provides": [
     "transition: slide",
@@ -3493,7 +3497,7 @@
    "duration": 0,
    "motion": "one-shot",
    "difficulty": 1,
-   "taught_by": 8,
+   "taught_by": 10,
    "variants": [],
    "provides": [
     "motion: stagger"
@@ -5157,7 +5161,7 @@
    "composes": [],
    "shelf": "shipped",
    "section": {
-    "document": "arsenal-line",
+    "document": "arsenal-line-2",
     "heading": "Hollow chrome outline title: faces hidden, bevels and walls remain"
    },
    "still": null,
@@ -5319,7 +5323,7 @@
    "composes": [],
    "shelf": "shipped",
    "section": {
-    "document": "arsenal-picture",
+    "document": "arsenal-picture-2",
     "heading": "Flat cut-outs into a deep stage: push far layers back in Z, pull near ones forward, rescale to frame"
    },
    "still": {
@@ -5706,7 +5710,7 @@
    "composes": [],
    "shelf": "shipped",
    "section": {
-    "document": "arsenal-line",
+    "document": "arsenal-line-2",
     "heading": "Two-colour phase bar that draws on segment after segment"
    },
    "still": {
@@ -5780,10 +5784,11 @@
    "duration": 4,
    "motion": "one-shot",
    "difficulty": 2,
-   "taught_by": 8,
+   "taught_by": 10,
    "variants": [
     "01-bounce-keyframes-word-stagger",
-    "02-bounce-expression-pop-in"
+    "02-bounce-expression-pop-in",
+    "03-expression-bounce-drop-in"
    ],
    "provides": [
     "motion: bounce",
@@ -6128,7 +6133,7 @@
    "duration": 3,
    "motion": "one-shot",
    "difficulty": 2,
-   "taught_by": 8,
+   "taught_by": 10,
    "variants": [],
    "provides": [
     "type: label",
@@ -6391,7 +6396,7 @@
    "duration": 2,
    "motion": "one-shot",
    "difficulty": 3,
-   "taught_by": 8,
+   "taught_by": 10,
    "variant_of": "03-step-icons-pop-with-bounce-in-sequence",
    "variants": [],
    "provides": [
@@ -6524,7 +6529,7 @@
    "duration": 5,
    "motion": "one-shot",
    "difficulty": 4,
-   "taught_by": 8,
+   "taught_by": 10,
    "variants": [],
    "provides": [
     "light: glow",
@@ -6900,6 +6905,223 @@
    "still": {
     "path": "arsenal/stills/13-text-fill-in-blur-and-scale-finish.jpg",
     "sha256": "a1f8b14bf52d0113b12950ce89c32024bd2e74a829676e4d0cf37f1d60813641"
+   }
+  },
+  {
+   "id": "01-frosted-glass-pill-from-adjustment-shape",
+   "revision": "0a854efa",
+   "level": "recipe",
+   "name": "Frosted-glass pill built from three stacked shape layers",
+   "line": "Reach for it when a card, banner or notification has to sit in front of a busy picture and look like frosted glass: it blurs whatever is behind it and gets a faint tint and a thin light outline. It is the base card that later techniques animate.",
+   "status": "proven",
+   "kind": "technique",
+   "job": "add-depth",
+   "support": [
+    "finish-the-look"
+   ],
+   "mood": [
+    "light",
+    "clean",
+    "soft",
+    "minimal"
+   ],
+   "needs": [
+    "shapes"
+   ],
+   "duration": 3,
+   "motion": "still",
+   "difficulty": 2,
+   "taught_by": 2,
+   "variant_of": "05-glass-bar-refraction",
+   "variants": [],
+   "provides": [
+    "material: glass",
+    "finish: blur",
+    "depth: z-stack"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
+   "section": {
+    "document": "arsenal-picture",
+    "heading": "Frosted-glass pill built from three stacked shape layers"
+   },
+   "still": {
+    "path": "arsenal/stills/01-frosted-glass-pill-from-adjustment-shape.jpg",
+    "sha256": "6a5b3b21e402adcc5b7ce6b04ed7d7878224ec23a0d0ca6a14af8ab521484330"
+   }
+  },
+  {
+   "id": "02-null-hierarchy-for-grouped-motion",
+   "revision": "1102a00e",
+   "level": "recipe",
+   "name": "Null hierarchy: three group nulls under one master null",
+   "line": "Reach for it before animating a card made of many layers (shapes, text, logo). Each part-group gets its own null, and one master null sits above them, so the whole card or any single group moves with one layer.",
+   "status": "proven",
+   "kind": "build-aid",
+   "job": null,
+   "support": [],
+   "mood": [
+    "neutral",
+    "workflow"
+   ],
+   "needs": [
+    "none"
+   ],
+   "duration": 0,
+   "motion": "still",
+   "difficulty": 2,
+   "taught_by": 1,
+   "variants": [],
+   "provides": [],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
+   "section": {
+    "document": "arsenal-build-aid",
+    "heading": "Null hierarchy: three group nulls under one master null"
+   },
+   "still": null,
+   "no_still": "build aid: serves no beat, so no proof still"
+  },
+  {
+   "id": "03-expression-bounce-drop-in",
+   "revision": "f26631a0",
+   "level": "recipe",
+   "name": "Two-key drop-in that settles with an expression bounce",
+   "line": "Reach for it when a card or group should drop into place and wobble a little before it rests, without hand-keying the overshoot. Two plain keys give the move; one pasted expression adds the settle on Position and on Scale.",
+   "status": "proven",
+   "kind": "technique",
+   "job": "add-impact",
+   "support": [
+    "introduce-tool"
+   ],
+   "mood": [
+    "light",
+    "clean",
+    "playful"
+   ],
+   "needs": [
+    "type",
+    "shapes"
+   ],
+   "duration": 2,
+   "motion": "one-shot",
+   "difficulty": 3,
+   "taught_by": 10,
+   "variant_of": "03-step-icons-pop-with-bounce-in-sequence",
+   "variants": [],
+   "provides": [
+    "motion: bounce"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
+   "section": {
+    "document": "arsenal-line-2",
+    "heading": "Two-key drop-in that settles with an expression bounce"
+   },
+   "still": {
+    "path": "arsenal/stills/03-expression-bounce-drop-in.jpg",
+    "sha256": "5d99a183cc62a244dd33b12c99118ccd1afb56a3fee95847b8ce824f54c0a674"
+   }
+  },
+  {
+   "id": "04-staggered-element-offsets",
+   "revision": "ff96ebf7",
+   "level": "recipe",
+   "name": "Offset the logo and text groups a few frames behind the card",
+   "line": "Reach for it when several parts of one card all get the same drop-and-settle move and read as a single stiff block. Sliding the start of each part a couple of frames later makes the parts land one after another.",
+   "status": "proven",
+   "kind": "technique",
+   "job": "reveal-headline",
+   "support": [
+    "add-impact"
+   ],
+   "mood": [
+    "light",
+    "clean",
+    "soft"
+   ],
+   "needs": [
+    "shapes",
+    "type"
+   ],
+   "duration": 1,
+   "motion": "one-shot",
+   "difficulty": 2,
+   "taught_by": 10,
+   "variant_of": "05-staggered-slide-in",
+   "variants": [],
+   "provides": [
+    "motion: stagger",
+    "motion: bounce"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
+   "section": {
+    "document": "arsenal-line",
+    "heading": "Offset the logo and text groups a few frames behind the card"
+   },
+   "still": {
+    "path": "arsenal/stills/04-staggered-element-offsets.jpg",
+    "sha256": "346c3b78975ca132633d22d43e0608c4a288b945edea8fe0b026227cc20a81e7"
+   }
+  },
+  {
+   "id": "05-stacked-second-notification-with-push-back",
+   "revision": "626d0c64",
+   "level": "recipe",
+   "name": "Second notification arrives and the first one is pushed back",
+   "line": "Use it when a second card lands on top of a card already on screen and the first should react: sink, shrink and settle with a small springy wobble instead of just being covered.",
+   "status": "proven",
+   "kind": "technique",
+   "job": "list-items",
+   "support": [
+    "add-depth",
+    "add-impact"
+   ],
+   "mood": [
+    "light",
+    "clean",
+    "soft",
+    "playful"
+   ],
+   "needs": [
+    "shapes",
+    "type"
+   ],
+   "duration": 2,
+   "motion": "one-shot",
+   "difficulty": 3,
+   "taught_by": 1,
+   "variants": [],
+   "provides": [
+    "motion: bounce",
+    "depth: z-stack",
+    "material: glass"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
+   "section": {
+    "document": "arsenal-line-2",
+    "heading": "Second notification arrives and the first one is pushed back"
+   },
+   "still": {
+    "path": "arsenal/stills/05-stacked-second-notification-with-push-back.jpg",
+    "sha256": "3515d6e45253c7fdaec3c83ee3a4af8a6099483a43c9255539d799592125ba71"
    }
   },
   {

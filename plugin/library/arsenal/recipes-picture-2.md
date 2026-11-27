@@ -2,6 +2,49 @@
 
 Generated from the recipe drafts; do not edit by hand. Recipes whose primary job is in this group. Find candidates for a beat with ae_arsenal find; read one with ae_arsenal get, or a section here by its heading.
 
+## Flat cut-outs into a deep stage: push far layers back in Z, pull near ones forward, rescale to frame
+id: 03-z-depth-push-and-rescale
+revision: a5ee353f
+job: add-depth; support: move-camera
+status: proven (accepted 2026-11-19)
+what it does for a beat: Sets up real parallax and depth of field for a 2D illustrated scene: the picture through the default view barely changes, but layers now sit thousands of pixels apart, so any later camera move or focus pull separates them. Assumes: the scene is already split into one layer per object (technique 01) and graded (technique 02), with Tritone switched off on the stone-wall layer so its lamp glows warm (off).
+what it looks like: The same blue night scene, framed almost as before: sky and skyline far behind, the two figures on the ledge in the middle, grass and two dark leafy branches large and close at the bottom and sides. The difference is structural (Z positions spread from about -1800 to about 7900), not yet visible as motion.
+ingredients:
+- 3D Layer switch — built-in; timeline switch column (shown)
+- Layer Transform: Position (Z), Scale — built-in
+- No camera layer yet: the viewer reads "Active Camera (Default)", i.e. the composition's default camera (shown)
+steps:
+1. Turn on the 3D Layer switch for every layer (said; shown, all 13 rows switched on)
+2. Push the farthest element, the sky photo, far back in Z: the narrator asks for 5000 or more (said)
+   - Sky Position: 960.0, 540.0, 7940.0 (shown; Z passes 3690 on the way); X and Y stay at the comp centre
+3. Scale that far layer back up until it fills the frame again (said)
+   - Sky Scale: from 76.0% to 312.0% (shown for 76%, for 312%)
+4. Pull the foreground elements toward the viewer, i.e. negative Z, and resize them for the framing you want (said; shown)
+   - Foreground branch on the left: Position 639.5, 778.0, -1810.0 (shown)
+   - Foreground branch on the right: Position 1248.0, 729.4, -1810.0 (shown)
+   - Both branches reach Z -1810 by way of -1700 (shown)
+   - Both foreground branches: Scale 37.0% (shown for both); they pass 57% and 41/59% while being adjusted. In the flat layout the left one was turned 47° (its Scale not shown) and the right one was at 60% (technique 01)
+   - Grass: Position 1010.4, 712.7, -830.0 (shown; it passes 1010.4, 842.7, 1240.0 while being moved); Scale not shown
+   - Stone wall: Position 561.8, 627.9, -600.0 (shown; 546.8, 695.9, -600.0 before a last nudge); Scale not shown in this technique (94% in the flat layout, technique 01)
+5. Leave the main subject at Z 0 (said)
+   - Figure on the left: Position 762.8, 636.7, 0.0; figure on the right: 907.3, 639.0, 0.0 (shown; the same X/Y as in the flat layout); Scale not shown
+   - Ledge they stand on: Position 948.5, 989.8, 0.0 (shown; same X/Y as the flat layout)
+6. Spread the remaining middle and back layers over a range of depths rather than one plane, the narrator stresses variety (said). Each one pushed back is also scaled up and moved in X/Y so it keeps (or improves) its place in the picture; done on screen without comment (shown)
+   - Tall pine: Position from 567.9, 565.2, 0.0 (shown) to 567.9, 581.2, 1200.0, then X dragged in to 407.9: final 407.9, 581.2, 1200.0 (shown)
+   - Tall pine: Scale from 68.0% to 114.0% (shown in cuts from, 108% passes on the way). This is about 1.68 times its flat scale, more than the push needs, so the pine ends about 1.15 times its flat size on screen
+   - Bare tree on the right: Position 1577.2, 590.4, 1770.0 (shown); Scale -162.0, 162.0, 162.0%, i.e. mirrored left to right and enlarged (shown, the -146% is a value passed while dragging)
+   - Bare tree on the left: Position 31.5, 393.2, 1770.0 (shown; X dragged in from 384.5 and 267.5); Scale about 162% (the last value on screen while being dragged up from 100%, not seen landed)
+   - City skyline: Position 960.0, 184.0, 4730.0 (shown, Z dragged 0 → 2500 → 3990 → 4640 → 4730, which then holds with the cursor gone); Scale from 162.0% to 275.0% (shown, 232% on the way; 275% landed). X/Y stay as in the flat layout (960, 184). The reading of Z 0 is from before the push
+   - The shape layer: no values (it is set back to 2D, step 7)
+7. Switch the shape layer's 3D switch back off so it stays 2D; done on screen without comment (shown on, off)
+   - Housekeeping, no effect on the picture: the Shy switch is turned on for every layer except the sky photo (still on); Hide Shy Layers is not used
+layout: measured on the result frame against my crop (the comp view minus a thin top strip under the camera label, so y shares run from just below the picture's top edge), as shares of its width (x) and height (y): the two figures stand together with their centre at about 43% x, about 34% of the crop height tall, feet about 74% down (measured); the ledge spans about 1%–59% x with its top about 70% down (measured); the pine stands at about 29% x, crown about 25%–39% x at its widest, top about 10% down, foot hidden at the ledge about 71% down, so about 61% of the height tall (measured); the lamp at about 61% x, 64%–77% down (measured); the stone wall at the right, left edge about 84% x, from about 25% down past 88% (measured), and the wall image's own near-black bare tree fills the upper right, about 77%–100% x, from the top edge down to the wall top; the left foreground branch covers about 0%–27% x from about 12% down to the bottom, its stem rising from the bottom-left corner (measured); the right foreground branch starts at about 60%–62% x near the top (top leaf about 5% down) and runs down to the bottom-right corner (measured); the left bare tree spans about 6%–28% x from the top edge, the mirrored right bare tree about 58%–80% x from about 22% down to about 88% (measured); the grass is a dark band across the bottom from about 78% down (measured); the city's skyline runs about 58%–70% down across the middle, with a large gothic block at the left edge, about 0%–15% x, from about 45% down (measured). Each layer's size on screen against the flat layout, from the shown values through the default camera (factor 2666.7 / (2666.7 + Z); inferred, and it agrees with the result frame where checked): sky about 1.03 times (76% → 312% at Z 7940); city about 0.61 times (162% → 275% at Z 4730, so the buildings end smaller than before, measured: blocks behind the figures about 50 px wide against about 120 px in the flat layout at the same figure height); bare trees about 0.97 times (100% → 162% at Z 1770); pine about 1.16 times (68% → 114% at Z 1200; measured on the result: its top stands about 1.7 figure heights above the figures' feet in the flat layout and about 1.9 here); figures and ledge unchanged (Z 0); wall about 1.29 times and grass about 1.45 times (Z -600 and -830, scale unchanged as far as shown); branches about 3.1 times their 37% scale, i.e. about 115% of their image size on screen: about 1.9 times the flat size for the right one, which was at 60%. Nothing moves; nothing is turned in depth (the right bare tree is mirrored by a negative X scale, not turned)
+timing and easing: none given (static layout; nothing keyframed in this technique)
+variations: Use whatever is furthest away (sky or other background) as the layer to push back (said). Vary the depths as much as the scene allows (said).
+pitfalls: Pushing a layer back makes it smaller on screen, so it must be scaled up again (said). The shape layer is turned back to 2D without explanation (shown, reason unknown).
+build notes: All scriptable. layer.threeDLayer = true for each layer (skip any 2D guide/shape layer). Set "ADBE Transform Group" > "ADBE Position" to [x, y, z] and "ADBE Scale" to [s, s, s]. The X/Y values in the steps only mean something for this artwork: they depend on each image's size and anchor point (the wall's 561.8 lands it at the right edge because its stone sits off-centre in its own image; inferred from the picture). Aim instead for the end shares in `layout`. To keep a pushed layer in the same place and size through the default camera, multiply its scale by (zoom + z) / zoom and move its X/Y away from the comp centre by the same factor, where zoom is the default camera's 2666.7 px for a 1920-wide comp (this formula is inferred, not given): the sky's 76% × (2666.7 + 7940) / 2666.7 ≈ 303%, close to the 312% used; the pine's flat X 567.9 at Z 1200 would need about 391 to stay put, and 407.9 was used. The author did not compensate everything exactly: the city ends at about 0.61 of its flat size, the pine about 1.16, and the foreground branches far bigger (37% instead of about 19% for the right one, which was at 60%), so they loom. Set Continuously Rasterize on .ai layers scaled above 100%.
+unknowns: The grass, wall, figures' and ledge's Scale in this technique (not shown; nothing in the result suggests they changed); the left bare tree's landed Scale (162% is the last value seen while dragging); whether the city's Z 4730 is final (it is the last value shown); whether the composition's default camera or a specific view was used to judge framing (only "Active Camera (Default)" is shown); what the shape layer contains and why it is left 2D; Continuously Rasterize settings.
+
 ## Rain slanted to match the wind
 id: 08-rainfall-matched-to-wind
 revision: ce6ebd7e

@@ -14,6 +14,8 @@ A technique is a reusable way of getting a look or a move in After Effects that 
 - A single-project tutorial ("make this scene") holds several: split it where the author moves to a new look or mechanism, and give each one a recipe-sized span. Do not make a technique out of ordinary housekeeping (making a comp, importing files, naming layers) unless the author presents it as a trick.
 - Leave out greetings, sign-offs, adverts for the creator's own products and recaps.
 - When one technique builds on another shown earlier in the same video, list both and say so in `purpose`.
+- **The object a technique works on is part of it.** Drawing the card, button or shape that the later steps act on, with its size and corners, is not housekeeping: start the span where that object is made. One list started a frosted card's span after its size and corner roundness had been set, so its writer never heard them.
+- **A span runs until the technique is fully applied**: "now do the same to the other layers" belongs to the technique before it, and the last technique's span takes in the finished result the video plays at the end. The runner names any narration left in no span (`speech in no span` in its note); greetings, sign-offs and plain housekeeping may stay out, nothing else.
 
 ## Output
 

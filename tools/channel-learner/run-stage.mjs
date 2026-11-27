@@ -229,6 +229,10 @@ function runBlock(stage, unit, ctx) {
     if (real && real !== ctx.proof) L.push(`- PROOF's real path: \`${real}\` (the same folder through the study link, so a project open from \`${path.join(real, 'proofs.aep')}\` is \`PROOF/proofs.aep\`)`);
   }
   if (/^prove-(author|run)$/.test(stage)) L.push(`- SCRIPTS: \`${ctx.scripts}\``);
+  if (/^(art|prove-author|prove-run)$/.test(stage)) {
+    const ln = path.join(ctx.proof, 'lead-notes.md');
+    if (fs.existsSync(ln)) L.push(`- Lead notes: \`${ln}\` holds the owner's requirements for this video's proofs (the subject or brand, type stand-ins, an extra variant to show). Read it before you start and follow it; where it and the recipe disagree on what the technique does, the recipe wins and you say so.`);
+  }
   if (stage === 'prove-run') { const sf = scriptFile(ctx, unit); if (sf) L.push(`- Script: \`${sf}\` (yours to run; \`${EXAMPLE_SCRIPT}\` is only the finished example)`); }
   if (stage === 'prove-run') {
     const rv = path.join(ctx.proof, unit, 'review.md');
@@ -273,6 +277,54 @@ function runBlock(stage, unit, ctx) {
   return L.join('\n');
 }
 
+const clock = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+
+/**
+ * Stretches of narration that no technique's span covers (LESSONS.md lesson 50): the lead reads
+ * them after the techniques run, since a span that starts late loses the object's own build
+ * (a card's size and corners) and one that ends early loses "now do the same to the rest".
+ * A stretch is at least `minWords` words with no gap over `joinGap` seconds between them.
+ */
+export function uncoveredSpeech(timeline, techniques, { minWords = 10, joinGap = 4 } = {}) {
+  const words = [];
+  for (const c of timeline?.chapters || []) {
+    for (const s of c.sentences || []) for (const w of s.words || []) words.push(w);
+  }
+  const spans = (techniques || []).map((t) => [Number(t.start), Number(t.end)]);
+  const covered = (w) => spans.some(([a, b]) => w.t >= a && w.t <= b);
+  const out = [];
+  let run = [];
+  const flush = () => {
+    if (run.length >= minWords) {
+      out.push({ start: run[0].t, end: run[run.length - 1].end ?? run[run.length - 1].t,
+        words: run.slice(0, 6).map((w) => w.text).join(' ') });
+    }
+    run = [];
+  };
+  for (const w of words.sort((a, b) => a.t - b.t)) {
+    if (covered(w)) { flush(); continue; }
+    if (run.length && w.t - (run[run.length - 1].end ?? run[run.length - 1].t) > joinGap) flush();
+    run.push(w);
+  }
+  flush();
+  return out;
+}
+
+/**
+ * A check run that printed its check as its last message instead of writing the file (LESSONS.md
+ * lesson 52): save that check, when it is one, for this recipe, with a verdict. Returns true if saved.
+ */
+export function savePrintedCheck(text, file, unit) {
+  const t = String(text || '');
+  const i = t.search(/^round:/m);
+  if (i < 0) return false;
+  const body = t.slice(i).split('\n').filter((l) => !/^\s*RESULT:/i.test(l)).join('\n').trim();
+  const rid = (body.match(/^recipe:\s*(\S+)/m) || [])[1];
+  if (!rid || !rid.startsWith(`${unit}-`) || !/^verdict:\s*(pass|fail)\b/m.test(body)) return false;
+  fs.writeFileSync(file, `${body}\nnote: saved by the runner from the run's last message; the run printed its check instead of writing it (LESSONS.md lesson 52).\n`);
+  return true;
+}
+
 export function buildPrompt(stage, unit, ctx) {
   return `${fs.readFileSync(path.join(PROMPTS, `${stage}.md`), 'utf8').trimEnd()}\n${runBlock(stage, unit, ctx)}\n`;
 }
@@ -285,7 +337,10 @@ function judgeOutput(stage, unit, ctx, started) {
   switch (stage) {
     case 'techniques': {
       const t = readJson(path.join(ctx.study, 'techniques.json'));
-      return Array.isArray(t) && t.length ? { ok: true, note: `${t.length} techniques` } : { ok: false, note: 'no techniques.json' };
+      if (!(Array.isArray(t) && t.length)) return { ok: false, note: 'no techniques.json' };
+      const gaps = uncoveredSpeech(readJson(path.join(ctx.study, 'timeline.json')), t);
+      const shown = gaps.map((g) => `${clock(g.start)}–${clock(g.end)} "${g.words}…"`).join('; ');
+      return { ok: true, note: `${t.length} techniques${gaps.length ? `; speech in no span: ${shown}` : ''}` };
     }
     case 'distil': {
       const r = recipeFile(ctx, unit);
@@ -405,10 +460,12 @@ async function runOne(stage, unit, ctx, deps, runUsd) {
     else if (!r.subtype) rec.note = `claude exited ${out.code} with no result: ${String(out.stderr || '').trim().split('\n').slice(-2).join(' | ')}`;
     else if (r.isError) rec.note = `run error (${r.subtype}): ${r.text.slice(0, 120)}`;
     else {
+      const saved = stage === 'check' && !freshSince(checkFile(ctx, unit), started)
+        && savePrintedCheck(r.text, checkFile(ctx, unit), unit);
       const j = judgeOutput(stage, unit, ctx, started);
       const said = r.verdict;
       rec.pass = j.ok && (!said || said.pass);
-      rec.note = [j.note, said ? said.note : 'no RESULT line'].filter(Boolean).join('; ');
+      rec.note = [j.note, saved ? 'saved from the run\'s message' : '', said ? said.note : 'no RESULT line'].filter(Boolean).join('; ');
     }
   }
   fs.mkdirSync(path.dirname(ctx.results), { recursive: true });

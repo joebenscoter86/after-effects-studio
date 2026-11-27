@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
-  STAGES, claudeArgs, parseStream, runStage, runVideo, readResults,
+  STAGES, claudeArgs, parseStream, runStage, runVideo, readResults, uncoveredSpeech, savePrintedCheck,
 } from '../run-stage.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -244,7 +244,8 @@ test('material the author gave beside the video (extras.md) is named to writers 
   const write = ({ unit }) => fs.writeFileSync(path.join(dir, 'recipes', `${unit}-trick.md`), `## Technique ${unit}\n`);
   const without = fakeClaude(write);
   await runStage('distil', { study: dir }, { ...quiet, claude: without.claude });
-  assert.ok(!without.calls[0].input.includes('extras.md'), 'no extras note without the file');
+  const bareBlock = without.calls[0].input.slice(without.calls[0].input.indexOf('## This run'));
+  assert.ok(!bareBlock.includes('extras.md'), 'no extras note in the run block without the file');
 
   fs.writeFileSync(path.join(dir, 'extras.md'), '# Beside the video\n\nPinned comment: an expression.\n');
   for (const stage of ['distil', 'check']) {
@@ -385,4 +386,81 @@ test('committed proof scripts name no home folder; paths come from args or start
   for (const f of ['prove-author.md', 'prove-run.md']) {
     assert.ok(fs.readFileSync(path.join(PROMPTS, f), 'utf8').includes('never a home folder spelled out'), `${f} says so`);
   }
+});
+
+test('narration that no technique span covers is named, so a late start or early end is seen before the writers run (lesson 50)', async () => {
+  const words = (from, n, text) => Array.from({ length: n }, (_, i) => ({ t: from + i * 0.5, end: from + i * 0.5 + 0.4, text: `${text}${i}` }));
+  const timeline = { chapters: [
+    { sentences: [{ words: words(0, 12, 'hello') }] },          // intro, 0–6 s
+    { sentences: [{ words: words(20, 30, 'card') }] },           // the card is drawn, 20–35 s
+    { sentences: [{ words: words(40, 20, 'blur') }] },           // the technique, 40–50 s
+    { sentences: [{ words: words(52, 12, 'rest') }] },           // "do the same to the rest", 52–58 s
+    { sentences: [{ words: words(70, 4, 'bye') }] },             // a short sign-off, under 10 words
+  ] };
+  const late = uncoveredSpeech(timeline, [{ n: '01', start: 40, end: 50.5 }]);
+  assert.deepEqual(late.map((g) => [g.start, Math.round(g.end)]), [[0, 6], [20, 35], [52, 58]]);
+  assert.match(late[1].words, /^card0 card1/);
+  assert.deepEqual(uncoveredSpeech(timeline, [{ n: '01', start: 20, end: 60 }]).map((g) => g.start), [0], 'only the intro is left once the span is widened');
+
+  // The techniques run's note carries them.
+  const dir = study(['01']);
+  fs.unlinkSync(path.join(dir, 'techniques.json'));
+  fs.writeFileSync(path.join(dir, 'timeline.json'), JSON.stringify(timeline));
+  const { claude } = fakeClaude(() => {
+    fs.writeFileSync(path.join(dir, 'techniques.json'), JSON.stringify([{ n: '01', slug: 'blur', start: 40, end: 50.5, purpose: 'x' }]));
+  });
+  await runStage('techniques', { study: dir }, { ...quiet, claude });
+  const [r] = readResults(path.join(dir, 'runs.jsonl'));
+  assert.ok(r.pass, 'listing passes');
+  assert.match(r.note, /speech in no span: 0:00–0:05 "hello0[^;]*; 0:20–0:34 "card0/);
+  for (const f of ['techniques.md', 'video-lead.md']) {
+    assert.ok(fs.readFileSync(path.join(PROMPTS, f), 'utf8').includes('speech in no span'), `${f} names the note`);
+  }
+});
+
+test('the owner\'s proof requirements reach art and build runs through PROOF/lead-notes.md, and only when it exists', async () => {
+  const told = async (stage, withNote) => {
+    const dir = study(['01']);
+    fs.writeFileSync(path.join(dir, 'recipes', '01-zigzag.md'), '## Technique 01\n');
+    const scripts = path.join(dir, 'scripts');
+    fs.mkdirSync(scripts);
+    fs.writeFileSync(path.join(scripts, '01-zigzag.jsx'), '// technique 01\n');
+    const note = path.join(dir, 'proof', 'lead-notes.md');
+    if (withNote) fs.writeFileSync(note, '# Lead notes\nInvented app mark; Inter Tight for SF Pro.\n');
+    fs.mkdirSync(path.join(dir, 'proof', '01'), { recursive: true });
+    const { claude, calls } = fakeClaude(() => {});
+    await runStage(stage, { study: dir, scripts, only: ['01'] }, { ...quiet, claude, makeSheets: async () => {} });
+    assert.equal(calls.length, 1, `${stage} ran once`);
+    return calls[0].input.slice(calls[0].input.indexOf('## This run')).includes(`- Lead notes: \`${note}\``);
+  };
+  assert.equal(await told('prove-run', false), false, 'no note file, no line');
+  for (const stage of ['art', 'prove-author', 'prove-run']) assert.equal(await told(stage, true), true, `${stage} is told`);
+  assert.equal(await told('prove-review', true), false, 'the review judges against the tutorial, not the brief');
+});
+
+test('code the author gave is quoted whole in the recipe, and the check compares it word for word (lesson 51)', () => {
+  const distil = fs.readFileSync(path.join(PROMPTS, 'distil.md'), 'utf8');
+  const check = fs.readFileSync(path.join(PROMPTS, 'check.md'), 'utf8');
+  assert.match(distil, /quote the whole text word for word in a fenced block/, 'writers quote it');
+  assert.match(check, /carries that text in full in a fenced block/, 'checkers ask for it');
+  assert.match(check, /word for word/, 'and compare it with extras.md');
+});
+
+test('a check run that prints its check instead of writing it has the check saved, for its own recipe only (lesson 52)', async () => {
+  const dir = study(['01']);
+  fs.writeFileSync(path.join(dir, 'recipes', '01-trick-01.md'), '## Technique 01\n');
+  const printed = 'Done.\n\nround: 3 (changed lines only)\nrecipe: 01-trick-01\nverdict: pass\nfailures:\n- none\n\nRESULT: pass — fixed';
+  const { claude } = fakeClaude(() => ({ text: printed }));
+  await runStage('check', { study: dir, only: ['01'] }, { ...quiet, claude });
+  const saved = fs.readFileSync(path.join(dir, 'checks', '01.md'), 'utf8');
+  assert.match(saved, /^round: 3 \(changed lines only\)\nrecipe: 01-trick-01\nverdict: pass/);
+  assert.ok(!/RESULT:/.test(saved), 'the RESULT line is not part of the check');
+  const [r] = readResults(path.join(dir, 'runs.jsonl'));
+  assert.ok(r.pass, 'counts as a passed check');
+  assert.match(r.note, /saved from the run's message/);
+
+  const other = path.join(dir, 'checks', '02.md');
+  assert.equal(savePrintedCheck('round: 1\nrecipe: 03-else\nverdict: pass\n', other, '02'), false, 'another recipe\'s check is not saved');
+  assert.equal(savePrintedCheck('round: 1\nrecipe: 02-x\n', other, '02'), false, 'no verdict, no check');
+  assert.ok(!fs.existsSync(other));
 });

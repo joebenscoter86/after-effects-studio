@@ -821,6 +821,34 @@
     "type: reveal",
     "finish: blur"
    ]
+  },
+  "01-frosted-glass-pill-from-adjustment-shape": {
+   "provides": [
+    "material: glass",
+    "finish: blur",
+    "depth: z-stack"
+   ]
+  },
+  "02-null-hierarchy-for-grouped-motion": {
+   "provides": []
+  },
+  "03-expression-bounce-drop-in": {
+   "provides": [
+    "motion: bounce"
+   ]
+  },
+  "04-staggered-element-offsets": {
+   "provides": [
+    "motion: stagger",
+    "motion: bounce"
+   ]
+  },
+  "05-stacked-second-notification-with-push-back": {
+   "provides": [
+    "motion: bounce",
+    "depth: z-stack",
+    "material: glass"
+   ]
   }
  },
  "styles": {
