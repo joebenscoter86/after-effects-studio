@@ -296,6 +296,16 @@ test('a check of a recipe whose merge lines no check has confirmed is told to ch
   }
 });
 
+// Lesson 55: a builder set CC Composite's Composite Original to 1 for "In front"; the default,
+// which is In front, is 3, so the original showed at full strength and the build swapped mechanisms.
+test('builders read an effect menu by its default before setting it by number (lesson 55)', () => {
+  const text = fs.readFileSync(path.join(PROMPTS, 'prove-run.md'), 'utf8');
+  assert.match(text, /menu/i);
+  assert.match(text, /Composite Original/);
+  assert.match(text, /default value/i);
+  assert.match(text, /before (?:you )?(?:replace|substitute|swap)/i, 'a mechanism is not swapped before the setting is tested');
+});
+
 test('proofs are built at 9:16, the phone frame the owner reviews on: the art, script and comp rules all say so', () => {
   for (const f of ['prove-author.md', 'prove.md', 'art.md']) {
     const text = fs.readFileSync(path.join(PROMPTS, f), 'utf8');
