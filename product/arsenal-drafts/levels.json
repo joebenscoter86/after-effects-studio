@@ -849,6 +849,41 @@
     "depth: z-stack",
     "material: glass"
    ]
+  },
+  "01-edge-only-outline-from-logo": {
+   "provides": [
+    "light: rim"
+   ]
+  },
+  "02-multi-colour-edge-lines-converging": {
+   "provides": [
+    "light: rim",
+    "transition: sweep"
+   ]
+  },
+  "03-stacked-glow-on-outline": {
+   "provides": [
+    "light: glow",
+    "finish: glow"
+   ]
+  },
+  "04-animated-light-sweep-width-reveal": {
+   "provides": [
+    "light: rim",
+    "light: glow"
+   ]
+  },
+  "05-fill-reveal-with-composite-and-highlight": {
+   "provides": [
+    "light: glow",
+    "finish: glow"
+   ]
+  },
+  "06-swap-logo-or-text-procedurally": {
+   "provides": [
+    "light: glow",
+    "type: reveal"
+   ]
   }
  },
  "styles": {

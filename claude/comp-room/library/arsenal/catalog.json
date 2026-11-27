@@ -1,6 +1,6 @@
 {
  "vocab": "jobs-v1",
- "version": "c5529514",
+ "version": "a85de696",
  "jobs": [
   "land-number",
   "count-things",
@@ -2738,6 +2738,271 @@
    "no_still": "unproven: no proof build yet"
   },
   {
+   "id": "01-edge-only-outline-from-logo",
+   "revision": "b84f5ffe",
+   "level": "recipe",
+   "name": "Edge-only light outline from a solid logo",
+   "line": "Turn a solid-colour logo into a thin glowing rim line with nothing inside it, as the base for an animated outline reveal.",
+   "status": "proven",
+   "kind": "technique",
+   "job": "light-the-hero",
+   "support": [
+    "introduce-tool"
+   ],
+   "mood": [
+    "dark",
+    "glow",
+    "sleek"
+   ],
+   "needs": [
+    "shapes"
+   ],
+   "duration": 2,
+   "motion": "still",
+   "difficulty": 2,
+   "taught_by": 5,
+   "variant_of": "04-light-sweep-edge-on-buttons",
+   "variants": [],
+   "provides": [
+    "light: rim"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
+   "section": {
+    "document": "arsenal-picture-2",
+    "heading": "Edge-only light outline from a solid logo"
+   },
+   "still": {
+    "path": "arsenal/stills/01-edge-only-outline-from-logo.jpg",
+    "sha256": "8af185ab5e2f85eed1d8c7b8405006ed2e22dc1a602fde22fb0164e15d96a2e9"
+   }
+  },
+  {
+   "id": "02-multi-colour-edge-lines-converging",
+   "revision": "f2f7c4ae",
+   "level": "recipe",
+   "name": "Three coloured edge sweeps that spin in and meet at one angle",
+   "line": "Reveal a logo as thin bright outlines that start at different angles, race around it and lock together at one point. Use it when a logo needs a sleek outline intro before the fill or glow arrives.",
+   "status": "proven",
+   "kind": "technique",
+   "job": "introduce-tool",
+   "support": [
+    "light-the-hero",
+    "add-impact"
+   ],
+   "mood": [
+    "dark",
+    "sleek",
+    "glow"
+   ],
+   "needs": [
+    "shapes"
+   ],
+   "duration": 5,
+   "motion": "one-shot",
+   "difficulty": 3,
+   "taught_by": 5,
+   "variant_of": "04-light-sweep-edge-on-buttons",
+   "variants": [],
+   "provides": [
+    "light: rim",
+    "transition: sweep"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
+   "section": {
+    "document": "arsenal-picture-2",
+    "heading": "Three coloured edge sweeps that spin in and meet at one angle"
+   },
+   "still": {
+    "path": "arsenal/stills/02-multi-colour-edge-lines-converging.jpg",
+    "sha256": "3afe91b53c306680dd43dd5008417896eab1d9e3aadeb7d151cd579f2308e474"
+   }
+  },
+  {
+   "id": "03-stacked-glow-on-outline",
+   "revision": "1426e5ca",
+   "level": "recipe",
+   "name": "Four stacked Glow effects blooming a thin outline",
+   "line": "When a thin bright outline on black needs to read as lit from within, with a tight hot edge, a near halo and a wide soft haze. One Glow is flat; several at growing radii give the falloff.",
+   "status": "proven",
+   "kind": "technique",
+   "job": "light-the-hero",
+   "support": [
+    "finish-the-look"
+   ],
+   "mood": [
+    "dark",
+    "glow",
+    "sleek"
+   ],
+   "needs": [
+    "shapes"
+   ],
+   "duration": 1,
+   "motion": "still",
+   "difficulty": 1,
+   "taught_by": 2,
+   "variant_of": "20-two-pass-glow",
+   "variants": [],
+   "provides": [
+    "light: glow",
+    "finish: glow"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
+   "section": {
+    "document": "arsenal-picture",
+    "heading": "Four stacked Glow effects blooming a thin outline"
+   },
+   "still": {
+    "path": "arsenal/stills/03-stacked-glow-on-outline.jpg",
+    "sha256": "7aec312227fd7c7f6a1161a3b73b9339fb6a1278036929076fc4ca3bc6028716"
+   }
+  },
+  {
+   "id": "04-animated-light-sweep-width-reveal",
+   "revision": "3901f108",
+   "level": "recipe",
+   "name": "Animated light-sweep width: outline brightens, spreads, starts hidden",
+   "line": "Make a rim-lit logo come alive: the lit edges widen and brighten over the first seconds, and at the start nothing is visible, so the outline fades in while it keeps turning.",
+   "status": "proven",
+   "kind": "technique",
+   "job": "introduce-tool",
+   "support": [
+    "light-the-hero",
+    "add-impact"
+   ],
+   "mood": [
+    "dark",
+    "glow",
+    "sleek"
+   ],
+   "needs": [
+    "shapes"
+   ],
+   "duration": 6,
+   "motion": "one-shot",
+   "difficulty": 3,
+   "taught_by": 5,
+   "variant_of": "04-light-sweep-edge-on-buttons",
+   "variants": [],
+   "provides": [
+    "light: rim",
+    "light: glow"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
+   "section": {
+    "document": "arsenal-picture-2",
+    "heading": "Animated light-sweep width: outline brightens, spreads, starts hidden"
+   },
+   "still": {
+    "path": "arsenal/stills/04-animated-light-sweep-width-reveal.jpg",
+    "sha256": "816d1946251bb2d3d27c3b625499ea091817b3b8bb01db06c69bef21ca6680a5"
+   }
+  },
+  {
+   "id": "05-fill-reveal-with-composite-and-highlight",
+   "revision": "4dcda4ff",
+   "level": "recipe",
+   "name": "Solid logo fading in over a glowing outline, with a hot highlight and a small scale-down",
+   "line": "When a thin glowing outline logo should land as a finished, solid, clean logo: the outline's glow dies away, a flare flashes over the top of the shape, the solid fill fades in and the whole logo settles slightly smaller.",
+   "status": "proven",
+   "kind": "technique",
+   "job": "introduce-tool",
+   "support": [
+    "add-impact",
+    "light-the-hero"
+   ],
+   "mood": [
+    "dark",
+    "glow",
+    "sleek"
+   ],
+   "needs": [
+    "shapes"
+   ],
+   "duration": 7,
+   "motion": "one-shot",
+   "difficulty": 3,
+   "taught_by": 5,
+   "variants": [],
+   "provides": [
+    "light: glow",
+    "finish: glow"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
+   "section": {
+    "document": "arsenal-line",
+    "heading": "Solid logo fading in over a glowing outline, with a hot highlight and a small scale-down"
+   },
+   "still": {
+    "path": "arsenal/stills/05-fill-reveal-with-composite-and-highlight.jpg",
+    "sha256": "9ecbf3f6609225aeaff549e228b5302cb0bbd13090905c2902b1f7a5abe2c5ac"
+   }
+  },
+  {
+   "id": "06-swap-logo-or-text-procedurally",
+   "revision": "220eebe5",
+   "level": "recipe",
+   "name": "Swap the logo or text inside a finished glow-reveal setup",
+   "line": "When a glowing outline-and-flash logo reveal is already built on a pre-composed logo, this reuses it for another mark or a word. Replace the artwork inside the pre-comp and the whole animation carries over unchanged.",
+   "status": "proven",
+   "kind": "technique",
+   "job": "introduce-tool",
+   "support": [
+    "light-the-hero"
+   ],
+   "mood": [
+    "dark",
+    "glow",
+    "sleek"
+   ],
+   "needs": [
+    "shapes",
+    "type"
+   ],
+   "duration": 6,
+   "motion": "one-shot",
+   "difficulty": 2,
+   "taught_by": 1,
+   "variants": [],
+   "provides": [
+    "light: glow",
+    "type: reveal"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
+   "section": {
+    "document": "arsenal-line",
+    "heading": "Swap the logo or text inside a finished glow-reveal setup"
+   },
+   "still": {
+    "path": "arsenal/stills/06-swap-logo-or-text-procedurally.jpg",
+    "sha256": "e1076d4ca72ff5fa49152d3d9246482b8752468017f350d0fbf4b5d41573c901"
+   }
+  },
+  {
    "id": "01-value-driven-counter",
    "revision": "bec7b246",
    "level": "recipe",
@@ -4133,8 +4398,10 @@
    "duration": 5,
    "motion": "still",
    "difficulty": 1,
-   "taught_by": 1,
-   "variants": [],
+   "taught_by": 2,
+   "variants": [
+    "03-stacked-glow-on-outline"
+   ],
    "provides": [
     "finish: glow",
     "light: glow"
@@ -4600,7 +4867,7 @@
    "composes": [],
    "shelf": "shipped",
    "section": {
-    "document": "arsenal-line",
+    "document": "arsenal-line-2",
     "heading": "Cards growing along a drawn path into a stacked trail"
    },
    "still": {
@@ -4861,7 +5128,7 @@
    "composes": [],
    "shelf": "shipped",
    "section": {
-    "document": "arsenal-line",
+    "document": "arsenal-line-2",
     "heading": "Bevelled 3D text wrapped in a tiled material"
    },
    "still": {
@@ -4990,7 +5257,7 @@
    "composes": [],
    "shelf": "shipped",
    "section": {
-    "document": "arsenal-picture",
+    "document": "arsenal-picture-2",
     "heading": "Soft front fill from a point light with smooth falloff"
    },
    "still": {
@@ -5119,7 +5386,7 @@
    "composes": [],
    "shelf": "shipped",
    "section": {
-    "document": "arsenal-line",
+    "document": "arsenal-line-2",
     "heading": "Warm-sided metal title: textured faces, plain tinted sides"
    },
    "still": null,
@@ -5280,7 +5547,7 @@
    "composes": [],
    "shelf": "shipped",
    "section": {
-    "document": "arsenal-picture",
+    "document": "arsenal-picture-2",
     "heading": "One mood grade for mismatched art: Tritone plus a single-point Curves, pasted to every layer"
    },
    "still": {
@@ -6484,8 +6751,12 @@
    "duration": 2,
    "motion": "one-shot",
    "difficulty": 3,
-   "taught_by": 1,
-   "variants": [],
+   "taught_by": 5,
+   "variants": [
+    "01-edge-only-outline-from-logo",
+    "02-multi-colour-edge-lines-converging",
+    "04-animated-light-sweep-width-reveal"
+   ],
    "provides": [
     "light: rim",
     "material: glass",

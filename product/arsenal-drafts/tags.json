@@ -2673,6 +2673,140 @@
       "difficulty": 3,
       "group": null,
       "why": "\"Use it when a second card lands on top of a card already on screen and the first should react: sink, shrink and settle with a small springy wobble instead of just being covered.\": a second item arrives while the first stays visible, stepped back behind it, so it reads as a growing stack of messages"
+    },
+    "Nh3TenxxQzQ#01": {
+      "id": "01-edge-only-outline-from-logo",
+      "kind": "technique",
+      "job": "light-the-hero",
+      "support": [
+        "introduce-tool"
+      ],
+      "mood": [
+        "dark",
+        "glow",
+        "sleek"
+      ],
+      "needs": [
+        "shapes"
+      ],
+      "duration": 2,
+      "motion": "still",
+      "difficulty": 2,
+      "group": "edge light sweep",
+      "variant_of": "tYRvoI04pJk#04",
+      "why": "'a solid-colour logo into a thin glowing rim line with nothing inside it, as the base for an animated outline reveal': a black Fill plus one edge-only CC Light Sweep leaves a hairline of light along the logo's top edges"
+    },
+    "Nh3TenxxQzQ#02": {
+      "id": "02-multi-colour-edge-lines-converging",
+      "kind": "technique",
+      "job": "introduce-tool",
+      "support": [
+        "light-the-hero",
+        "add-impact"
+      ],
+      "mood": [
+        "dark",
+        "sleek",
+        "glow"
+      ],
+      "needs": [
+        "shapes"
+      ],
+      "duration": 5,
+      "motion": "one-shot",
+      "difficulty": 3,
+      "group": "edge light sweep",
+      "variant_of": "tYRvoI04pJk#04",
+      "why": "'a logo mark needs a sleek outline intro before the fill arrives': three coloured CC Light Sweep edge lines on an invisible-fill logo race round it and lock together at one point"
+    },
+    "Nh3TenxxQzQ#03": {
+      "id": "03-stacked-glow-on-outline",
+      "kind": "technique",
+      "job": "light-the-hero",
+      "support": [
+        "finish-the-look"
+      ],
+      "mood": [
+        "dark",
+        "glow",
+        "sleek"
+      ],
+      "needs": [
+        "shapes"
+      ],
+      "duration": 1,
+      "motion": "still",
+      "difficulty": 1,
+      "group": "double glow",
+      "why": "'a thin bright logo outline on black needs to read as lit from within, a hot edge, a near halo and a wide soft haze': four duplicated Glows at radii 50, 165, 480 and 1000 on the outline layer",
+      "variant_of": "YBeMmC43Q1U#20"
+    },
+    "Nh3TenxxQzQ#04": {
+      "id": "04-animated-light-sweep-width-reveal",
+      "kind": "technique",
+      "job": "introduce-tool",
+      "support": [
+        "light-the-hero",
+        "add-impact"
+      ],
+      "mood": [
+        "dark",
+        "glow",
+        "sleek"
+      ],
+      "needs": [
+        "shapes"
+      ],
+      "duration": 6,
+      "motion": "one-shot",
+      "difficulty": 3,
+      "group": "edge light sweep",
+      "variant_of": "tYRvoI04pJk#04",
+      "why": "'a logo has to arrive out of black as lit edges that spread and keep turning, before the solid mark lands': the stacked CC Light Sweeps with Width keyed from 0 so the rims fade in and Direction keyed so they circle the mark (the silhouette itself is never drawn, so this is the outline half of the arrival)"
+    },
+    "Nh3TenxxQzQ#05": {
+      "id": "05-fill-reveal-with-composite-and-highlight",
+      "kind": "technique",
+      "job": "introduce-tool",
+      "support": [
+        "add-impact",
+        "light-the-hero"
+      ],
+      "mood": [
+        "dark",
+        "glow",
+        "sleek"
+      ],
+      "needs": [
+        "shapes"
+      ],
+      "duration": 7,
+      "motion": "one-shot",
+      "difficulty": 3,
+      "group": "edge light sweep",
+      "why": "'a named product's logo should arrive on black: a glowing outline blooms, a flare flashes and the solid mark lands clean': CC Composite opacity fade of the solid over the keyed light-sweep outline and stacked glows, with sweep widths to 0, a Sweep Intensity flare and a small scale-down"
+    },
+    "Nh3TenxxQzQ#06": {
+      "id": "06-swap-logo-or-text-procedurally",
+      "kind": "technique",
+      "job": "introduce-tool",
+      "support": [
+        "light-the-hero"
+      ],
+      "mood": [
+        "dark",
+        "glow",
+        "sleek"
+      ],
+      "needs": [
+        "shapes",
+        "type"
+      ],
+      "duration": 6,
+      "motion": "one-shot",
+      "difficulty": 2,
+      "group": null,
+      "why": "'put my own logo, or a word, into this glowing outline reveal': drop new artwork into the logo pre-comp, add a white Fill, and the finished stack draws it with light, blooms and lands it as a crisp white mark"
     }
   }
 }
