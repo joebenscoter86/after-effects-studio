@@ -86,7 +86,7 @@ All six were written and none is held. Writing, checking and fixing cost $11.60 
 
 ## Spend
 
-$38.22 of the video's $40 was spent across 104 runs:
+$40.01 was spent across 107 runs. Joe raised the video's budget from $40 to $55 for one more round on 03 and 06:
 
 | Stage | Cost | Runs |
 |---|---|---|
@@ -95,13 +95,13 @@ $38.22 of the video's $40 was spent across 104 runs:
 | check | $5.82 | 29 |
 | art | $1.47 | 6 |
 | prove-author | $1.24 | 6 |
-| prove-run | $15.86 | 19 |
-| prove-review | $7.98 | 19 |
+| prove-run | $17.23 | 21 |
+| prove-review | $8.41 | 20 |
 
 - The 12 "failed" checks are checks whose verdict was fail, which sent recipe gaps back to writers.
-- The 13 "failed" reviews are reviews that did not end "matches".
+- The 14 "failed" reviews are reviews that did not end "matches".
 - The lead stopped the runner once, mid-05, to save budget after Glow Colors was found. No dialog was open and the project was saved.
-- No further fix round fit the budget, so 03 and 06 went to Joe as they are.
+- At $38.22 no further fix round fit the $40 budget, so 03 and 06 went to Joe as they were. Joe accepted all six and approved one more round; it cost $1.79 (below).
 
 ## Acceptance
 
@@ -123,6 +123,33 @@ $38.22 of the video's $40 was spent across 104 runs:
   - release, 125 of 125;
   - runtime offline (`npm run test:offline`): all 100 test files pass, with 1702 tests passed and 117 skipped (the After Effects opt-ins).
 
+  This was merged as PR 48.
+
+## Fix round after acceptance
+
+Joe accepted all six as they were. He then approved one more round on 03 and 06, with the video's budget raised to $55: "1 - approved / … / 3 - budget raised approved", relayed by the session that runs the plan. His targets:
+- for 03, less magenta in the line and the white haze about twice as strong;
+- for 06, the trace light 3–4 times dimmer, so the thin outlines show.
+
+The rule for the round: a rebuild that reviews better replaces the accepted proof without a second acceptance; otherwise the accepted proof stays. The recipes were not changed; the reviews' recipe suggestions went to the builders as lead notes instead (see Open).
+
+- **03: replaced.** The sixth build changed only the sweeps: the white sweep's Width 170 → 230 × K, and the mask's end y 730 → 750. Its review is again "partly (close)", but it moved toward both targets:
+
+  | Figure | Accepted fifth build | Sixth build | Tutorial |
+  |---|---|---|---|
+  | White share of lit pixels | 24 % | 63 % | 68 % |
+  | Far white haze, share of the tutorial's | about 35 % | 50–73 % | — |
+
+  The near haze agrees. It lost the soft pink wash round the magenta beyond 25 px, because the magenta sits in the white haze. The sixth build now supplies the cookbook's still and the phone file (`logo-03.mp4`, sent to Joe for information; the accepted one is kept as `logo-03-fifth.mp4`). The recipe's status line says so, and so does a note in `checks/03.md`.
+- **06: kept.** The lead's note had the name reset in capitals (`LUMENFOLD`, Montserrat Black) at about twice the size, so the edge light would cover thin rims rather than whole letter faces. With the Glows off, that came true. But with them on, the trace still read 4–5 times its rest. The builder also tried the word at half the frame's width, which was worse. The fourth build was not reviewed and is kept as a study. The accepted third build stays the proof: the still now points at `proof/06/build-third.png`, the same image as before. A note in `checks/06.md` says so.
+- **Lesson 58.** The lead sent 06's round on an untested cause. `video-lead.md` step 7 now has the lead test a named cause on a scratch comp before a rebuild, and write what the test measured in the note.
+- **Stills.** `arsenal.mjs` keeps a still that already exists, so 03's old JPEG was deleted to make the new one. The same rule is what keeps an unaccepted rebuild (like 06's fourth) out of the cookbook.
+- **Spend.** Two builds ($0.69 and $0.67) and one review ($0.42) brought the video to $40.01 of $55.
+- **Tests and rebuild.** The arsenal, plugin and Claude package were rebuilt. All three suites pass again:
+  - learner, 233 of 233, with lesson 58's test;
+  - release, 125 of 125;
+  - runtime offline: all 100 test files pass, with 1702 tests passed and 117 skipped.
+
 ## Lessons from this run
 
 - **53.** gather fetches a 403'd video once more (`learn.mjs`).
@@ -130,12 +157,21 @@ $38.22 of the video's $40 was spent across 104 runs:
 - **55.** An effect menu is set to the number that gives the recipe's label, found by testing, and a setting that seems not to work is tested alone before anything is substituted (`prove-run.md`). It names CC Composite and Glow Colors.
 - **56.** Glow Threshold takes 0–255 by script (`prove-run.md`).
 - **57.** Art that a light traces or blooms needs long smooth curves, type as heavy as the reference's, and a ground at the reference's level (`art.md` rule 2). The lead's own shared art meets that rule (`video-lead.md` step 6).
+- **58.** A lead note that names a cause for a rebuild is tested on a scratch comp first, and gives what the test measured (`video-lead.md` step 7).
 
 Each lesson is in `tools/channel-learner/LESSONS.md`, with a test in the learner suite.
 
 ## Open
 
-- **03's colour split.** The line going into the Glows is mostly magenta, where the tutorial's is a hot white crescent with a short magenta curl. The review's target is to light the long stretch white with row peaks of 240 or more, and keep magenta to about 30 % of lit pixels. The recipe lists the sweep colours and widths that give this under unknowns.
-- **06's trace phase.** The fix the review points at is in the shared stack, not the swap: what the sweeps light on a heavy word. Render with the Glows off and narrow the sweeps to edge slivers before touching the Glows.
+- **03's pink wash and far haze.** After the sixth build, the line is mostly white, as the tutorial's is. Two things fall short:
+  - The far haze is about two thirds of the tutorial's. More hot white length would raise it, but the picture-mean limit blocks that at this frame shape.
+  - The pink wash fades to grey beyond 25 px.
+
+  The review suggests a thinner, softer magenta (about 210, 80, 205 before the Glows) kept clear of the white run. It also suggests a layout line giving the line's colour split going into the Glows, about 70 % hot white and 20–30 % soft magenta. The recipe still lists the sweep colours and widths as unknowns.
+- **06's trace phase.** With only thin rims lit (Glows off), the recipe's Glow stack still floods a nine-letter word to 4–5 times its rest. The tutorial's trace is 1.2 times. The levers left:
+  - a subject that lights less rim at once, such as a shorter word (the tutorial's is HELLO);
+  - Glow values for a swapped-in subject with more edge, which the recipe would have to give.
+
+  The review also suggests adding the trace and flash ratios (about 1.2–1.6 and 2.5–3 times rest) to the recipe's layout.
 - **05's outline haze.** It is about 3× the tutorial's at 3/8 and 5/8 of the clip, an optional fix. The lever is the rims' brightness, not the Glow threshold.
 - **A stale compiled file.** `plugin/runtime/dist/tools/arsenal.js` is tracked but stale. It predates the variant rule (no `standOnTheirOwn`) and gives a wrong answer for introduce-tool if imported directly. The plugin runs the bundled `dist/index.js`, which `build.mjs` builds from source, so users are not affected.

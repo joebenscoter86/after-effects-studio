@@ -748,14 +748,14 @@
       "title": "Technique arsenal index: documents, vocabulary and counts",
       "path": "arsenal/index.json",
       "kind": "catalog",
-      "sha256": "c8a6f658c5ebf189811ffbad57fafb0d01324835c32ee43605b52dde72780fc0"
+      "sha256": "f01700749dcc174f70b130cf5c01527199f1d13b2eeac226355b17509b69a3b1"
     },
     {
       "id": "arsenal-catalog",
       "title": "Library catalog: one record per style, world, recipe and piece, queried by ae_arsenal",
       "path": "arsenal/catalog.json",
       "kind": "catalog",
-      "sha256": "dc0af5021791569f45455cd676e04a293ae7d371e5dccb98fddd2ad5d89a1211"
+      "sha256": "bb5e38a487f68a2f69be40ea2fb294092c251c49e02ee57b3b59540a20ebac3a"
     },
     {
       "id": "arsenal-jobs",
@@ -783,7 +783,7 @@
       "title": "Arsenal recipes: picture jobs: how the picture has to read, whatever the line says (part 1 of 2)",
       "path": "arsenal/recipes-picture.md",
       "kind": "recipes",
-      "sha256": "617f560db3a41246508faa91eb6ffccfad93432f8d44d12ecc00253a2117eb55"
+      "sha256": "f63932ad0e7d37ee85322a58237a2ec57aeff43bb2a2d9821f0f352c5cae6aa8"
     },
     {
       "id": "arsenal-picture-2",
