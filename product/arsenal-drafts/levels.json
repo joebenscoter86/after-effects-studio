@@ -884,6 +884,29 @@
     "light: glow",
     "type: reveal"
    ]
+  },
+  "01-before-after-sliding-matte-wipe": {
+   "provides": [
+    "transition: wipe",
+    "depth: matte"
+   ]
+  },
+  "01-slider-driven-countdown-timer-expression": {
+   "provides": [
+    "type: number",
+    "motion: counter"
+   ]
+  },
+  "01-trim-paths-travelling-round-cap-line": {
+   "provides": [
+    "motion: draw-on"
+   ]
+  },
+  "02-duplicate-rotate-lines-into-cross": {
+   "provides": [
+    "motion: draw-on",
+    "material: flat-vector"
+   ]
   }
  },
  "styles": {

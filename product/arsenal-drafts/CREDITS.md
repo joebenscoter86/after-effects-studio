@@ -17,3 +17,6 @@ The recipes in this folder were learned from public tutorials. The techniques ar
 | `tYRvoI04pJk.md` | [TomsProject](https://www.youtube.com/channel/UCVg8JEJOOLjFSx43tPbx3yQ) | [SaaS Motion Graphics Masterclass: Every Technique You Need](https://www.youtube.com/watch?v=tYRvoI04pJk) |
 | `tYjqtArZtds.md` | [Zuyns](https://www.youtube.com/channel/UCNtmXS6PG2w1cK8mByxC7Lg) | [How to Animate Notifications Like Apple in After Effects](https://www.youtube.com/watch?v=tYjqtArZtds) |
 | `Nh3TenxxQzQ.md` | [Motion Nations](https://www.youtube.com/channel/UC5oZfKcyeB3O1sKrxVTibAg) | [This LOGO Animation Method is so POWERFUL - After Effects Tutorial \| No Plugins - Glow Outline Logo](https://www.youtube.com/watch?v=Nh3TenxxQzQ) |
+| `99FUeOo4fiQ.md` | [Smertimba Graphics](https://www.youtube.com/channel/UC00xDVHwxN9NChfLMfke_xA) | [Countdown Timer Tutorial in After Effects](https://www.youtube.com/watch?v=99FUeOo4fiQ) |
+| `SSAsTdXmKl0.md` | [Move Shapes](https://www.youtube.com/channel/UCcvag2CHtCfOjCzngMPuTpg) | [Simple Before & After Transition in After Effects Tutorial](https://www.youtube.com/watch?v=SSAsTdXmKl0) |
+| `UehuuNiZVuk.md` | [After Effects Channel •](https://www.youtube.com/channel/UCiIs_XfIl__ufojb4hO-ETQ) | [Tutorial 04: Cross animation in after effects with trim paths ✔](https://www.youtube.com/watch?v=UehuuNiZVuk) |

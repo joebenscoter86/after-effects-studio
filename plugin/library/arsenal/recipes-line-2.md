@@ -2,6 +2,157 @@
 
 Generated from the recipe drafts; do not edit by hand. Recipes whose primary job is in this group. Find candidates for a beat with ae_arsenal find; read one with ae_arsenal get, or a section here by its heading.
 
+## Frame video in a custom shape with a track matte
+id: 25-custom-media-frame
+revision: 8c6d3c5f
+job: show-real-screen; support: reveal-headline
+status: proven (accepted 2026-11-14)
+what it does for a beat: When a photo or clip should sit in a designed window rather than a plain rectangle (for example, a cut-out that leaves room for a headline), draw any shape and use it as the clip's matte.
+what it looks like: On a white slide, a dark building photo fills a wide frame whose lower middle is notched out, so a white panel with a large black headline sits inside the notch; the image reads as a custom-shaped placeholder.
+ingredients:
+- Shape layer drawn with the Rectangle tool (or the Pen tool) — built-in
+- Track Matte column (Alpha Matte) on the media layer — built-in
+steps:
+1. Draw the frame shape with the Pen tool or shape tools (said); here, three rectangles inside one shape layer (shown)
+   - Rectangle 1: a wide bar across the top (shown)
+   - Rectangles 2 and 3: two blocks hanging down at the left and right, leaving a gap in the middle for the text (shown)
+   - Rectangle 3 Size: 595.0, 1285.0 (shown)
+   - Rectangle 3 Roundness: 20.0 (shown)
+   - Rectangle 3 Position: 1374.5, 261.5 (shown)
+   - Comp: 3840 x 2160 (measured: a 3840 comp at the 20% zoom readout is about 1378 px on screen and the result crop is 1376 px)
+   - Fill: grey; Stroke Width 3.0 with the stroke switched off (shown)
+   - The clip layer's visibility (eye) is off while the shape is drawn, so the grey shape is seen over the slide (shown)
+2. Drag the video or image layer from below the shape (layer 3) to directly above it (layer 1, shape on layer 2; shown)
+3. Turn the clip layer's eye back on; a hidden layer renders nothing even with a matte (shown cursor on the eye column, eye on; the reason is inferred)
+4. Set the clip's Track Matte to the shape layer, alpha matte (said "matte your video or images to it"; shown, Track Matte "2. Shape L…" with the alpha icon)
+5. The shape layer's visibility turns off and the clip shows only inside the shape (shown)
+layout: whole frame: about 87% of the comp's width (6.3% to 93.4% across) by 59% of its height (33% to 92% down) (measured, shares of the whole comp: the viewer is at 20% zoom and the result crop takes in the whole comp; the comp is 3840 x 2160: the viewer reads 20% and the crop is 1376 px wide against about 1378 px for a 3840 comp at that zoom, measured); top bar about 29% of the comp's height deep across the full frame width; left and right blocks each about 15.4% of the comp's width wide, running the full frame height; the notch between them about 56% of the width wide and 30% of the height deep, centred at 50% across (measured, same frame, shares of the whole comp); corner rounding about 0.4% of the comp's width (measured, same frame); the headline in the notch about 52% of the width wide, capitals about 12% of the height tall, centred at 50% across (measured, same frame, shares of the whole comp)
+timing and easing: none given
+variations: Any shape made with the pen or shape tools works (said)
+pitfalls: none given
+build notes: Add a shape layer with three `ADBE Vector Shape - Rect` groups (Size, Position, Roundness) and a Fill; put the footage layer above it with `footage.enabled = true` (a hidden footage layer renders nothing), then call `footage.setTrackMatte(shapeLayer, TrackMatteType.ALPHA)` (AE 23+; older: move footage directly above and set `trackMatteType`). All scriptable. The Rectangle Position values on screen are in the shape layer's own space with the layer left at the comp centre; read that way in a 3840 x 2160 comp, Rectangle 3 lands on the layout's right block (inferred: found in a proof build, not said or shown).
+unknowns: Sizes and positions of Rectangles 1 and 2; the fill colour value. A later shot shows the same layout with clearly rounded corners on every edge, but the step that rounded them is not shown (Roundness reads 20 throughout).
+
+## Rounded-rectangle matte card that carries its media and labels
+id: 01-rounded-shape-matte-media-card
+revision: 6305ccdf
+job: show-real-screen; support: list-items
+status: unproven
+variant of: 25-custom-media-frame
+differs: the same mechanism as the parent: a shape layer drawn with the Rectangle tool sits directly under the photo or clip, the media's Track Matte is set to that shape as an alpha matte, and the shape's own visibility goes off so the media shows only inside it (parent steps 1, 2, 4 and 5, the source video.md L919, L928, L930, L931). Shape: here one upright rectangle, Rectangle Path Size 556 × 712, Roundness 54, centred in the frame (steps 1–3); in the parent three rectangles in one shape layer, a top bar and two hanging blocks that leave a notch for a headline, Rectangle 3 at Size 595 × 1285 and Roundness 20 (L919–L923). Order: here the photo is dropped in directly above the shape (step 4); in the parent the clip starts below the shape, is dragged above it and has its eye turned back on, since a hidden layer renders nothing (L928–L929). Parenting: here the photo (Scale 70 %) and every overlay (a two-line headline, two pill tags with a word in each, a logo) are parented to the shape, so one layer moves and scales the whole card, and the overlays carry no matte so they sit on top of it (steps 6, 8, 9); the parent has no parenting step (its steps, L919–L931). Comp: here about 1920 × 1080 at 23.976 fps (step 1); the parent's comp is 3840 × 2160 (L925).
+what it does for a beat: Turns any photo or clip into a tidy rounded card whose size and position are driven by one shape layer, so the card can later be swung, scaled or duplicated as a unit. Reach for it as the base piece of any card carousel or media stack.
+what it looks like: A portrait photo of a model, cropped into a rounded upright card in the middle of a plain cream frame, with a bold two-line white headline, two small outlined pill tags laid over the lower part of the card, and a small white logo mark in the card's top-left corner.
+ingredients:
+- Shape layer from the Rectangle Tool — built-in; toolbar shape-tool flyout (Rectangle Tool shown)
+- Track Matte (alpha matte from the shape layer) — built-in; Track Matte column of the timeline (shown)
+- Parenting (Parent & Link) — built-in; Parent & Link column (shown)
+steps:
+1. Pick the Rectangle Tool from the shape-tool flyout and drag out an upright rectangle in the composition (said; tool menu shown)
+   - Composition: about 1920x1080, 23.976 fps (fps shown; size inferred from the rectangle filling 29% x 66% of the picture at 556x712)
+   - Rectangle Path Size: 556.0,712.0 (shown)
+   - Rectangle Path Position: 0.0,0.0 (shown)
+   - Fill: black, Stroke off (shown; the fill colour does not matter because the layer is only used as a matte — inferred)
+2. Centre the shape layer in the frame (said, stressed as exact; the Align panel is set to "Composition", but no click on an align button is seen — how it was centred is inferred)
+   - Shape layer Position: no settled readout is ever on screen. The only readouts come during the drag-away-and-back test (step 9), while the value is being scrubbed: Y stays 538.0 and X passes 868 to 1448 (cuts from); these are values passed through, not the layer's set position. The recording then cuts (X reading 768, card left of centre) to a state where the card is centred again. Measured on the result frame, the card's centre sits at 0.501 x 0.501 of the picture, so aim for the comp centre, 960,540 (measured; the 538 seen while dragging is within reading error)
+3. Open Contents > Rectangle 1 > Rectangle Path 1 and raise Roundness to round the corners (said)
+   - Roundness: 54.0 (shown; dragged up through 20 and 41 first)
+4. Drop the photo or video into the comp directly above the shape layer (said; shown, photo layer at index 1 above the shape layer)
+5. On the photo layer set Track Matte to the shape layer, using the alpha matte (said "track matte"; matte chosen shown; alpha rather than luma is inferred from the matte icon)
+   - The shape layer's own visibility goes off when it becomes the matte (shown, eye column empty on the shape layer)
+6. Scale the photo inside the card until it frames well (said "control the sizing")
+   - Photo Scale: 70.0,70.0% (shown)
+7. Rename the shape layer so it is easy to find, for example "matte" (shown; not said)
+8. Parent the photo layer to the shape layer so moving or scaling the shape moves the photo with it (said; shown, photo layer Parent = the matte layer)
+9. Add the overlay elements on top — a two-line headline text layer, two pill-shaped outline boxes with a one-word text tag in each, a small logo image — and parent every one of them to the shape layer too (said; shown, all six overlay layers parented to the matte layer)
+   - Optional test: after parenting the photo, the matte's Position is dragged away and back to show the photo following it (shown); it is put back, so it does not change the result
+   - The overlay layers have no track matte (Track Matte = No Matte, shown), so they sit on top of the card rather than being cut by it
+   - The overlays are switched on one at a time while the layers are set up (shown); this is housekeeping, not part of the look
+layout: background a flat, full-frame cream solid, RGB about 247,244,237, the same value in all four corners and mid-edges of the result crop, with no vignette, gradient or grain (measured on a still of the result; the layer is present); card width about 29% of the picture width and height about 66% of the picture height, centred both ways (measured on the result frame: 491 x 634 px in the 1688 x 948 crop, centre 0.501 x 0.501); the card is flat, with no drop shadow, edge glow or stroke: the two rows just below its bottom edge are a lighter anti-aliased fringe, and from the third row down the pixels are within 4 levels of the background, exact from the seventh (measured at the card's centre column and near its left corner); corner radius: Roundness 54 shown, which in After Effects is the radius in comp pixels (about 10% of the 556 px card width); measured on the result crop the corner fits a circle of about 45 crop px on the 491 px card, about 51 comp px or 9% of the card width, the same on the top-left, top-right and bottom-left corners (measured; within reading error of 54); headline sits in the lower third of the card, left-aligned with a margin of about 7% of the card width, letter height about 6% of the picture height; pill tags under the headline, each about 4% of the picture height tall; logo mark in the card's top-left corner, about 7% of the card width in from the left edge and about 5% of the card height down, roughly 11% of the card width wide (measured on the result frame, also visible)
+timing and easing: none given (this part is static set-up)
+variations: any media works — photos or video (said); any shape can be drawn (said "any shape that you want")
+pitfalls: the shape must be exactly centred in the frame (said, stressed); the media and all text and graphics must be parented to the matte shape so one layer moves everything (said, stressed as "most importantly")
+build notes: by script — layers.addShape(); add "ADBE Vector Group" with "ADBE Vector Shape - Rect" (Size [556,712], Roundness 54) and "ADBE Vector Graphic - Fill"; set layer Position to the comp centre; import the media, move it above the shape, then mediaLayer.setTrackMatte(shapeLayer, TrackMatteType.ALPHA) (AE 2023+; older versions: put the shape directly above and set trackMatteType = TrackMatteType.ALPHA); mediaLayer.parent = shapeLayer and the same for each text, box and logo layer; media Transform > Scale [70,70]. Nothing here needs the interface.
+unknowns: exact composition size (inferred 1920x1080); how the layer was centred (align button or position typed) and its settled Position value; fonts, sizes and colours of the headline and tags; size and roundness of the pill boxes; the logo artwork; whether the photo is a still or a clip in the finished build (a still is used here)
+
+## Card that swings round a pivot below the frame, one step at a time, forever
+id: 02-pivot-null-swing-loop
+revision: faf0d084
+job: list-items; support: keep-it-alive
+status: proven (accepted 2026-11-19)
+what it does for a beat: Gives a card (or later a row of cards) a carousel step: it swings in from one side on a big arc, settles upright, pauses, then swings out the other side, and the step repeats endlessly from only three keyframes. Use it for product or photo carousels, list reveals, or any "next item" rhythm.
+what it looks like: The rounded photo card from 01-rounded-shape-matte-media-card arrives from the lower right tilted about 34 degrees, rocks up into the centre on a wide arc and holds upright; the next step carries it on the same arc to the mirror of where it started, lower left and tilted about −34°, where it holds again with its lower-left corner about 6% of the picture height below the frame's bottom edge, the card cut by that edge along about 8% of the picture width; only the step after that (−68°) takes it mostly out of frame, one corner still showing at the lower left. Each cycle adds another −34°, so a single card never comes back.
+ingredients:
+- The matte card from 01-rounded-shape-matte-media-card (shape matte with media and overlays parented to it)
+- Pan Behind (Anchor Point) Tool — built-in; toolbar (said)
+- Null Object — built-in; Layer > New > Null Object, Ctrl+Alt+Shift+Y (menu shown)
+- loopOut("offset") expression on Rotation — built-in (said; shown)
+- Easy Ease (F9) and the Graph Editor speed graph — built-in (said)
+steps:
+1. Build the card as in 01-rounded-shape-matte-media-card (inferred link; said "builds on")
+2. With the Pan Behind tool, drag the matte layer's anchor point down to the bottom edge of the card, centred (said; result shown, Anchor Point 3.8,359.8 on a 712 px tall rectangle, so the anchor sits on its bottom edge)
+3. Make a null object (said; New > Null Object menu shown)
+4. Parent the matte layer to the null (said; shown, matte layer Parent = the null)
+5. With the Pan Behind tool, drag the null's anchor point straight down below the composition to where the swing should pivot (said; shown, the null's anchor sits centred horizontally below the frame)
+   - Pivot: centred, about 0.36 picture heights below the bottom edge of the frame, i.e. about 0.53 picture heights below the card's bottom edge (measured)
+6. Test the arc by scrubbing the null's Rotation value back and forth and watching the card travel round the pivot (shown, scrub cursor on the Rotation value; the timeline also records about −81° during this stretch; not said; the value is then put back to 0)
+7. On the null's Rotation, set a keyframe of 0 degrees around frame 20 (said "around 20 ish frames"; shown, key at about 20 f, 0x+0.0°)
+8. Go to frame 0 and rotate the null so the card sits off to one side (said; shown)
+   - Rotation at 0 f: 0x+34.0° (shown; card to the right)
+9. Add a third keyframe a few frames after the 0-degree one, with the same value, to make a short hold (said; shown, a third key about 3 f later)
+   - Final key times after retiming: 0 f (+34°), 17 f (0°), 24 f (0°) at 23.976 fps (shown, measured on the timeline ruler; the move from 20 f to 17 f is not seen being done)
+10. Alt-click the Rotation stopwatch and type the offset loop (said; the auto-complete list of continue / cycle / offset / pingpong shown)
+   - Expression: loopOut("offset") (shown)
+   - Each cycle now adds another −34° step and its own 7-frame hold, so the card goes right (+34°) → centre (0°, hold) → lower left (−34°, hold) → mostly out (−68°) (inferred from how offset looping works; confirmed in the playback, cut every 0.05 s from 133.5, upright hold, swing, left hold, next step, then a still corner at the lower left)
+11. Select the first two keyframes and apply Easy Ease with F9 (said; hourglass Easy Ease icons on keys 1 and 2, third key left linear, shown)
+12. In the Graph Editor (speed graph), pull the ease handles out to make a strong, symmetric ease in and out (said "smooth out the animation however you need"; final shape shown and unchanged, just before the playback)
+   - Key 1 outgoing handle: Speed 0.00 °/s, Influence about 77% (shown, a tooltip reading 76.71% read while the handle is still being dragged, so a value passed through; the settled graph has the same shape, so about 77% stands as approximate)
+   - Key 2 incoming handle: about the same length, so about 77% too (inferred from the matching handle length)
+   - Resulting speed graph: peak about −199 °/s at about frame 8.5 of the 17-frame swing, symmetric, near-zero speed for the first and last few frames (shown, read off the graph's degree scale)
+   - On the way the author drags an earlier, lopsided shape (peak about −116 °/s near frame 5, mid-drag); that is not the final shape
+layout: card upright and centred at the hold, card about 29% of picture width and 66% of picture height (measured, unchanged from 01); the card keeps this size through the whole swing, with no shrink or lean of its own (that is 03) (measured: its pixel area is 18.9% of the picture upright and 18.5% at the left hold); at the left hold (−34°) the card's centre sits about 23% across and 64% down, its lower-left corner about 6% of the picture height below the frame's bottom edge, so the bottom edge cuts the card along about 8% of the picture width, from about 19% to 27% across (measured on the last picture row of a full, the corner depth from the geometry: centre 64% down, −34° tilt puts the lower-left corner about 450 comp px below the centre); after the next step (−68°) only about a third of the card shows, low in the bottom-left corner (measured); motion is right to left: each step carries the card's centre about 27% of the picture width, almost all of it in about 5 comp frames mid-swing, peaking at about 1.5 picture widths per second (from about 7.8° per comp frame on a pivot about 0.48 picture widths below the card centre; measured); at frame 0 the card centre sits about 77% across and 62% down the picture, tilted +34° (measured); pivot centred about 0.36 picture heights below the frame's bottom edge (measured)
+timing and easing: 23.976 fps; null Rotation keys 0 f = +34°, 17 f = 0°, 24 f = 0° (24-frame cycle: 17 f swing, 7 f hold); Easy Ease on the first two keys, then both handles pulled to about 77% influence for a symmetric ease with a peak of about 199 °/s mid-swing; loopOut("offset") repeats the step forever
+variations: none given beyond "however you need" for the graph shape (said)
+pitfalls: parenting the card to a null that is itself moved creates layers of parenting ("null-ception", said); without a loop expression the keyframes only play one swing (said); without easing the step looks mechanical (said: ease is highly suggested)
+build notes: by script — matte.property("ADBE Transform Group").property("ADBE Anchor Point") set to [0, rectHeight/2] and Position compensated so the card does not jump (the Pan Behind tool does this compensation by hand); var n = comp.layers.addNull(); move the null's anchor/position so its position lies at [compW/2, compH*1.36]; matte.parent = n; n Rotation setValueAtTime(0,34), (17/23.976,0), (24/23.976,0); expression 'loopOut("offset")'; KeyframeEase on keys 1–2: key 1 outgoing new KeyframeEase(0, 76.71) and key 2 incoming new KeyframeEase(0, about 77) (key 1 value shown; key 2 inferred from its matching handle); key 2 outgoing and key 3 can stay linear. Nothing needs the interface.
+unknowns: how the keys moved from about 20 f / 23 f to 17 f / 24 f (somewhere in, not checked); the exact influence of key 2's incoming handle; the null's exact position values; the composition length; whether anything else in the comp is animated
+
+## Card shrinks and leans outward at the ends of its swing
+id: 03-tilt-and-shrink-on-swing
+revision: 27af439d
+job: list-items; support: point-at-detail
+status: proven (accepted 2026-11-19)
+what it does for a beat: Adds a size-and-lean change on top of the pivot swing so the card is small and tipped outward while it is off to the side and full size and upright when it reaches the top. This is what makes a swinging carousel feel like it is "resizing" and gives the centred item its emphasis.
+what it looks like: The rounded photo card enters from the lower right at about two-thirds size and leaning hard outward, grows to full size as it rises upright into the centre, holds, then shrinks and leans outward again as it falls away to the lower left.
+ingredients:
+- The swinging card from 02-pivot-null-swing-loop (matte card parented to a pivot null with a looping rotation)
+- Scale and Rotation keyframes on the matte shape layer — built-in (said)
+- Easy Ease (F9) and the Graph Editor — built-in (shown)
+steps:
+1. Start from the finished 02-pivot-null-swing-loop set-up: null keys 0 f +34°, 17 f 0°, 24 f 0° with loopOut("offset") (inferred link; null keys still visible)
+2. Select the matte shape layer (the card) and open Scale and Rotation; its anchor is already on the card's bottom edge (shown, Anchor Point 3.8,359.8)
+   - Housekeeping: the photo, text, box and logo layers are hidden from the timeline with the shy switch, leaving only the null, the matte and the background listed (shown); this does not change the picture
+3. At frame 17, where the null reaches 0°, set keyframes for Scale and Rotation at full size and upright (said "hold the sizing rotation at the top"; shown)
+   - Scale: 100.0,100.0% (shown)
+   - Rotation: 0x+0.0° (shown)
+4. At frame 0, where the card sits to the right, set Scale and Rotation so the card is smaller and leans further outward (said "slightly tilt and scale down"; shown and again)
+   - Scale: 68.0,68.0% (shown)
+   - Rotation: 0x+23.0° (shown; added on top of the null's +34°, so the card leans about 57° in all — inferred sum)
+5. At frame 24, where the null's hold ends, add a matching full-size, upright key so the card holds at the top (shown, a third key added with 100% and 0°; the author says to hold the size and rotation at the top)
+6. At frame 41, where the null's next step has carried the card to the left (24 f + 17 f), set the shrink and lean again in the other direction (said: repeat the shrink and tilt when the card reaches the other side)
+   - Scale: 68.0,68.0% (shown)
+   - Rotation: 0x−22.0° (shown; the key first reads 68% and +23° — that it was copied and pasted from frame 0 is inferred, no copy or paste is seen — then it is changed to −22, so the card leans about −56° in all with the null at −34° — inferred sum)
+   - Key times measured on the timeline ruler: 0 f, 17 f, 24 f, 41 f (shown)
+7. Smooth the Scale and Rotation keys (said "smooth out those keyframes if you want")
+   - Easy Ease on all four keys of both properties: hourglass icons on every key (shown in a; all four keys selected)
+   - Then in the Graph Editor the handles are pulled long: a tooltip on the first key's outgoing handle reads Speed 0.00 °/s, Influence 86.23% (shown in a, read while the handle is still being dragged, so a value passed through, not a settled key: the same handle is still short, and the graph is closed; take it as about 86%)
+   - Resulting speed graphs for Scale (red) and Rotation (cyan): near zero speed around every key, with one narrow, tall spike inside each change: at about frame 7.5 of the 0–17 f stretch and about frame 32 of the 24–41 f stretch (Rotation peaks roughly −500 °/s and beyond the graph's lower edge; shown, key positions measured on the graph), so each change is slow at both ends and very quick in the middle; the other handles' influences are not readable and are taken as the same (inferred)
+layout: at the centre hold the card is 29% of picture width and 66% of picture height, upright, centred (measured, from 01); at the side extremes the card is about 20% of picture width (68% of full size), its centre about 77% across and 77% down the picture on the right and about 23% across and 76% down on the left, leaning about 57° outward, so it partly drops below the frame's bottom edge (measured on editor frames with handles); Scale and Rotation act about the anchor on the card's bottom edge (from 02), so the card shrinks down towards its bottom edge and tips about it: that is why the shrunk side card sits low, partly below the frame, rather than floating at mid-height (inferred from the anchor, matches the frames); after 41 f a single card holds at 68% and −22° (about −56° in all) at the lower left until the null's next step carries it out of frame (inferred from the keys; no key after 41 f is shown); in the reference result (see `result`) the centre card is visibly smaller and leaning and full size and upright, 29.4% of the picture wide (still tilting slightly) and 67% tall (measured on a still of the result to), while the incoming copy at the lower right shows the frame-0 state: 68% size, leaning about +57°, centre about 78% across and 78% down; the left side is empty at that moment because no card precedes the first one; the incoming card is drawn in front of the centre card (its corner covers the centre card's red lower-right corner); the background is the flat cream of 01
+timing and easing: 23.976 fps; matte keys at 0 f (68%, +23°), 17 f (100%, 0°), 24 f (100%, 0°), 41 f (68%, −22°), timed to the null's 0 f / 17 f / 24 f / 41 f positions; Easy Ease on all keys, then strong eases with long handles (first key outgoing influence about 86%, read mid-drag; the others assumed similar, inferred)
+variations: the smoothing is optional (said "if you want")
+pitfalls: none given
+build notes: by script — on the matte layer: Scale setValueAtTime at 0, 17, 24, 41 frames (÷23.976) with [68,68], [100,100], [100,100], [68,68]; Rotation ("ADBE Rotate Z") with 23, 0, 0, −22; apply KeyframeEase(0, 86) in and out on every key to match the first-key handle read mid-drag (the other keys' values inferred). The null's Rotation loops with loopOut("offset"), but the video does not show any loop on the matte's Scale and Rotation, so as built here they play once (0–41 f); a single card that leaves the frame after 41 f does not need more, and in a multi-card chain each copy carries its own keys (see the next step of the video, not part of this recipe).
+unknowns: the influence of every handle (the first key's outgoing 86.23% was read mid-drag); whether the matte's keys are looped by an expression; why the left-side lean (−22°) differs from the right-side lean (+23°) by one degree; a clean playback of the single-card effect (only the chained build of 04 is played clean)
+
 ## Cards growing along a drawn path into a stacked trail
 id: 06-path-trail-scale-rotate-in
 revision: a7127f71
@@ -1081,84 +1232,3 @@ variations: Cursor Shape can be changed from Vertical Bar in the effect (menu se
 pitfalls: The text must be paragraph text, not point text, and the typing text layer must be cut off with Alt+[ so no cursor shows before it starts (said). First keys of the camera push must be hold keys or it looks odd (said).
 build notes: Add the preset by selecting the text layer and double-clicking it in Effects & Presets (Animation Presets > Text > Animate In). Effect names appear as "Animation", "Cursor On/Off", "Cursor Shape", "Cursor Blink Speed" (preset-created expression controls, so they cannot be added by name from the Effects menu). Text animator: Text > Animator > Opacity; Range Selector Advanced > Based On = Words; key Start 0 to 100 %. Null: add a null, link the card's parent chain to it, key Position and Scale with setInterpolationTypeAtKey(HOLD) for the first keys. Cursor preset must be applied by hand or the preset file loaded with applyPreset.
 unknowns: Opacity animator's own value on the final result (said 50 %, not read on screen); slider key values apart from the last (100); the later Range Selector Start value; the heading's own animation; how far the text block was moved; the null's second key times; the preset's file name beyond what Effects & Presets shows; ease handle values; font colours; the final picture after the push is a different framing from the first and plays no typing on screen in this stretch. The result crop shows both lines bold (building state, before the switch to Regular); the finished weight is regular.
-
-## Second notification arrives and the first one is pushed back
-id: 05-stacked-second-notification-with-push-back
-revision: 626d0c64
-job: list-items; support: add-depth, add-impact
-status: proven (accepted 2026-11-26)
-what it does for a beat: Use it when a second card lands on top of a card already on screen and the first should react: sink, shrink and settle with a small springy wobble instead of just being covered.
-what it looks like: A wide frosted pill card sits centred on a near-white ground. A copy drops in from above and lands on top at the same spot with a soft bounce, while the original slides down behind it, a little smaller, its lower part peeking out under the new card. The new card's glass blurs what lies behind it.
-
-ingredients:
-- Finished notification build (a group of shape, text and logo layers, all parented to a chain of null layers ending in one top "main" null) — built earlier in the video, not part of this technique
-- Duplicate layers (select all, duplicate, move copies to top of the stack, slide them later in time) — built-in; shortcut Ctrl+D said; menu path inferred (Edit > Duplicate)
-- Position and Scale keyframes on the first notification's main null — built-in
-- Bounce expression on both Position and Scale — stock; text supplied in the video description; used unchanged (said (description))
-
-steps:
-1. Select every layer of the finished notification and duplicate them (said, including the Ctrl+D shortcut; the Edit > Duplicate menu path is inferred, no menu is on screen).
-2. Move the duplicated set to the very top of the layer stack (said). Layer list shows the copies ("… 2" names) above the originals (shown).
-3. Slide the duplicated layers later in time by 15 to 20 frames (said). Their bars start at about frame 15 on the ruler (shown, bars start under the playhead at 0:00:00:15; measured from the ruler, ≈ frame 15).
-   - Result: the copy repeats the original's entrance, including its bounce, from that moment (inferred from the finished clip; frames 15919–15922 were cut from the source video, not kept frames). The copy's entrance is the one built in 03-expression-bounce-drop-in and 04-staggered-element-offsets: start 150 px above rest and at 60 % scale, 4 frames to rest, bounce expression amp 0.04, freq 1.8, decay 3; logo parts start 2 frames and text parts 4 frames after the card, so the copy's parts arrive one after another (at 15919 the logo is in while the card's text is still missing).
-4. Select the first notification's main null (the null at the top of its parent chain, with no parent itself — shown, parent column "None") and add Position and Scale keyframes (said). First keys are set where the playhead stands, at time 15, with Position 960,540 and Scale 100,100 (shown).
-5. Paste the bounce expression onto both Position and Scale of that null (said). The values go red, which marks an expression (shown). Expression used is the one from the description, with amp 0.04, freq 1.8, decay 3, time_max 3 (said (description)). Full text, word for word (said (description)):
-   ```
-amp = .04;
-freq = 1.8;
-decay = 3;
-n = 0;
-time_max = 3;
-
-
-if (numKeys > 0) {
-    n = nearestKey(time).index;
-    if (key(n).time > time) {
-        n--;
-    }
-}
-
-
-if (n == 0) {
-    t = 0;
-} else {
-    t = time - key(n).time;
-}
-
-
-if (n > 0 && t < time_max) {
-    v = velocityAtTime(key(n).time - thisComp.frameDuration / 10);
-    
-    // Ease Out Factor (starts at 1, gradually reduces to 0)
-    easeFactor = easeOut(t, 0, time_max, 1, 0);
-    
-    value + v * amp * Math.sin(freq * t * 2 * Math.PI) / Math.exp(decay * t) * easeFactor;
-} else {
-    value;
-}
-   ```
-6. Move the first key (and its Scale partner) from frame 15 back to about frame 13, two frames before the copy starts (said); the diamonds then sit at about 13 (inferred from diamond x position against the ruler). The 15 in step 4 is only where the keys were first made.
-7. Go about five frames on and lower both values slightly (said). The second key's time reads frame 19 on the time display (shown), so the span is about 6 frames from key one by measure; the narrator's "five" is rounded.
-   - Position (second key): Y first read 617, then 636, 652 along the way (617 and 636 read from the timeline panel text; 652 shown) and finished at 960, 676 (shown — panel reads 960.0,676.0).
-   - Scale (second key): 86 % passed through (shown), 90 % at the end (shown — 90.0,90.0 %).
-8. Preview. The original now sinks 136 px and shrinks to 90 % over about 6 frames as the copy arrives, then wobbles, while the copy carries its own bounce (seen in the finished clip, frames 15918–15930 cut from the source video).
-
-layout: (all measured on the finished clip frames and a 9-frame sheet 15890–15970; the clip fills the whole 1920×1080 picture and the card sizes match the editor view at 100 % scale, so one is the other)
-- Front (new) card: about 70 % of picture width (≈1350 px), about 29 % of picture height (≈315 px), a fully rounded pill; centred at x 50 %, y 50 % of the picture. measured
-- Back (first) card: about 90 % of the front card in each direction (≈1215 × 283 px), centred about 12.5 % of picture height (≈135 px) below the front card's centre, i.e. at y ≈ 62.4 %. This matches the typed key (540 → 676, scale 90 %). measured
-- Overlap: front card hides the back card's upper part; about 10.8 % of picture height (≈117 px) of the back card shows below the front card. The back card's logo and text peek out under the front edge: its second line of text is sharp there, its logo only partly visible. measured
-- The front card's glass blurs whatever sits behind it: the back card's logo shows through as a soft teal blob inside the front card's lower-left, and its text as dark smudges. measured. The blur is the card build of 01-frosted-glass-pill-from-adjustment-shape, which the copy's cards carry: the front card is an adjustment-layer pill with Fast Box Blur, Blur Radius 30, 3 iterations (said and shown in recipe 01), set for a card 1350 × 315 px (radius ≈ 2.2 % of the card width, 9.5 % of its height), with a 4 px CCCCCC outline and a 5 % black 'depth' pill under it, which gives the faint shading rim. Recipe 01's figures apply here; this clip's ground reads 247.
-- Both cards have a thin pale outline and very light shading; ground is near white, slightly grey (about 247 in the clip; the editor's own white picture is brighter). The shadow under each card is faint. measured by eye only.
-- Which objects carry it: only the first notification's top null is keyed; every layer of the first card follows it through parenting, so card, text and logo move and scale together (shown, parent column). The copy's layers carry the original's bounce unchanged.
-- Motion blur: the arriving copy and the sinking original are both streaked vertically in the clip (frames 15919–15922 cut from the source video). At 15921 the arriving card's small text is stretched to about 2 line heights (≈ 25–30 px of smear on glyphs ≈ 35 px tall, at 1920 wide) and card edges are doubled; the smear is vertical only. measured. Cause: not said or shown (no motion-blur switch is on screen in this technique). A smear along the direction of travel that fades as the cards settle is what the comp Motion Blur gives, not the glass box blur, so layer Motion Blur switches (plus the comp switch) are the likely cause: inferred. Card travel between clip frames 15920 and 15921 is ≈ 55 px; with smear ≈ 25–30 px the implied shutter is about 180–200° (smear ≈ speed × angle ÷ 360), matching the default 180°; inferred, as clip frame spacing against comp frames is unknown. Gone by 15930.
-- Direction: the copy enters from above (a faint card sits above centre at its start, shown, at y ≈ 275 of the editor's picture, i.e. ≈ 27 % of height from the top) and ends at the centre; the first card moves straight down, no sideways drift. At the new card is a blurred smear above the older one, so it arrives with a blur. (the copy's own entrance is built earlier in the video; only its look at arrival is given here).
-- Motion size: first card moves 136 px down and loses 10 % scale. Bounce size from the expression: peak speed on Position over the 6 frames is ≈ 23 px per frame (680 px/s), so the first overshoot is ≈ 0.04 × 680 ≈ 27 px, decaying with e^(−3t) at 1.8 cycles per second; on Scale the initial wobble is ≈ 0.04 × 50 %/s ≈ 2 percentage points. (inferred from the pasted expression and the keys; not measured on the clip.)
-- Overshoot read in the clip: the front card measured 68 % wide (settling) and 70.4 % (rest). measured. Source frames also read ≈ 75 % at 15924 and ≈ 71 % at 15930, so the front card overshoots to about 75 % before shrinking back to 70.4 %; it does not only settle from below.
-- Result is the pre-made finished clip at the end, not the build just watched: it zooms to full screen and the build's panels are gone; the keys in the build (676, 90 %) match the clip's measured offset and size, so they appear the same.
-
-timing and easing: Copy starts at about frame 15 (shown). First key about frame 13 (inferred), second key frame 19 (shown). Keys look like plain diamonds (linear) in the panel (shown), no easing change is mentioned or shown; the springy feel comes from the expression: amp 0.04, freq 1.8, decay 3, time_max 3 (said (description)). In the clip the copy's blur-in and the sink play over roughly the same half second at preview speed (not timed; preview speed unknown).
-variations: The narrator says the timing and values can be refined further (said).
-pitfalls: none given, apart from the need to start the first card's keys a couple of frames before the copy starts so the reaction is not late (said).
-build notes: In a script: duplicate all layers, set the duplicates' startTime +15 frames (0.5 s at 30 fps), put them above the originals. On the main null: setValueAtTime(13/30, [960,540]) and (19/30, [960,676]) for Position; Scale [100,100] and [90,90] at the same times; then set both properties' expression to the full text quoted in step 5, verbatim (including the easeOut factor). Turn on the comp's Motion Blur switch and the layers' switches (inferred, shutter about 180–200°). Keep the expression's `velocityAtTime(key(n).time - thisComp.frameDuration/10)` — it reads the move into the key. Keys are plain linear (inferred from diamond shape). Scale keys on a null need the link-dimensions switch on (the chain icon shows linked). If the cards are built differently from the original, 676 px is 12.5 % of a 1080 high comp: scale it to the card height (136 ≈ 0.43 × card height 315).
-  - Played window source seconds 530.3–531.2 (frames 15910–15935): full-screen picture, no overlay, the new card arrives and the first one sinks. Still reference: 531.3–532.5 (frames 15940–15975) holds the same layout; use (clean, no arrow or handles). The kept frame is blank, so the clip fades or cuts at ≈ 532.7. The comp's time display is not visible in the clip, so frames per redraw are not counted.
-unknowns: Exact first key time (13 is read from a diamond's position). Whether the narrator's "five frames" or the display's 19 is intended. Key interpolation type (looks linear). Whether Motion Blur switches are on (inferred only) and the exact shutter. Shadow darkness. Preview speed of the clip. The copy's entrance start position beyond a rough 27 % of height.

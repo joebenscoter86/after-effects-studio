@@ -1,6 +1,6 @@
 {
  "vocab": "jobs-v1",
- "version": "a816c8b7",
+ "version": "67deb222",
  "jobs": [
   "land-number",
   "count-things",
@@ -1940,7 +1940,7 @@
    "duration": 2,
    "motion": "one-shot",
    "difficulty": 3,
-   "taught_by": 8,
+   "taught_by": 10,
    "variants": [],
    "provides": [
     "motion: draw-on",
@@ -2738,6 +2738,50 @@
    "no_still": "unproven: no proof build yet"
   },
   {
+   "id": "01-slider-driven-countdown-timer-expression",
+   "revision": "aac50b01",
+   "level": "recipe",
+   "name": "Slider-driven minutes:seconds countdown timer",
+   "line": "Put a live countdown clock (MM:SS) on screen when a scene needs a timer, a deadline or a ticking tension beat. Only one number is keyed, so the length is changed by editing two key values.",
+   "status": "proven",
+   "kind": "technique",
+   "job": "show-time",
+   "support": [
+    "land-number"
+   ],
+   "mood": [
+    "dark",
+    "bold",
+    "minimal"
+   ],
+   "needs": [
+    "type"
+   ],
+   "duration": 4,
+   "motion": "one-shot",
+   "difficulty": 2,
+   "taught_by": 5,
+   "variant_of": "01-value-driven-counter",
+   "variants": [],
+   "provides": [
+    "type: number",
+    "motion: counter"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
+   "section": {
+    "document": "arsenal-line",
+    "heading": "Slider-driven minutes:seconds countdown timer"
+   },
+   "still": {
+    "path": "arsenal/stills/01-slider-driven-countdown-timer-expression.jpg",
+    "sha256": "2961ab7d1592d13ca3c31a927b6cfa10f7d9a3501166d6789fba797f6f69f215"
+   }
+  },
+  {
    "id": "01-edge-only-outline-from-logo",
    "revision": "b84f5ffe",
    "level": "recipe",
@@ -3023,8 +3067,10 @@
    "duration": 3,
    "motion": "one-shot",
    "difficulty": 1,
-   "taught_by": 4,
-   "variants": [],
+   "taught_by": 5,
+   "variants": [
+    "01-slider-driven-countdown-timer-expression"
+   ],
    "provides": [
     "type: number",
     "motion: counter"
@@ -3068,7 +3114,7 @@
    "duration": 3,
    "motion": "one-shot",
    "difficulty": 1,
-   "taught_by": 4,
+   "taught_by": 5,
    "variants": [],
    "provides": [
     "motion: chart",
@@ -3112,7 +3158,7 @@
    "duration": 4,
    "motion": "one-shot",
    "difficulty": 2,
-   "taught_by": 4,
+   "taught_by": 5,
    "variants": [],
    "provides": [
     "motion: chart"
@@ -3155,7 +3201,7 @@
    "duration": 3,
    "motion": "one-shot",
    "difficulty": 2,
-   "taught_by": 4,
+   "taught_by": 5,
    "variants": [],
    "provides": [
     "motion: chart"
@@ -3215,6 +3261,50 @@
    "still": {
     "path": "arsenal/stills/05-map-regions-fade-up.jpg",
     "sha256": "be42d3beee355fc1631a1533636c9f89fbbc38bdbde836443439bd9084248597"
+   }
+  },
+  {
+   "id": "01-before-after-sliding-matte-wipe",
+   "revision": "138bf9d4",
+   "level": "recipe",
+   "name": "Before/after reveal with a sliding rectangle matte and thin edge line",
+   "line": "Show the same subject before and after one change. The \"after\" picture sits over the \"before\" picture and is uncovered by a straight vertical edge that sweeps across and then back.",
+   "status": "proven",
+   "kind": "technique",
+   "job": "before-after",
+   "support": [
+    "compare"
+   ],
+   "mood": [
+    "dark",
+    "sleek",
+    "clean"
+   ],
+   "needs": [
+    "photo",
+    "shapes"
+   ],
+   "duration": 5,
+   "motion": "one-shot",
+   "difficulty": 2,
+   "taught_by": 3,
+   "variants": [],
+   "provides": [
+    "transition: wipe",
+    "depth: matte"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
+   "section": {
+    "document": "arsenal-line",
+    "heading": "Before/after reveal with a sliding rectangle matte and thin edge line"
+   },
+   "still": {
+    "path": "arsenal/stills/01-before-after-sliding-matte-wipe.jpg",
+    "sha256": "6659c20f6072a331537e5bdf0f7d63fefed805c62b4203c597a26eb2a0243c6f"
    }
   },
   {
@@ -3567,6 +3657,89 @@
    "still": {
     "path": "arsenal/stills/08-staggered-slide-out-exit.jpg",
     "sha256": "51b141ffc5ff427331727603a5630defdc4f0fed3f8c2ca3a513b6bc4d0072ec"
+   }
+  },
+  {
+   "id": "01-trim-paths-travelling-round-cap-line",
+   "revision": "c770918c",
+   "level": "recipe",
+   "name": "Round-capped line that draws on and then wipes off (Trim Paths)",
+   "line": "A designer reaches for this when a plain stroke should grow along its path and then have its tail chase the head off the far end, as a quick graphic accent or as the building block for a larger line design.",
+   "status": "proven",
+   "kind": "technique",
+   "job": "add-impact",
+   "support": [],
+   "mood": [
+    "dark",
+    "minimal",
+    "clean"
+   ],
+   "needs": [
+    "shapes"
+   ],
+   "duration": 2,
+   "motion": "one-shot",
+   "difficulty": 2,
+   "taught_by": 10,
+   "variants": [],
+   "provides": [
+    "motion: draw-on"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
+   "section": {
+    "document": "arsenal-picture",
+    "heading": "Round-capped line that draws on and then wipes off (Trim Paths)"
+   },
+   "still": {
+    "path": "arsenal/stills/01-trim-paths-travelling-round-cap-line.jpg",
+    "sha256": "bdf509d54a19a2ee4c92f0caea846c6deebc0f537f6f3c0ce561b497226b1213"
+   }
+  },
+  {
+   "id": "02-duplicate-rotate-lines-into-cross",
+   "revision": "09c4e2c9",
+   "level": "recipe",
+   "name": "Two travelling lines turned into an X by duplicating and rotating",
+   "line": "A designer reaches for this when one animated stroke (see recipe 01-trim-paths-travelling-round-cap-line) should become a symbol or accent such as a cross, a close mark or a plus-style hit, by reusing the same animation on turned copies.",
+   "status": "proven",
+   "kind": "technique",
+   "job": "flag-a-problem",
+   "support": [
+    "add-impact"
+   ],
+   "mood": [
+    "bold",
+    "clean",
+    "minimal"
+   ],
+   "needs": [
+    "shapes"
+   ],
+   "duration": 2,
+   "motion": "one-shot",
+   "difficulty": 2,
+   "taught_by": 10,
+   "variants": [],
+   "provides": [
+    "motion: draw-on",
+    "material: flat-vector"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [],
+   "shelf": "shipped",
+   "section": {
+    "document": "arsenal-line",
+    "heading": "Two travelling lines turned into an X by duplicating and rotating"
+   },
+   "still": {
+    "path": "arsenal/stills/02-duplicate-rotate-lines-into-cross.jpg",
+    "sha256": "ec5251944fd24af359ef9062562bfa82152a013fd6d340c8427ebc86f0e544f1"
    }
   },
   {
@@ -4597,7 +4770,7 @@
    "duration": 4,
    "motion": "still",
    "difficulty": 1,
-   "taught_by": 2,
+   "taught_by": 3,
    "variants": [
     "01-rounded-shape-matte-media-card"
    ],
@@ -4611,7 +4784,7 @@
    "composes": [],
    "shelf": "shipped",
    "section": {
-    "document": "arsenal-line",
+    "document": "arsenal-line-2",
     "heading": "Frame video in a custom shape with a track matte"
    },
    "still": {
@@ -4644,7 +4817,7 @@
    "duration": 4,
    "motion": "still",
    "difficulty": 2,
-   "taught_by": 2,
+   "taught_by": 3,
    "variant_of": "25-custom-media-frame",
    "variants": [],
    "provides": [
@@ -4656,7 +4829,7 @@
    "composes": [],
    "shelf": "shipped",
    "section": {
-    "document": "arsenal-line",
+    "document": "arsenal-line-2",
     "heading": "Rounded-rectangle matte card that carries its media and labels"
    },
    "still": null,
@@ -4697,7 +4870,7 @@
    "composes": [],
    "shelf": "shipped",
    "section": {
-    "document": "arsenal-line",
+    "document": "arsenal-line-2",
     "heading": "Card that swings round a pivot below the frame, one step at a time, forever"
    },
    "still": {
@@ -4739,7 +4912,7 @@
    "composes": [],
    "shelf": "shipped",
    "section": {
-    "document": "arsenal-line",
+    "document": "arsenal-line-2",
     "heading": "Card shrinks and leans outward at the ends of its swing"
    },
    "still": {
@@ -5083,7 +5256,7 @@
    "composes": [],
    "shelf": "shipped",
    "section": {
-    "document": "arsenal-picture",
+    "document": "arsenal-picture-2",
     "heading": "Wide-lens camera inside the card ring"
    },
    "still": {
@@ -5215,7 +5388,7 @@
    "composes": [],
    "shelf": "shipped",
    "section": {
-    "document": "arsenal-picture",
+    "document": "arsenal-picture-2",
     "heading": "Shadowless parallel light as an extra backlight"
    },
    "still": {
@@ -5965,7 +6138,7 @@
    "duration": 2,
    "motion": "one-shot",
    "difficulty": 3,
-   "taught_by": 8,
+   "taught_by": 10,
    "variants": [],
    "provides": [
     "motion: draw-on",
@@ -6098,7 +6271,7 @@
    "duration": 3,
    "motion": "one-shot",
    "difficulty": 2,
-   "taught_by": 8,
+   "taught_by": 10,
    "variants": [],
    "provides": [
     "motion: draw-on"
@@ -6227,7 +6400,7 @@
    "duration": 3,
    "motion": "one-shot",
    "difficulty": 2,
-   "taught_by": 8,
+   "taught_by": 10,
    "variants": [],
    "provides": [
     "motion: chart",
@@ -6270,7 +6443,7 @@
    "duration": 1,
    "motion": "one-shot",
    "difficulty": 1,
-   "taught_by": 8,
+   "taught_by": 10,
    "variants": [],
    "provides": [
     "motion: draw-on",
@@ -6358,7 +6531,7 @@
    "duration": 2,
    "motion": "one-shot",
    "difficulty": 3,
-   "taught_by": 8,
+   "taught_by": 10,
    "variants": [],
    "provides": [
     "motion: chart"
@@ -6575,7 +6748,7 @@
    "duration": 3,
    "motion": "one-shot",
    "difficulty": 3,
-   "taught_by": 8,
+   "taught_by": 10,
    "variants": [],
    "provides": [
     "environment: map",
@@ -6706,7 +6879,7 @@
    "duration": 1,
    "motion": "one-shot",
    "difficulty": 3,
-   "taught_by": 8,
+   "taught_by": 10,
    "variants": [],
    "provides": [
     "motion: draw-on",
@@ -7387,7 +7560,7 @@
    "composes": [],
    "shelf": "shipped",
    "section": {
-    "document": "arsenal-line-2",
+    "document": "arsenal-line-3",
     "heading": "Second notification arrives and the first one is pushed back"
    },
    "still": {

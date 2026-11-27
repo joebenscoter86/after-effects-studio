@@ -2,6 +2,65 @@
 
 Generated from the recipe drafts; do not edit by hand. Recipes whose primary job is in this group. Find candidates for a beat with ae_arsenal find; read one with ae_arsenal get, or a section here by its heading.
 
+## Wide-lens camera inside the card ring
+id: 11-wide-lens-camera-distortion
+revision: 13680b7a
+job: add-depth
+status: proven (accepted 2026-11-19)
+what it does for a beat: A one-step finish for the ring of cards in 10-inner-ring-carousel: a short-focal-length camera stretches the perspective so the ring reads as a wide, immersive sweep rather than three flat cards. Use it whenever a 3D layout looks too flat under the default view.
+what it looks like: The same turning ring now shows about seven cards across the frame: the middle card is small and square-on, and the cards toward the left and right edges grow taller and lean inward, so the row bows like the inside of a drum around the viewer.
+ingredients:
+- The finished ring from 10-inner-ring-carousel — built-in layers (shown). On screen the camera goes into the pre-made 15-card file with its own photos, not into the 16-card build (shown timeline rows)
+- Camera layer, Two-Node Camera — built-in (said "create another camera"; type shown); right-click in the timeline > New > Camera… (right-click menu with "New ›" shown; New submenu open with "Camera…" highlighted shown, crop)
+steps:
+1. Start from the ring of 3D cards on its spinning 3D null, seen through the default view (shown, viewer label reads the default active camera).
+2. Add a new camera (said; right-click menu shown, New > Camera… highlighted shown, Camera Settings dialog shown).
+   - Type: Two-Node Camera (shown, crop)
+   - Preset: 24mm, picked from the preset list in place of the default 50mm (said "wide focal length preset"; list open, 24mm landed)
+   - Focal Length: 24.00 mm; Zoom: 451.56 mm; Angle of View: 73.74°; Film Size: 36.00 mm, measured horizontally (shown)
+   - Enable Depth of Field: off (shown)
+   - Lock to Zoom: on (shown)
+   - Create Camera From Current View: off (shown); turning it on would change where the camera is placed
+3. Click OK (shown, OK pressed). No camera move is seen afterwards, so the camera is taken to stay where the dialog puts it (inferred; the camera is layer 5 with its row collapsed, so its keyframes cannot be seen).
+4. Play: the null's expression keeps the ring turning, now seen through the wide lens (shown).
+layout: Measured on the viewer picture (1502 x 840 px, the whole picture less a 2 px edge; the result crop below keeps its top 630 px). Middle card: about 14% of the picture width and 31% of its height, centred (centre at about 52% across, 50% down) (measured). Next cards out: about 15% wide and 32% tall, centres at about 36% and 68% across (measured). Next: about 17–18% wide and 37–39% tall, centres at about 19% and 86% (measured). The cards cut off at the left and right edges are about 44–45% tall (measured). Gaps between cards about 1.5–2% of the width (measured). Seven cards are in view, against three under the hand-dollied default view of technique 10 (its step 6), where the middle card was about 27% wide and 59% tall (measured); under the untouched default view the same ring gives about 19%. Each card's outer edge is the nearer (taller) one: the card second from the left is 330 px tall at its outer edge against 280 px at its inner edge in the result crop (measured). The measurements agree with the inferred camera: a 570 px card at radius 1480 seen from Z −1280 with zoom 1280 px projects to 264 px, 13.8% of the width (measured 207/1502 = 13.8%), and the ±24° cards are predicted at 35% and 65% across (measured about 36% and 68%). Background flat pale grey, RGB about 228 (measured).
+  Motion: the ring turns and every card travels left to right across the picture (measured on full-size cuts with the viewer fixed: the centre card's left edge goes from x 1334 to 1350 and 1374); this fits the steps (−24° copies sit to the left, the null's Y Rotation rises). Speed from the expression, not from the recording (the recording plays previews faster than real time, so its on-screen rate is not the comp's): 20° per second of comp time, a turn in 18 s; through this camera the centre card moves about 240 comp px per second, about 12.5% of the picture width per second, and the cards nearer the edges move faster on screen (inferred: 1480 px radius at 0.349 rad/s, seen 2760 px away at zoom 1280). Nothing holds still except the background.
+timing and easing: none given for the camera (no keyframes). The ring's spin comes from technique 10 (`time*20` on the null's Y Rotation).
+variations: none given (the narrator only says a wide preset; 24mm is the one picked on screen).
+pitfalls: none given
+build notes: By script: `comp.layers.addCamera("Camera", [comp.width/2, comp.height/2])` makes a two-node camera; set `cameraOption.zoom` to the 24mm value in pixels, which for a 36 mm film width is `comp.width * 24 / 36` = 1280 px in a 1920-wide comp (inferred from 451.56 mm zoom on a 677.33 mm comp width, both shown). The dialog route with the 24mm preset and Create Camera From Current View off places the camera at Z = −1280 (the measured card sizes and positions match this placement, see layout; with that option on the camera would take the hand-dollied view instead), inside a ring of radius about 1500 px; that is what makes the near cards swing in large at the edges (inferred). By script, `addCamera` likely places the camera using the comp's default zoom (Z about −2667 for a 1920-wide comp), and setting the zoom afterwards does not move it, so also set the camera's Position to [960, 540, −1280] (point of interest at the comp centre); otherwise the camera sits outside the ring and the picture will not match (not tested in After Effects; confirm in a build). Leave `cameraOption.depthOfField` off. Picking the preset from the dialog's Preset list is a by-hand step; by script set the zoom directly.
+unknowns: The camera's position and point of interest after creation, and whether it is moved or keyed afterwards (not shown; the camera row is never opened; the default placement is assumed); whether any other camera setting was changed after OK; how the dressed-up version with title, logos and buttons (seen) was built; the 16th card overlapping one place, carried over from technique 10.
+
+## Shadowless parallel light as an extra backlight
+id: 03-parallel-rim-light-no-shadows
+revision: 49cebea9
+job: light-the-hero; support: finish-the-look
+status: proven (accepted 2026-11-19)
+what it does for a beat: A small finishing touch on a lit 3D title: a second, shadowless directional light from behind and to one side brightens the edges and tops of the letters without adding a second set of shadows.
+what it looks like: The same backlit rusty word on the pale blue floor, now with brighter right- and upper-right-facing edges, strongest on the first two letters (the first letter's right-hand curves, the second letter's stem side) and only thin bevel-edge lines on the last two; the front faces barely change and the single set of soft shadows is unchanged. The effect is subtle.
+ingredients:
+- Parallel light — built-in; new light, Light Type: Parallel (shown menu, layer). Menu path Layer > New > Light... is inferred (the cursor is on the Layer menu).
+- Builds on 02 (environment backlight, shadow-only floor) and 01 (textured 3D text)
+steps:
+1. Add another light; in Light Settings change Light Type from Environment to Parallel (said; shown type menu open with Parallel under the cursor, layer named Parallel Light 1 with Light Options: Parallel)
+2. In the same Light Settings dialog untick Casts Shadows, then OK (said; shown still ticked, unticked with the pointer moving to OK; Light Options reads Casts Shadows: Off)
+   - Dialog leaves Intensity at 100% and Color white (shown dialog); intensity is raised afterwards in step 4
+3. Push the light back in Z (away from the camera, behind the text: positive Z), over to the right and up, aiming at the text centre, by scrubbing the Position values in the timeline (said; shown starting at 1040.0, 460.0, -346.7 with the scrub cursor on the Z value, landed). From there it shines toward the camera, to the left and down, which is why the right- and upper-right-facing edges catch it (inferred from the values; matches the measured result)
+   - Position: 2920.0, -100.0, 2663.3 (shown)
+   - Point of Interest: 960.0, 540.0, 0.0 (shown, left at default — inferred)
+4. Raise the intensity in Light Options (said "mess with the intensity"; values shown)
+   - Intensity: 100% → 407% (shown)
+   - Colour: white (shown)
+   - Shadow Darkness: 100% (shown; irrelevant with shadows off)
+timing and easing: none given. The light is not animated, and the comp does not play in this stretch: the playhead is parked at 0:00:02:21 (frame 69) in the before frame and all through the result window (timecode read). At that time 02's linear keys put the environment light's Y Rotation at about 212° (235° − 40° × 69/119), not 02's 235° result: the shadows here fall almost straight toward the camera (shown)
+variations: Intensity is to taste (said); right after this stretch the same light's Intensity is dragged down through 316% to 186%/216% (shown —, just outside this technique's window), so 400% is a starting point, not a final value.
+pitfalls: none given beyond keeping its shadows off so it does not add a second shadow set (said in substance).
+layout: picture = the comp viewer, whole 16:9 comp visible (picture box x 698–2196, y 332–1176 in the full frame). The word spans about 13% to 87% of the picture width and about 33% to 66% of its height, base at about 66% where the floor begins; shadows darken the floor from there to the bottom edge. The result crop covers only about 0–47% of the picture width and 7–97% of its height, i.e. the first two letters and the floor below them (measured).
+Scene state: comp time 0:00:02:21, environment light Y Rotation about 212° (02's keys), so the shadow fan points almost straight at the camera with both outer floor corners part-shaded; compare against, which has the same comp time and only the environment light.
+What the rim light does (measured, aligned: the after frame is about 1.01 times larger and shifted a few pixels by the recording's interface zoom, then subtracted; letter pixels only, letter band 30 to 67 % of the height, aim line masked): it is subtle and falls off from left to right. Mean gain per letter, left to right: about +3.1, +4.6, +1.7, +0.5 and +0.5 levels of 255 (proof review; a second alignment gives +3.7, +4.4, +2.9, +0.7, +1.2, the last three inflated by aim-line and alignment residue: measured). Pixels brightening by more than 20 levels: about 5 % on the first two letters, 1 to 2.6 % on the last three (about 1 % of that is alignment noise, as many pixels darken by 20). The bright pixels sit on the right-facing sides and edges: the first letter's right-hand curves and the second letter's stem side reach near white (that side about 113 before, 240 to 251 of 255 after). The last two letters gain almost nothing on their faces; what they get is a thin line along the front bevel's right-hand edges (the L's stem and foot, the ends of the E's arms and its right edge), 99.5th percentile of the gain about +24 and +34 levels (line confirmed on the difference image). The floor and shadows are unchanged (mean change +0.6 of 255): no second shadow set. Target for a build: the first two letters' right-facing sides near white with mean gains of +3 to +5, about +1.7 on the third, about +0.5 on the last two with only thin bevel-edge lines; faces within a few percent; floor unchanged
+build notes: var L = comp.layers.addLight(name, [960,540]); L.lightType = LightType.PARALLEL; Transform > Position [2920,-100,2663.3], Point of Interest [960,540,0]; Light Options > Intensity 407, Casts Shadows off (property "Casts Shadows" under "Light Options", value 0). Advanced 3D renderer from 01; the scene from 02.
+unknowns: The final intensity the author settled on for this light (it is scrubbed down to 316% and later 186–216%, in the next technique's stretch). The result crop is only the left part of the viewer (the S, T and floor): everywhere in this stretch the selected light's gizmo and aim line cross the right half of the picture, so no clean full-viewer frame exists. The crop holds at 407% with no pointer, handles or gizmo from 181.72 (checked at both ends; the pointer is on the Intensity value in the timeline, outside the crop). The rim on the right-hand letters shows best in the full viewer (not clean: gizmo and aim line in the upper right) — use it to judge the rim, the crop to compare pixels.
+
 ## Soft front fill from a point light with smooth falloff
 id: 04-point-light-falloff-front-fill
 revision: c3d7dbf6

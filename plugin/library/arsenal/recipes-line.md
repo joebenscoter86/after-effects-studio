@@ -216,6 +216,67 @@ pitfalls: Without rounding the source text shows the slider's full decimal, e.g.
 build notes: Null: `comp.layers.addNull()`. Effect: match name `ADBE Slider Control`, its value property `ADBE Slider Control-0001` (displayed "Slider"); set the effect's `name` to `Value 1`. Text: `layer.property("ADBE Text Properties").property("ADBE Text Document").expression = 'Math.round(thisComp.layer("Controls").effect("Value 1")("Slider")) + "%"'` (use the null's actual name). Keys with `setValueAtTime(0,0)` and `setValueAtTime(3.003,83)` (3:00 at 23.976 fps), linear interpolation. Nothing here needs the interface.
 unknowns: The text layer's anchor and position in pixels (left edge at about 431 px of 1920 from the measured share); comp duration; colour of the ground as typed (only rendered colour measured); whether the heading's type-on is keyframes or a preset.
 
+## Slider-driven minutes:seconds countdown timer
+id: 01-slider-driven-countdown-timer-expression
+revision: aac50b01
+job: show-time; support: land-number
+status: proven (accepted 2026-11-26)
+variant of: 01-value-driven-counter
+differs: Shared: a Slider Control keyed between two values, and a text layer's Source Text expression that reads the slider through `Math.round(...)` so the text shows whole numbers (parent steps 2 to 6), with linear keys (the parent shows them linear, here linear is inferred), Montserrat Black on white, and a count that changes only the digits. Differences: here the Slider Control sits on the text layer itself and the expression reads `effect("Slider Control")("Slider")`; in the parent it sits on a separate null object, is renamed `Value 1` and is linked by pick-whip (parent steps 2 to 4). Here the expression splits the rounded value into minutes and seconds with an `addZero` helper and joins them as `MM:SS`; in the parent it adds only a `"%"` suffix (or a `"$"` prefix) to the number (parent steps 7 and 8). Here the keys run 60 at the first frame to 0 at the last frame of a, 30 fps comp, a countdown that reads as a clock; in the parent they run 0 at 0:00 to 83 at 3:00 on a 23.976 fps time base, counting up (the parent lists counting down only as a variation). Here the project's Expressions Engine is switched to Legacy ExtendScript to clear an expression error (step 6); the parent has no such step. Here the text is 200 px and centred in the comp with the Align panel; in the parent it is 111 px and left-aligned, its left edge fixed at about 22.4 % of the width.
+what it does for a beat: Put a live countdown clock (MM:SS) on screen when a scene needs a timer, a deadline or a ticking tension beat. Only one number is keyed, so the length is changed by editing two key values.
+what it looks like: A heavy, wide, rounded white sans-serif "MM:SS" sits dead centre on a black frame and ticks down once a second from 01:00 to 00:00, always with two digits each side of the colon.
+
+ingredients:
+- Text layer (Type tool) — built-in; Type tool in the toolbar (shown)
+- Slider Control — stock; Effects & Presets, searched "slider", sits under Expression Controls (shown)
+- Source Text expression — built-in; Text > Source Text, alt/option-click the stopwatch (said); expression text from the pinned comment
+- Align panel — built-in; Align Layers to: Composition (shown)
+- Project Settings > Expressions > Expressions Engine — built-in; File > Project Settings (shown)
+
+steps:
+1. Start from an empty comp, 1920x1080, 30 fps, 1 minute long (one minute said; 30 fps shown in the time display; height 1080 px read from the on-screen text of the composition-settings dialog in the timeline, the dialog frame itself not viewed by me; width 1920 inferred from the 16:9 picture). Black background (shown).
+2. Choose the Type tool, click in the viewer, type a single character "0", then click away to commit the layer (said; result shown : white bold "0").
+   - Fill: white (shown)
+   - Font: Montserrat, style Black (shown, Character panel)
+   - Size 200 px, leading 160 px, tracking: Metrics / 0, scale 100 % / 100 %, baseline shift 0 px (shown)
+   - Fill: white (also the swatch in the Character panel)
+3. Add Slider Control to that layer: search "slider" in Effects & Presets and apply it (said; shown). Slider starts at 0.00 (shown).
+4. Open the layer's Text group, alt/option-click the stopwatch beside Source Text to open an expression (said; stopwatch shown "Expression: Source Text").
+5. Paste the author's expression (said (pinned comment); text on screen):
+   ```
+   slider = Math.round(effect("Slider Control")("Slider"))  
+       
+   sec = slider%60 
+   min = Math.floor(slider/60) 
+
+   function addZero(n){ if (n<10) return "0" + n else return n } 
+
+   addZero(min) + ":" + addZero(sec)
+   ```
+   - What it does (inferred from the code): slider is rounded to whole seconds, minutes = whole, seconds = remainder, each padded to two digits, joined by a colon.
+6. A warning bar "This project contains an expression error" appears after the paste (shown). Fix: File > Project Settings (shown; the narrator names the dialog), Expressions tab, set Expressions Engine from JavaScript to Legacy ExtendScript, click OK (dropdown open with both entries shown; the choice is said, the landing is not on a frame I cited). After it the text reads 00:00 (shown).
+   - Expressions Engine: Legacy ExtendScript (said)
+7. Centre the text: select the layer and in Align set Align Layers to Composition (said "align into the middle"; panel shown). The text is already horizontally centred (block 843–1183, centre 1013 against comp centre 1012); only the vertical move is evidenced (block centre y 383 → 402, the comp's centre). Which button was clicked is not seen; the vertical-centre button is inferred.
+8. Check the comp is long enough for the countdown (said). Here the comp is (said; the ruler runs 0 to 1:00).
+9. Go to time 0, create a keyframe on Slider (said) and type 60 (said: values are in seconds, 60 = one minute, 120 = two). The stopwatch icon is visible but the click itself is not seen (inferred). Press U to reveal the keyframes (said). Key shown at the start (diamond at left edge of the timeline).
+   - Slider at 0:00: 60.00 (shown)
+10. Move to the last frame of the comp (0:00:59:29 shown) and set Slider to 0 (said); a second key appears at the right end (shown). The linear / default interpolation is not changed (inferred; no ease is touched).
+   - Slider at end: 0.00 (said; value 0.00 shown in the timeline "New values")
+11. Play: the clock counts 01:00 down to 00:00 (said). Frames showing it playing: (00:59), (00:57), (00:55).
+
+layout: 
+- Text block width about 30% of the picture width (measured : 434 of 1439 px), digit height about 13.6% of the picture height (110 of 811 px); at 1920x1080 that is roughly 580 px wide and 147 px tall digits (inferred from those shares); this ties to the 200 px Montserrat Black setting, whose digits are about 0.7 em. Centred both ways, block centre at 50% / 50% (measured). Digits are tabular enough that the block width is the same at 00:57 and 00:59 within a pixel or two (vs).
+- Colon is the same weight as the digits and sits slightly closer to the right pair; characters are tightly spaced (the digits nearly touch) (shown).
+- Flat white (255) on flat black, no shadow, glow, grain or background shading (shown).
+- The result is the author's own build: the same layer as built in the steps, not a separate finished file. The Align step moved the block upward-to-centre (it sits near y 47% before step 7, and at 50% after).
+- Motion: only the digits change; nothing slides or fades. Value drops one whole second each comp second (slider 60 over 59:29 → about 1 per second). Linear key interpolation is inferred.
+
+timing and easing: Two keys on Slider: 60 at the first frame, 0 at the last frame of a comp at 30 fps. No easing given. One displayed second per comp second (inferred from the two keys and the rounding).
+variations: Slider values are in seconds, so another length is just a different start value (said: 120 = two minutes); keep the comp at least as long as the countdown (said).
+pitfalls: If the expression errors, switch the Expressions Engine to Legacy ExtendScript (said); the code's one-line `if ... else` without a semicolon is the likely cause (inferred, see extras). Make the comp long enough for the countdown (said).
+build notes: Create a text layer ("0"), add ADBE Slider Control (effect name "Slider Control", property "Slider"), set sourceText.expression to the pasted code (quote it exactly). Set project expressions engine to Legacy ExtendScript by hand (File > Project Settings > Expressions; scripting: app.project.expressionEngine = "extendscript" is inferred, check on build). Keyframe the Slider: setValueAtTime(0, 60) and setValueAtTime(compDuration - 1/30, 0) (inferred end key frame). Centre with the Align panel (Composition), which works from the layer bounds. On screen the anchor sits at the bottom-centre of the text, about the baseline (: anchor y 424 under digits spanning 343–424); nothing on screen sets a position value, so do not assume the anchor is at the text's middle. Text: Montserrat Black 200 px, leading 160 px, tracking 0.
+unknowns: exact comp dimensions beyond the 1080 px height and 30 fps read in the timeline's Changed list (width 1920 inferred from the 16:9 picture); which Align button was clicked (only the vertical move is evidenced); whether keys were linear (default assumed); the preview ran slower than real time (about 70 comp frames across 5.2 s of recording), so no speed is taken from the video; how the end key was reached beyond the timecode 0:00:59:29 shown.
+
 ## Ring that fills to the counter's value
 id: 02-ring-fills-to-value
 revision: 05485478
@@ -371,6 +432,66 @@ variations: Each region's layer can be animated "any way" — the opacity fade i
 pitfalls: none given
 build notes: The After Effects part is only an opacity fade per layer and fully scriptable: layer.opacity.setValueAtTime(t, 0) / setValueAtTime(t + 0.5, 100), offset per region (or set layer.inPoint). The region separation is an Illustrator step a script cannot follow, and we do not need it: our route is generated map art delivered as separate, pre-aligned region layers — one full-frame PNG with alpha per highlighted region (the region in its colour, no label), with all region names on their own always-visible labels layer above the regions — in the finished example the white names sit on a separate Names layer and show before their regions fade in (: GERMANY and ITALY white over grey). Below the regions goes one base map with every region grey, and the numbered list comes as one layer per row so each row can fade with its region. Import each as footage, stack at the comp centre, and key the fades. If shape layers are wanted instead, an SVG/AI per region can be imported and converted with Layer > Create > Create Shapes from Vector Layer (a menu command; check how it can be called by script before relying on it).
 unknowns: The exact import type; the second opacity key's value and easing in the build; how the finished example fades each region (in-point plus opacity, or keys only) and the per-region times beyond the five measured in-points; which layer holds which region in the finished example; how the list is split there. The build's own fade is never played on screen; the result shows the finished example.
+
+## Before/after reveal with a sliding rectangle matte and thin edge line
+id: 01-before-after-sliding-matte-wipe
+revision: 138bf9d4
+job: before-after; support: compare
+status: proven (accepted 2026-11-26)
+what it does for a beat: Show the same subject before and after one change. The "after" picture sits over the "before" picture and is uncovered by a straight vertical edge that sweeps across and then back.
+what it looks like: A square picture of a dark glossy robot (the "after") is uncovered from the left by a vertical edge, over a shaded white wire-mesh render of the same robot on black (the "before"). A hairline in a pale amber (measured on the finished clip) runs along the moving edge. The edge sweeps left to right, then right to left. In the clip only the forward start is soft; the forward leg ends off the right side and the return leg is cut while still fast. The soft ends belong to the build's Easy Ease keys, not to the clip.
+
+ingredients:
+- Two stills of the same subject, one per state — built-in (imported footage); the author used a black-background robot render and a wireframe-style render of it.
+- Shape layer with a Rectangle (Rectangle tool) — built-in
+- Position keyframes with Easy Ease — built-in; Animation > Keyframe Assistant > Easy Ease (shown, F9 overlay)
+- Edit > Duplicate (shown menu)
+- Track Matte, Alpha Matte on the "after" layer — built-in; layer's TrkMat dropdown (shown)
+
+steps:
+1. Make a square composition, 1080 × 1080 px, square pixels, 30 fps, 12 s long, black background. (shown)
+2. Bring both stills into the comp: "after" above "before", both filling the 1080 square. (shown; the way they were added is inferred)
+3. Draw a rectangle with the Rectangle tool: a shape layer with "Rectangle 1" whose selection handles sit a little outside the comp edge. (shown for the layer, for the box)
+   - Size: about 1160 px square, centred, so it is about 7 % wider and taller than the comp (inferred from the handle box against the comp edge; not typed on screen)
+   - Position: 540, 540 (shown; this is the layer's Transform Position, opened with the on-screen "Press P", not the Rectangle Path's Position; the path stays centred on the layer anchor, inferred)
+4. Give the rectangle a thin stroke and no fill, and rename the layer "Line" (the rename was in place, before the keys). (stroke row shown)
+   - Fill: none (red slash) (shown)
+   - Stroke colour: the toolbar swatch is WHITE (shown, also)
+   - Stroke width: 1 px (shown)
+   - The finished clip's hairline is pale amber, about 160,150,115 at about 1.5 px (measured, anti-aliased); no frame shows the white stroke being changed to amber, see unknowns.
+5. Key the layer's Position, x only (y stays 540). (shown)
+   - 0:00: x = −581, y 540 — the rectangle's right edge then sits just outside the comp's left side (shown for the −581 value; a context menu reads −582.0, 540.0 for the same key, so the true value is −581 or −582)
+   - 3:00: x = 540, y 540 — the rectangle covers the comp (inferred; the 3:00 key is not yet present, where a 485.7 readout is only a value passed while setting up, not evidence)
+   - 6:00: x = −581 again, so it goes back (the third key is seen as a hump pair in the graph, shown; three diamonds at 0:00, 3:00 and 6:00 and −581.0, 540.0 at 6:00 shown)
+6. Select all three keys and apply Easy Ease (F9). (shown : menu path Keyframe Assistant > Easy Ease with an on-screen "Press F9"). Open the Graph Editor, speed view: two humps, zero speed at each key, top of the hump near the 500 px/sec grid mark (shown).
+7. Duplicate the layer (Edit > Duplicate, shown menu). Rename the copy "Fill". (shown)
+   - On "Fill": fill = solid colour, stroke = none (shown Fill Options dialog with Solid Color; Stroke Options dialog with "None" tile)
+   - Fill colour: orange, rendered 254, 152, 0 on screen (shown; saturated, may be inflated by the recording's wide-gamut display); the typed value is not readable
+8. Put "Line" above "Fill" in the stack by dragging, so the stack is: Line, Fill, after, before. (shown drag, final order). Both stills already carry padlocks (a starting state, not a step); only the "before" still is locked, and the "after" still is unlocked while its TrkMat menu is open.
+9. On the "after" layer open the TrkMat column and pick Alpha Matte "Fill". (shown menu)
+   - The orange of "Fill" vanishes and the "after" picture shows only where the rectangle is. (shown tile)
+10. Play. The edge of the rectangle, with its stroke, crosses the picture and returns. (shown)
+
+layout: All figures are on the 1080 px square picture of the finished clip (full frame 1920 × 1080; the picture is the full-height square at x 420–1500, measured: left edge pixel at x 420, ground at 242,136,8 outside it).
+- Picture: 1080 × 1080 px, centred, 56.25 % of the frame width and 100 % of its height. (measured)
+- Moving edge, measured on the full-size frames from the picture's left edge: edge at 1073 px = 60.5 % of the picture width; edge near 97 % (the hairline at the far right); (return leg) edge at 1252 px = 77 %. After state is always to the LEFT of the edge, before state to the right. (measured)
+- Edge hairline: about 1–2 px wide on a 1080 px picture (0.1–0.2 %), a pale muted amber. Measured over clean black at full frame (anti-aliased): about 160–165, 150–155, 115–120 (col 1466–1467 and col 1252–1253, each about 1.5 px; col 1073–1075 at row 200 a 1–2 px line rising to 246,253,215). Brighter readings (230,225,160 or 255,193,68) come from rows crossing the bright mesh or the robot's own rings and are not the line. No glow or soft shadow around it.
+- At rest at the start the hairline sits about 4.3 % in from the picture's left (x 466, full height, measured, about 46 px on a 1080 picture). The build as written does NOT give this: its 0:00 key puts the rectangle's right edge at about x −1, outside the picture, so no line shows at rest. To get it, start x would be about 46 px further right (≈ −535). Likewise the 3:00 key (right edge at 1120) hides the line; the example shows it at 96.9 % at 2.03 s. The example's own keys are not shown and differ from the build's; a builder wanting visible lines at both ends must pick keys so the right edge lands inside the picture (inferred).
+- The finished clip's surround is not part of the build: a diagonal gradient behind the square picture, orange (242,136,8) at the left to a yellower orange at the right and top. The build is square and black; this gradient comes from the finished example only (also).
+- The "after" picture is a near-black glossy render with amber rings; the "before" is a pale grey wire-mesh render of the same pose, aligned pixel for pixel; the edge cuts both without any change in position or scale of the picture.
+- Matte rectangle: about 1160 px square (inferred); stroke on its right edge is the line; at the 3 s key the left and bottom/top stroke edges fall outside the comp so only the right edge is seen.
+- Finished clip's motion, cut every 0.1 s from (crop 420,0,1080,1080), edge as share of picture width: 4.6 % (0.0 s), 6.5, 9, 12, 16 (0.4 s), 20, 26, 33, 42, 51, 60.5 (1.0 s), 68 (1.1 s), about 75 (1.2 s), 96.9 (2.03 s), off the picture by 2.5 s. So the forward leg is already moving at 0.0 s, starts softly (about 2 % per 0.1 s) and runs to about 2.4 s, peaking near 9 % per 0.1 s around 0.8–1.0 s; it ends off the right side with no soft stop. Return leg: about 75 % at 4.0 s, 77 %, 41 % at 4.5 s, 33 % at 4.6 s, about 26 % at 4.7 s, none at 4.8 s (about 7 % per 0.1 s, cut while still fast). Direction: forward left to right, return right to left, after state left of the edge. Soft ends are the build's Easy Ease (graph), not the clip. Clip seconds are the video's, not real-time speed. The build's keys, 0/3/6 s with no hold, give no such hold; whether the example uses a hold, other keys or a faster playback is not shown.
+
+timing and easing: Keys at 0:00, 3:00, 6:00 (shown), 3 s per leg. Easy Ease on all keys (shown). Speed graph: two humps, zero speed at each key, peak near the 500 px/sec grid mark (shown); for a 1121 px move in 3 s the average is about 374 px/s, so the peak of about 500–560 px/s fits the default 33 % influence (inferred).
+
+variations: none given (no narration).
+
+pitfalls: none given (no narration). Observed: the "Line" has to be above "Fill" and neither can sit under the "after" layer, or the matte would not read; the matte layer itself turns invisible once it is used as a matte (shown tile).
+
+
+build notes: Comp 1080×1080, 30 fps, 12 s. Add the two stills. Add shape layer "Line": Contents > Rectangle 1 > Rectangle Path > Size ≈ [1160,1160]; Stroke 1 with Fill 1 removed (or disabled); Transform > Position keys at 0 s [−581,540], 3 s [540,540], 6 s [−581,540]; set keys to Easy Ease via KeyframeEase(0,33.33) at each key (in/out), inferred from the default F9 behaviour. Duplicate the layer, name "Fill", enable Fill 1 (orange about 1.0, 0.596, 0 — screen-read, saturation may be inflated; the fill is only a matte so its colour does not show) and remove or disable Stroke 1. Order: Line, Fill, after, before. Set the "after" layer's trackMatteType = TrackMatteType.ALPHA, with the matte layer directly above it (Fill) — in recent AE versions use setTrackMatte(fillLayer, TrackMatteType.ALPHA). The thin hairline's width is the stroke width on the Line layer (shown 1 px, white; set it amber about 160,150,115 to match the clip, or keep white as drawn; for the rest-position line, start at x ≈ −535). The gradient surround is added separately if the 16:9 look is wanted.
+
+unknowns: Typed rectangle size; how the white stroke became amber, or whether the example used another colour; the fill's typed colour; whether the stroke has rounded or square caps; the exact key value at 3:00 (540 assumed) and 6:00 (−581 assumed); how the stills were put in the comp and the exact reason for the lock icons; the opacity and mode changes the on-screen text shows around 0:54 and 1:10 (read as housekeeping, not seen to matter); the finished clip's own key times and hold (they differ from the build's 0/3/6 s); playback speed of the example; the shutter, since no motion blur is visible or switched on.
 
 ## A pill button built in its own comp
 id: 01-pill-button-in-own-comp
@@ -695,6 +816,54 @@ variations: none given. Shown only: the exit key first at 3:10 then rebuilt at 4
 pitfalls: none given in words. Shown: pulling a handle on an exit key with no hold before it bent the arrival too, so the route was rebuilt with a hold key (step 3).
 build notes: pos.setValueAtTime for frames 89, 127, 190 and 233 (divide by 60). Curve the path with spatial tangents, pos.setSpatialTangentsAtKey(k, inTangent, outTangent). Key 1 (frame 89): out-tangent about [136,-296]. Key 2 (frame 127): in-tangent about [-87,50], about 100 px pointing back down-left so the entry arrives up-right at about 30°. Both are inferred from a fit to the eleven corrected points: RMS error 1.3 px, bow 73 px, left-edge crossing y 1031. A level [-100,0] in-tangent cannot fit them: its best fit misses by 6 px RMS and bends wrongly. Do not use the mid-drag [39,-564] or the earlier [-51,-89]. Pairs along the same family also fit within about 2.5 px, for example [-54,25] with [74,-249]. Key 3 (frame 190): out-tangent about [100,0] (inferred). The proof runner found 250 too long for both and 100 close. Key 4 (frame 233): in-tangent about [-222,399] (measured mid-drag), so the exit leg curls up into the end; the proof build's exit matched with it. Judge the result by the path, not the handle values: render the entry and check it passes within about 15 px of (230,843), (408,736), (497,691) and (589,645), crosses x 0 at y about 1020–1040 and bows no more than about 75 px from its chord. Use setSpatialContinuousAtKey(false) on keys 2 and 3 so the hold does not overshoot. Motion blur: comp.shutterAngle about 360–540 (inferred from a smear of 1–1.4 frames of travel; the 180° default gives half a frame, about a third of the reference smear, which the proof build showed). comp.shutterPhase about −180 to −270 (inferred, centred). Check that the cursor at its fastest smears about 100 px past its 160 px disc. Easy Ease is setTemporalEaseAtKey with new KeyframeEase(0, 33.33) in and out on all four keys (Easy Ease's defaults). Set layer.motionBlur = true on all layers and comp.motionBlur = true. Everything here can be scripted. Pulling handles with the Convert Vertex Tool is the interface way.
 unknowns: The final start handle is not shown. The mid-drag reading (39, −564) does not match the played path, so the handle was probably released shorter or changed later. The played points are the target, and the handle is inferred from them. The hold keys' tangents are never shown; about 100 px is inferred from the proof. The end key's in-tangent is a mid-drag reading. Why the drawn path read deeper than the played one is not resolved. How Easy Ease was applied (menu or F9) is not seen, nor whether its influence differs from the default 33.33 %. Shutter angle and phase are not shown; 360–540° is inferred from the smear. The preview drops frames, so per-frame speeds are ± one frame.
+
+## Two travelling lines turned into an X by duplicating and rotating
+id: 02-duplicate-rotate-lines-into-cross
+revision: 09c4e2c9
+job: flag-a-problem; support: add-impact
+status: proven (accepted 2026-11-26)
+what it does for a beat: A designer reaches for this when one animated stroke (see recipe 01-trim-paths-travelling-round-cap-line) should become a symbol or accent such as a cross, a close mark or a plus-style hit, by reusing the same animation on turned copies.
+what it looks like: Two thin dark-teal round-ended strokes on a plain bright teal ground cross at the middle of the picture to form an X. Both strokes draw from their left ends towards their right ends almost together (the "\" arm's head runs slightly ahead of the "/" arm's, see layout), the X is complete for a few frames, then both tails leave left to right until nothing is left. The pattern repeats on a 2-second loop.
+
+ingredients:
+- Shape layer with a round-capped stroke and Trim Paths (Start/End keyed) — built-in; made in recipe 01-trim-paths-travelling-round-cap-line (shown : one layer "Shape Layer 1" with the horizontal path)
+- Duplicate layer — built-in; Ctrl/Cmd+D (said "control D"; no menu on screen, so the shortcut for Mac is inferred)
+- Rotation property (R shortcut) — built-in (said "press R"; shown rotation fields)
+- Anchor point and Position — built-in (said; values not shown)
+- Title/action safe guides — built-in; used only as a visual aid for centring (shown; the guides are not part of the result)
+
+steps:
+1. Start from the finished single travelling line of recipe 01 (one horizontal stroke with Trim Paths keys) (shown, layer list holds one shape layer). The line has not been rotated yet and sits a little off the middle (shown, path centre slightly below the picture's middle).
+2. Duplicate the shape layer (said "control D") (shown : the layer list now holds two layers, top one selected; duplicate is the upper layer). Both layers keep the same stroke and the same Trim Paths keys (shown, two layers with identical key rows).
+3. The author says the move tool is selected (said; the arrow is highlighted in the toolbar, shown), clicks one of the layers (said) and moves its anchor point (said, "select the anchor point"; the reason for the move and the values are not given; a pivot at the line's middle is only my reading, inferred) (shown : the two lines sit at different heights while still horizontal after this step). Which layer moved, and by how much, is not given (see unknowns).
+4. Select both layers and press R to show Rotation (said) (shown : Rotation 0x +0,0° on both layers, the top one in edit).
+   - Upper layer (the duplicate): Rotation +45° (said "45 degrees"; shown : 0x +45,0°)
+   - Lower layer (the original): Rotation −45° (said "negative 45 degrees"; shown : 0x −45,0°)
+   - Result of the signs on screen: the +45° layer runs from upper left down to lower right ("\"), the −45° layer from lower left up to upper right ("/") (shown, X made from the two).
+5. Turn on the title/action safe guides to judge the middle (shown : guide rectangles in the viewer; the narrator mentions "title action safe", said) and move each layer's Position to the middle of the picture, naming the two layers one after the other (said, at about 3:05; wording not reproduced here) (shown, guides off: the X crosses at the picture's middle; still has the X off-centre). Position values are not shown (unknown).
+6. Switch the guides off; nothing else changes (shown, the first frame without the guide rectangles; still has them). Play it: both strokes run left to right at once and the author calls the animation finished (said; shown : the full X through the picture centre; only shows two small tail fragments, so it is not evidence of the crossing).
+7. To make it quicker, the author says to take the keyframes, "the last keyframes" (said), and pull them (dragging towards the start is inferred; only "quicker" is said). Which keys were selected is not clear: comparing the rulers, End's second key and both Start keys moved earlier while End's first key stayed at 0 (consistent with selecting all keys on both layers and dragging towards the start, the first stopping at 0; inferred). Final key positions on the layers' time ruler (shown, read as frames at 8.2 px per frame from the zero line): End keys at 0 and about 18 f; Start keys at about 15 f and about 31 f, identical on both layers. Before this the keys sat at End 0 → about 29 f and Start about 26 → about 48 f (shown on the same ruler; these are the recipe-01 keys). The shortened keys are what the intro clip plays (inferred, matches the played frames).
+
+layout: (measured on the finished intro clip, full-frame without the interface, 1920 × 1080, at 2.6 s; a frame cut from the source, `)
+- Cross size at its fullest (just before the tails have moved far): about 530 px wide × 520 px tall including the round caps, i.e. about 27.6 % of the picture width and 48 % of the picture height (the short side). Each arm is about 740 px long along its diagonal including round caps (path vertices about ±362 px plus the caps; "750 px" elsewhere is the same length within measurement error). (measured)
+- Over the whole loop the extreme extent seen is x 696–1255, y 283–828, about 559 × 545 px (29 % of the width, 50 % of the height) (measured; the heads and tails are not complete at the same moment, so the biggest single frame is the 530 px one above).
+- Cross centre: about x 975, y 556 on a 960,540 frame centre, i.e. about 0.8 % of the width right and 1.5 % of the height below the middle (measured). So centred to within about 1 to 1.5 %.
+- Arm angle: both arms 45° off the horizontal (said; shown), crossing at right angles.
+- Stroke: about 16–17 px thick measured across a diagonal arm (the horizontal cut through an arm reads 24 px, × 0.707 ≈ 17 px), matching the 16.4 px stroke of recipe 01 (measured). Ends fully round.
+- Ground: plain bright teal, RGB about 0,192,183, no shading, no grain, no shadow, no glow (measured; the clip starts from near-black and the ground comes up to teal within the first second, the intro only).
+- Line colour as rendered: about RGB 2,118,112, a darker, slightly desaturated teal (measured; screen-recording colour, use as a target only). The stroke colour typed in the stroke dialog in the intro is not shown; in the tutorial's own build the strokes are an olive/mustard on black (shown), so the intro is a restyled finished version: teal ground and dark teal stroke instead of olive on black. Both strokes carry the same colour.
+- The two arms are drawn nearly together but not exactly: on the played intro the "\" head leads the "/" head in every drawing frame (measured on consecutive source frames from 2.30 s: head advance in x at 240 px crop scale 20, 32, 56, 150 for "\" against 15, 22, 32, 90 for "/"; at the fast frame "/" is about 50 % drawn against 80 %, and reaches full length one frame later; on frames from 2.2 s the leading head sat at x 871 while the other sat at 823, a gap of about 50 px, up to 60–80 px at peak speed, about half to one video frame). The tails leave with the same small offset ("/" fragment further right than "\" at 2.8 s and 2.9 s). The tutorial's keys on both layers are identical (shown), so the offset is not produced by any step shown; cause unknown (inferred: a one-frame offset on one layer in the intro, or a different pass of the finished clip). A build with identical keys will draw both arms exactly together, which differs from the clip by under one frame. No shadow, no overlap shading at the crossing (the crossing shows the same flat colour, about 4,123,122 at the middle).
+- Motion blur (measured on the intro clip, one arm, column profile of the head): head x per video frame 721, 728, 740, 759, 793, 859, 971, 1135, 1183 (up to about 164 px a frame in x on that series, and about 250 px in x on the leading arm's fastest step in a second series; about 230–350 px a frame along the arm at peak). The head's soft edge is 4–8 columns wide at rest (the round cap's own edge) and 23 columns at the fastest-growing frame: about 15–17 px of extra smear at the 110 px step in x (that step is not the peak). Re-measured at the peak step (frames cut from 2.2 s; the leading arm's head jumps from x about 871 to about 1127, about 250 px in x in one frame, the two arms together span a larger step), the head's 10–90 % ramp is about 24 px, about 18–20 px beyond the cap's own 6 px edge: about 0.08 of that frame's travel. That implies a shutter of about 30° or less (smear ≈ speed × angle ÷ 360; inferred), far below the default 180° (which would smear about 125 px at that peak speed). The earlier 110 px reading gave at most 50°; the peak reading is the one to use. So the intro reads as no motion blur or a very short shutter; the softness is mostly the ease and compression (inferred). A build should leave motion blur off.
+- Direction: head and tail both travel in each arm's own left-to-right direction, so the "\" arm is revealed from its upper-left end and the "/" arm from its lower-left end; both heads reach the right-hand ends (upper-right for "/", lower-right for "\") last. The left ends are the first to disappear. (measured from the extents' left edge x = 696 holding while the right edge grows 733 → 1255, then the left edge rising 696 → 1255 afterwards.)
+- Speed: at the end of the first half the arms grow slowly at first (head pixel count 364 → 3943 over the first 8 frames), then fast (about 4000 → 17800 in one frame), then slow again as the heads arrive; the tails do the same in mirror. Steeply eased moves (inferred, influence about 90–95 %, see timing and easing). Fastest one-frame step about 266–270 px in x against an average of about 31 px a frame (555 px over 18 frames), about 8.7 times the average (assumes one video frame = one comp frame, inferred).
+
+timing and easing: Tutorial keys after the shortening (shown, read from the ruler, ±1 f): End 0 % at 0 f → 100 % at about 18 f; Start 0 % at about 15 f → 100 % at about 31 f (values 0 → 100 from recipe 01; hourglass key icons, so Easy Ease, shown). Both layers carry the same keys in the tutorial's panel (shown); the played intro nevertheless shows the "\" arm slightly ahead of the "/" arm (see layout; cause unknown). The played intro (30 frames visible out of a 60-frame loop, 2.0 s): first pixels at frame 7 after a 1.9 s start (2.10 s in the clip), arms at their fullest about frame 22 (2.6 s), last pixels gone at frame 36 (3.07 s), blank until the next loop starts at 4.07 s. That is about 15 frames of head draw and about 15 further frames of tail clearing, matching the shown keys when the keys begin at frame 7 (inferred; the clip's playback speed is assumed to be real time because loops are exactly 60 video frames). Played ease target (re-measured twice on every source frame 2.0–3.4 s, rightmost x of the line pixels over both arms, arms spanning x 698 → 1253 = 555 px; crop 630,235,700×640; one series quoted): head x per frame 732, 735, 736, 740, 746, 754, 766, 792, 853, 1119, 1161, 1186, 1186 (one frame repeats), 1211, 1229, 1240, 1247, 1252. The series starts at the first pixels (732). Steps between frames: 3, 1, 4, 6, 8, 12, 26, 61 px (0.5, 0.2, 0.7, 1.1, 1.4, 2.2, 4.7, 11 % of the run), i.e. 8 slow frames before the big one, the 8th stepping 61 px (the step that tells a 90 % ease from a 95 % one); then one step of 266 px (about 48 % of the run; (1119−698)/555 = 76 % drawn after it), then a settle, steps exactly as the series has them: 42, 25, 0, 25, 18, 11, 7, 5 px (7.6, 4.5, 0, 4.5, 3.2, 2.0, 1.3, 0.9 % of the run; 133 px in all, 1119 → 1252). The 0 is a repeated frame (a duplicate in the recording), and the 25 px step after it may be two frames of about 12 px; the settle is slower than the 95 % row's 12, 6, 3 %, so the match is approximate. About 96 % (1229, 95.7 %) five frames after the big step, counting the repeated frame as a frame; dropping the repeat, 1229 comes four distinct frames after the big step. The pre-step steps match the 95 % row (…1 2 3 6 12 then 48) well. The head reaches about 90 % (x about 1197) about 13 frames after its first pixels (1197 is first passed by the 13th step, 1211, counting the repeated frame). The tail is the mirror: left edge 768 → 828 → 1076 (one step of 248 px, about 45 % of the run), then slower steps of 51, 24, 18, 14, 8 px. The per-frame steps above are the target; the influence below only approximates them.
+Peak step: the measured one-frame step is about 266–270 px, i.e. about 8.7 × the average step (555 px ÷ 18 f ≈ 31 px a frame). (The curve's peak slope is a different figure and is lower; do not mix them.)
+Ease to aim for (inferred): speed 0 on all four keys of each layer, with a very high influence, about 90–95 % on both sides (the out side of the first key and the in side of the second key), raised from Easy Ease's 33.3 %. Reason (computed for After Effects' two-key ease sampled once a frame, share of the move per frame): 17 frames at 90 % gives 0 1 1 2 2 4 6 14 40 14 6 4 2 2 1 1 0; at 95 % gives 0 0 1 1 2 3 6 12 48 12 6 3 2 1 1 0 0; 15 frames at 95 % gives 0 1 1 2 3 6 12 51 12 6 3 2 1 1 0. Influence 80–85 % gives only about 22–33 % in the biggest frame (85 % at 17 frames: 33 %), too soft for the played 48 %. An even frame count (18 f at 95 %) splits the fast stretch over two frames (31 + 31 %). So a single step of 40–55 % happens only when the curve's middle falls between two frames, that is with an odd number of frames between the keys (or keys off the frame grid). The keys read from the ruler are 18 f (±1 f), so the true spacing may be 17 f or 15 f; the build should use an odd count (try 17 f) and compare its per-frame steps with the figures above. The influence value is not shown on screen (inferred); the match to the measured step depends on where the frames fall.
+variations: Take the later keyframes and pull them closer to make the cross quicker (said, "if you want it quicker"). The author also says the lines can then be put to use elsewhere (said, "putting those lines to use"; no further examples).
+pitfalls: none given.
+build notes: Take the recipe-01 layer, duplicate it, set Rotation to +45 on one and −45 on the other, and give both the same Position at the middle of the comp (the anchor move is not specified in the video; if the path's own centre is at the layer's origin this is automatic: path vertices (−362,0) and (362,0) with the layer's Position at the picture centre, about +15 px, +15 px for the exact look). Keep the two Trim Paths with identical keys: End 0 % at 0 f → 100 % at 18 f, Start 0 % at 15 f → 100 % at 31 f, a steep S-ease on every key, not the default Easy Ease: speed 0, influence about 90–95 % in and out (inferred; see timing and easing: use an odd key spacing such as 17 f so one frame carries 40–55 % of the move; the default 33 % glides evenly and misses the snap). Stroke width 16.4 px, Round Cap. For the intro look use a ground solid about RGB 0,192,183 and a stroke of about 2,118,112 (targets only). For a 9:16 build, keep the arm length in proportion to the short side: each arm about 70 % of the frame height in a 16:9 comp (750 px of 1080), and the stroke about 1.5 % of the height.
+unknowns: how the anchor point was moved (tool, values) and by how much; the Position values of both layers; the shutter angle (measured smear says short or off); the intro's stroke colour value and ground colour values as typed; the exact ease influences and key spacing (about 90–95 % and an odd spacing are inferred from the played steps, not shown); the intro's comp size and whether the clip is played at real time; where the intro's ground fade-in (black → teal over the first second) comes from; whether the first loop's start is at comp time 0.
 
 ## Round dots from a shape stroke
 id: 01-dotted-stroke
@@ -1170,154 +1339,3 @@ variations: Works for "anything", a title or a graphic, as long as the matte lay
 pitfalls: Once matted, the texture copy matches the background, so the title nearly vanishes (shown, title faint; inferred cause: it is the same texture); Curves is what brings the title back (said). Lowering Roughen Edges Scale is what blends the edge into the grunge (said).
 build notes: Script: tex2 = tex.duplicate(); tex2.moveAfter(title) (must sit directly below the matte); in AE 2023+ tex2.setTrackMatte(title, TrackMatteType.ALPHA), older: tex2.trackMatteType = TrackMatteType.ALPHA with title directly above; title.enabled = false. Curves ("ADBE CurvesCustom") curve points are not scriptable: set by hand, or substitute Levels ("ADBE Easy Levels2") with Input White about 33/255 (inferred equivalent). Title: Fill ("ADBE Fill", Color black), Displacement Map ("ADBE Displacement Map"), Roughen Edges ("ADBE Roughen Edges") with "Border" 19, "Edge Sharpness" 10, "Scale" 10, "Complexity" 2, "Evolution" 161.4 + 360 deg. With Max Vertical Displacement 46 the Displacement Map moved the whole title about 40 px down in a proof build whose stand-in texture had a green channel far from mid grey, so check the title's place after adding it (inferred: found in a proof build, not said or shown).
 unknowns: the texture source; title font, size and colour beyond black; exact curve points; whether the Displacement Map is meant as part of this technique; the title's in-animation.
-
-## Frame video in a custom shape with a track matte
-id: 25-custom-media-frame
-revision: 8c6d3c5f
-job: show-real-screen; support: reveal-headline
-status: proven (accepted 2026-11-14)
-what it does for a beat: When a photo or clip should sit in a designed window rather than a plain rectangle (for example, a cut-out that leaves room for a headline), draw any shape and use it as the clip's matte.
-what it looks like: On a white slide, a dark building photo fills a wide frame whose lower middle is notched out, so a white panel with a large black headline sits inside the notch; the image reads as a custom-shaped placeholder.
-ingredients:
-- Shape layer drawn with the Rectangle tool (or the Pen tool) — built-in
-- Track Matte column (Alpha Matte) on the media layer — built-in
-steps:
-1. Draw the frame shape with the Pen tool or shape tools (said); here, three rectangles inside one shape layer (shown)
-   - Rectangle 1: a wide bar across the top (shown)
-   - Rectangles 2 and 3: two blocks hanging down at the left and right, leaving a gap in the middle for the text (shown)
-   - Rectangle 3 Size: 595.0, 1285.0 (shown)
-   - Rectangle 3 Roundness: 20.0 (shown)
-   - Rectangle 3 Position: 1374.5, 261.5 (shown)
-   - Comp: 3840 x 2160 (measured: a 3840 comp at the 20% zoom readout is about 1378 px on screen and the result crop is 1376 px)
-   - Fill: grey; Stroke Width 3.0 with the stroke switched off (shown)
-   - The clip layer's visibility (eye) is off while the shape is drawn, so the grey shape is seen over the slide (shown)
-2. Drag the video or image layer from below the shape (layer 3) to directly above it (layer 1, shape on layer 2; shown)
-3. Turn the clip layer's eye back on; a hidden layer renders nothing even with a matte (shown cursor on the eye column, eye on; the reason is inferred)
-4. Set the clip's Track Matte to the shape layer, alpha matte (said "matte your video or images to it"; shown, Track Matte "2. Shape L…" with the alpha icon)
-5. The shape layer's visibility turns off and the clip shows only inside the shape (shown)
-layout: whole frame: about 87% of the comp's width (6.3% to 93.4% across) by 59% of its height (33% to 92% down) (measured, shares of the whole comp: the viewer is at 20% zoom and the result crop takes in the whole comp; the comp is 3840 x 2160: the viewer reads 20% and the crop is 1376 px wide against about 1378 px for a 3840 comp at that zoom, measured); top bar about 29% of the comp's height deep across the full frame width; left and right blocks each about 15.4% of the comp's width wide, running the full frame height; the notch between them about 56% of the width wide and 30% of the height deep, centred at 50% across (measured, same frame, shares of the whole comp); corner rounding about 0.4% of the comp's width (measured, same frame); the headline in the notch about 52% of the width wide, capitals about 12% of the height tall, centred at 50% across (measured, same frame, shares of the whole comp)
-timing and easing: none given
-variations: Any shape made with the pen or shape tools works (said)
-pitfalls: none given
-build notes: Add a shape layer with three `ADBE Vector Shape - Rect` groups (Size, Position, Roundness) and a Fill; put the footage layer above it with `footage.enabled = true` (a hidden footage layer renders nothing), then call `footage.setTrackMatte(shapeLayer, TrackMatteType.ALPHA)` (AE 23+; older: move footage directly above and set `trackMatteType`). All scriptable. The Rectangle Position values on screen are in the shape layer's own space with the layer left at the comp centre; read that way in a 3840 x 2160 comp, Rectangle 3 lands on the layout's right block (inferred: found in a proof build, not said or shown).
-unknowns: Sizes and positions of Rectangles 1 and 2; the fill colour value. A later shot shows the same layout with clearly rounded corners on every edge, but the step that rounded them is not shown (Roundness reads 20 throughout).
-
-## Rounded-rectangle matte card that carries its media and labels
-id: 01-rounded-shape-matte-media-card
-revision: 6305ccdf
-job: show-real-screen; support: list-items
-status: unproven
-variant of: 25-custom-media-frame
-differs: the same mechanism as the parent: a shape layer drawn with the Rectangle tool sits directly under the photo or clip, the media's Track Matte is set to that shape as an alpha matte, and the shape's own visibility goes off so the media shows only inside it (parent steps 1, 2, 4 and 5, the source video.md L919, L928, L930, L931). Shape: here one upright rectangle, Rectangle Path Size 556 × 712, Roundness 54, centred in the frame (steps 1–3); in the parent three rectangles in one shape layer, a top bar and two hanging blocks that leave a notch for a headline, Rectangle 3 at Size 595 × 1285 and Roundness 20 (L919–L923). Order: here the photo is dropped in directly above the shape (step 4); in the parent the clip starts below the shape, is dragged above it and has its eye turned back on, since a hidden layer renders nothing (L928–L929). Parenting: here the photo (Scale 70 %) and every overlay (a two-line headline, two pill tags with a word in each, a logo) are parented to the shape, so one layer moves and scales the whole card, and the overlays carry no matte so they sit on top of it (steps 6, 8, 9); the parent has no parenting step (its steps, L919–L931). Comp: here about 1920 × 1080 at 23.976 fps (step 1); the parent's comp is 3840 × 2160 (L925).
-what it does for a beat: Turns any photo or clip into a tidy rounded card whose size and position are driven by one shape layer, so the card can later be swung, scaled or duplicated as a unit. Reach for it as the base piece of any card carousel or media stack.
-what it looks like: A portrait photo of a model, cropped into a rounded upright card in the middle of a plain cream frame, with a bold two-line white headline, two small outlined pill tags laid over the lower part of the card, and a small white logo mark in the card's top-left corner.
-ingredients:
-- Shape layer from the Rectangle Tool — built-in; toolbar shape-tool flyout (Rectangle Tool shown)
-- Track Matte (alpha matte from the shape layer) — built-in; Track Matte column of the timeline (shown)
-- Parenting (Parent & Link) — built-in; Parent & Link column (shown)
-steps:
-1. Pick the Rectangle Tool from the shape-tool flyout and drag out an upright rectangle in the composition (said; tool menu shown)
-   - Composition: about 1920x1080, 23.976 fps (fps shown; size inferred from the rectangle filling 29% x 66% of the picture at 556x712)
-   - Rectangle Path Size: 556.0,712.0 (shown)
-   - Rectangle Path Position: 0.0,0.0 (shown)
-   - Fill: black, Stroke off (shown; the fill colour does not matter because the layer is only used as a matte — inferred)
-2. Centre the shape layer in the frame (said, stressed as exact; the Align panel is set to "Composition", but no click on an align button is seen — how it was centred is inferred)
-   - Shape layer Position: no settled readout is ever on screen. The only readouts come during the drag-away-and-back test (step 9), while the value is being scrubbed: Y stays 538.0 and X passes 868 to 1448 (cuts from); these are values passed through, not the layer's set position. The recording then cuts (X reading 768, card left of centre) to a state where the card is centred again. Measured on the result frame, the card's centre sits at 0.501 x 0.501 of the picture, so aim for the comp centre, 960,540 (measured; the 538 seen while dragging is within reading error)
-3. Open Contents > Rectangle 1 > Rectangle Path 1 and raise Roundness to round the corners (said)
-   - Roundness: 54.0 (shown; dragged up through 20 and 41 first)
-4. Drop the photo or video into the comp directly above the shape layer (said; shown, photo layer at index 1 above the shape layer)
-5. On the photo layer set Track Matte to the shape layer, using the alpha matte (said "track matte"; matte chosen shown; alpha rather than luma is inferred from the matte icon)
-   - The shape layer's own visibility goes off when it becomes the matte (shown, eye column empty on the shape layer)
-6. Scale the photo inside the card until it frames well (said "control the sizing")
-   - Photo Scale: 70.0,70.0% (shown)
-7. Rename the shape layer so it is easy to find, for example "matte" (shown; not said)
-8. Parent the photo layer to the shape layer so moving or scaling the shape moves the photo with it (said; shown, photo layer Parent = the matte layer)
-9. Add the overlay elements on top — a two-line headline text layer, two pill-shaped outline boxes with a one-word text tag in each, a small logo image — and parent every one of them to the shape layer too (said; shown, all six overlay layers parented to the matte layer)
-   - Optional test: after parenting the photo, the matte's Position is dragged away and back to show the photo following it (shown); it is put back, so it does not change the result
-   - The overlay layers have no track matte (Track Matte = No Matte, shown), so they sit on top of the card rather than being cut by it
-   - The overlays are switched on one at a time while the layers are set up (shown); this is housekeeping, not part of the look
-layout: background a flat, full-frame cream solid, RGB about 247,244,237, the same value in all four corners and mid-edges of the result crop, with no vignette, gradient or grain (measured on a still of the result; the layer is present); card width about 29% of the picture width and height about 66% of the picture height, centred both ways (measured on the result frame: 491 x 634 px in the 1688 x 948 crop, centre 0.501 x 0.501); the card is flat, with no drop shadow, edge glow or stroke: the two rows just below its bottom edge are a lighter anti-aliased fringe, and from the third row down the pixels are within 4 levels of the background, exact from the seventh (measured at the card's centre column and near its left corner); corner radius: Roundness 54 shown, which in After Effects is the radius in comp pixels (about 10% of the 556 px card width); measured on the result crop the corner fits a circle of about 45 crop px on the 491 px card, about 51 comp px or 9% of the card width, the same on the top-left, top-right and bottom-left corners (measured; within reading error of 54); headline sits in the lower third of the card, left-aligned with a margin of about 7% of the card width, letter height about 6% of the picture height; pill tags under the headline, each about 4% of the picture height tall; logo mark in the card's top-left corner, about 7% of the card width in from the left edge and about 5% of the card height down, roughly 11% of the card width wide (measured on the result frame, also visible)
-timing and easing: none given (this part is static set-up)
-variations: any media works — photos or video (said); any shape can be drawn (said "any shape that you want")
-pitfalls: the shape must be exactly centred in the frame (said, stressed); the media and all text and graphics must be parented to the matte shape so one layer moves everything (said, stressed as "most importantly")
-build notes: by script — layers.addShape(); add "ADBE Vector Group" with "ADBE Vector Shape - Rect" (Size [556,712], Roundness 54) and "ADBE Vector Graphic - Fill"; set layer Position to the comp centre; import the media, move it above the shape, then mediaLayer.setTrackMatte(shapeLayer, TrackMatteType.ALPHA) (AE 2023+; older versions: put the shape directly above and set trackMatteType = TrackMatteType.ALPHA); mediaLayer.parent = shapeLayer and the same for each text, box and logo layer; media Transform > Scale [70,70]. Nothing here needs the interface.
-unknowns: exact composition size (inferred 1920x1080); how the layer was centred (align button or position typed) and its settled Position value; fonts, sizes and colours of the headline and tags; size and roundness of the pill boxes; the logo artwork; whether the photo is a still or a clip in the finished build (a still is used here)
-
-## Card that swings round a pivot below the frame, one step at a time, forever
-id: 02-pivot-null-swing-loop
-revision: faf0d084
-job: list-items; support: keep-it-alive
-status: proven (accepted 2026-11-19)
-what it does for a beat: Gives a card (or later a row of cards) a carousel step: it swings in from one side on a big arc, settles upright, pauses, then swings out the other side, and the step repeats endlessly from only three keyframes. Use it for product or photo carousels, list reveals, or any "next item" rhythm.
-what it looks like: The rounded photo card from 01-rounded-shape-matte-media-card arrives from the lower right tilted about 34 degrees, rocks up into the centre on a wide arc and holds upright; the next step carries it on the same arc to the mirror of where it started, lower left and tilted about −34°, where it holds again with its lower-left corner about 6% of the picture height below the frame's bottom edge, the card cut by that edge along about 8% of the picture width; only the step after that (−68°) takes it mostly out of frame, one corner still showing at the lower left. Each cycle adds another −34°, so a single card never comes back.
-ingredients:
-- The matte card from 01-rounded-shape-matte-media-card (shape matte with media and overlays parented to it)
-- Pan Behind (Anchor Point) Tool — built-in; toolbar (said)
-- Null Object — built-in; Layer > New > Null Object, Ctrl+Alt+Shift+Y (menu shown)
-- loopOut("offset") expression on Rotation — built-in (said; shown)
-- Easy Ease (F9) and the Graph Editor speed graph — built-in (said)
-steps:
-1. Build the card as in 01-rounded-shape-matte-media-card (inferred link; said "builds on")
-2. With the Pan Behind tool, drag the matte layer's anchor point down to the bottom edge of the card, centred (said; result shown, Anchor Point 3.8,359.8 on a 712 px tall rectangle, so the anchor sits on its bottom edge)
-3. Make a null object (said; New > Null Object menu shown)
-4. Parent the matte layer to the null (said; shown, matte layer Parent = the null)
-5. With the Pan Behind tool, drag the null's anchor point straight down below the composition to where the swing should pivot (said; shown, the null's anchor sits centred horizontally below the frame)
-   - Pivot: centred, about 0.36 picture heights below the bottom edge of the frame, i.e. about 0.53 picture heights below the card's bottom edge (measured)
-6. Test the arc by scrubbing the null's Rotation value back and forth and watching the card travel round the pivot (shown, scrub cursor on the Rotation value; the timeline also records about −81° during this stretch; not said; the value is then put back to 0)
-7. On the null's Rotation, set a keyframe of 0 degrees around frame 20 (said "around 20 ish frames"; shown, key at about 20 f, 0x+0.0°)
-8. Go to frame 0 and rotate the null so the card sits off to one side (said; shown)
-   - Rotation at 0 f: 0x+34.0° (shown; card to the right)
-9. Add a third keyframe a few frames after the 0-degree one, with the same value, to make a short hold (said; shown, a third key about 3 f later)
-   - Final key times after retiming: 0 f (+34°), 17 f (0°), 24 f (0°) at 23.976 fps (shown, measured on the timeline ruler; the move from 20 f to 17 f is not seen being done)
-10. Alt-click the Rotation stopwatch and type the offset loop (said; the auto-complete list of continue / cycle / offset / pingpong shown)
-   - Expression: loopOut("offset") (shown)
-   - Each cycle now adds another −34° step and its own 7-frame hold, so the card goes right (+34°) → centre (0°, hold) → lower left (−34°, hold) → mostly out (−68°) (inferred from how offset looping works; confirmed in the playback, cut every 0.05 s from 133.5, upright hold, swing, left hold, next step, then a still corner at the lower left)
-11. Select the first two keyframes and apply Easy Ease with F9 (said; hourglass Easy Ease icons on keys 1 and 2, third key left linear, shown)
-12. In the Graph Editor (speed graph), pull the ease handles out to make a strong, symmetric ease in and out (said "smooth out the animation however you need"; final shape shown and unchanged, just before the playback)
-   - Key 1 outgoing handle: Speed 0.00 °/s, Influence about 77% (shown, a tooltip reading 76.71% read while the handle is still being dragged, so a value passed through; the settled graph has the same shape, so about 77% stands as approximate)
-   - Key 2 incoming handle: about the same length, so about 77% too (inferred from the matching handle length)
-   - Resulting speed graph: peak about −199 °/s at about frame 8.5 of the 17-frame swing, symmetric, near-zero speed for the first and last few frames (shown, read off the graph's degree scale)
-   - On the way the author drags an earlier, lopsided shape (peak about −116 °/s near frame 5, mid-drag); that is not the final shape
-layout: card upright and centred at the hold, card about 29% of picture width and 66% of picture height (measured, unchanged from 01); the card keeps this size through the whole swing, with no shrink or lean of its own (that is 03) (measured: its pixel area is 18.9% of the picture upright and 18.5% at the left hold); at the left hold (−34°) the card's centre sits about 23% across and 64% down, its lower-left corner about 6% of the picture height below the frame's bottom edge, so the bottom edge cuts the card along about 8% of the picture width, from about 19% to 27% across (measured on the last picture row of a full, the corner depth from the geometry: centre 64% down, −34° tilt puts the lower-left corner about 450 comp px below the centre); after the next step (−68°) only about a third of the card shows, low in the bottom-left corner (measured); motion is right to left: each step carries the card's centre about 27% of the picture width, almost all of it in about 5 comp frames mid-swing, peaking at about 1.5 picture widths per second (from about 7.8° per comp frame on a pivot about 0.48 picture widths below the card centre; measured); at frame 0 the card centre sits about 77% across and 62% down the picture, tilted +34° (measured); pivot centred about 0.36 picture heights below the frame's bottom edge (measured)
-timing and easing: 23.976 fps; null Rotation keys 0 f = +34°, 17 f = 0°, 24 f = 0° (24-frame cycle: 17 f swing, 7 f hold); Easy Ease on the first two keys, then both handles pulled to about 77% influence for a symmetric ease with a peak of about 199 °/s mid-swing; loopOut("offset") repeats the step forever
-variations: none given beyond "however you need" for the graph shape (said)
-pitfalls: parenting the card to a null that is itself moved creates layers of parenting ("null-ception", said); without a loop expression the keyframes only play one swing (said); without easing the step looks mechanical (said: ease is highly suggested)
-build notes: by script — matte.property("ADBE Transform Group").property("ADBE Anchor Point") set to [0, rectHeight/2] and Position compensated so the card does not jump (the Pan Behind tool does this compensation by hand); var n = comp.layers.addNull(); move the null's anchor/position so its position lies at [compW/2, compH*1.36]; matte.parent = n; n Rotation setValueAtTime(0,34), (17/23.976,0), (24/23.976,0); expression 'loopOut("offset")'; KeyframeEase on keys 1–2: key 1 outgoing new KeyframeEase(0, 76.71) and key 2 incoming new KeyframeEase(0, about 77) (key 1 value shown; key 2 inferred from its matching handle); key 2 outgoing and key 3 can stay linear. Nothing needs the interface.
-unknowns: how the keys moved from about 20 f / 23 f to 17 f / 24 f (somewhere in, not checked); the exact influence of key 2's incoming handle; the null's exact position values; the composition length; whether anything else in the comp is animated
-
-## Card shrinks and leans outward at the ends of its swing
-id: 03-tilt-and-shrink-on-swing
-revision: 27af439d
-job: list-items; support: point-at-detail
-status: proven (accepted 2026-11-19)
-what it does for a beat: Adds a size-and-lean change on top of the pivot swing so the card is small and tipped outward while it is off to the side and full size and upright when it reaches the top. This is what makes a swinging carousel feel like it is "resizing" and gives the centred item its emphasis.
-what it looks like: The rounded photo card enters from the lower right at about two-thirds size and leaning hard outward, grows to full size as it rises upright into the centre, holds, then shrinks and leans outward again as it falls away to the lower left.
-ingredients:
-- The swinging card from 02-pivot-null-swing-loop (matte card parented to a pivot null with a looping rotation)
-- Scale and Rotation keyframes on the matte shape layer — built-in (said)
-- Easy Ease (F9) and the Graph Editor — built-in (shown)
-steps:
-1. Start from the finished 02-pivot-null-swing-loop set-up: null keys 0 f +34°, 17 f 0°, 24 f 0° with loopOut("offset") (inferred link; null keys still visible)
-2. Select the matte shape layer (the card) and open Scale and Rotation; its anchor is already on the card's bottom edge (shown, Anchor Point 3.8,359.8)
-   - Housekeeping: the photo, text, box and logo layers are hidden from the timeline with the shy switch, leaving only the null, the matte and the background listed (shown); this does not change the picture
-3. At frame 17, where the null reaches 0°, set keyframes for Scale and Rotation at full size and upright (said "hold the sizing rotation at the top"; shown)
-   - Scale: 100.0,100.0% (shown)
-   - Rotation: 0x+0.0° (shown)
-4. At frame 0, where the card sits to the right, set Scale and Rotation so the card is smaller and leans further outward (said "slightly tilt and scale down"; shown and again)
-   - Scale: 68.0,68.0% (shown)
-   - Rotation: 0x+23.0° (shown; added on top of the null's +34°, so the card leans about 57° in all — inferred sum)
-5. At frame 24, where the null's hold ends, add a matching full-size, upright key so the card holds at the top (shown, a third key added with 100% and 0°; the author says to hold the size and rotation at the top)
-6. At frame 41, where the null's next step has carried the card to the left (24 f + 17 f), set the shrink and lean again in the other direction (said: repeat the shrink and tilt when the card reaches the other side)
-   - Scale: 68.0,68.0% (shown)
-   - Rotation: 0x−22.0° (shown; the key first reads 68% and +23° — that it was copied and pasted from frame 0 is inferred, no copy or paste is seen — then it is changed to −22, so the card leans about −56° in all with the null at −34° — inferred sum)
-   - Key times measured on the timeline ruler: 0 f, 17 f, 24 f, 41 f (shown)
-7. Smooth the Scale and Rotation keys (said "smooth out those keyframes if you want")
-   - Easy Ease on all four keys of both properties: hourglass icons on every key (shown in a; all four keys selected)
-   - Then in the Graph Editor the handles are pulled long: a tooltip on the first key's outgoing handle reads Speed 0.00 °/s, Influence 86.23% (shown in a, read while the handle is still being dragged, so a value passed through, not a settled key: the same handle is still short, and the graph is closed; take it as about 86%)
-   - Resulting speed graphs for Scale (red) and Rotation (cyan): near zero speed around every key, with one narrow, tall spike inside each change: at about frame 7.5 of the 0–17 f stretch and about frame 32 of the 24–41 f stretch (Rotation peaks roughly −500 °/s and beyond the graph's lower edge; shown, key positions measured on the graph), so each change is slow at both ends and very quick in the middle; the other handles' influences are not readable and are taken as the same (inferred)
-layout: at the centre hold the card is 29% of picture width and 66% of picture height, upright, centred (measured, from 01); at the side extremes the card is about 20% of picture width (68% of full size), its centre about 77% across and 77% down the picture on the right and about 23% across and 76% down on the left, leaning about 57° outward, so it partly drops below the frame's bottom edge (measured on editor frames with handles); Scale and Rotation act about the anchor on the card's bottom edge (from 02), so the card shrinks down towards its bottom edge and tips about it: that is why the shrunk side card sits low, partly below the frame, rather than floating at mid-height (inferred from the anchor, matches the frames); after 41 f a single card holds at 68% and −22° (about −56° in all) at the lower left until the null's next step carries it out of frame (inferred from the keys; no key after 41 f is shown); in the reference result (see `result`) the centre card is visibly smaller and leaning and full size and upright, 29.4% of the picture wide (still tilting slightly) and 67% tall (measured on a still of the result to), while the incoming copy at the lower right shows the frame-0 state: 68% size, leaning about +57°, centre about 78% across and 78% down; the left side is empty at that moment because no card precedes the first one; the incoming card is drawn in front of the centre card (its corner covers the centre card's red lower-right corner); the background is the flat cream of 01
-timing and easing: 23.976 fps; matte keys at 0 f (68%, +23°), 17 f (100%, 0°), 24 f (100%, 0°), 41 f (68%, −22°), timed to the null's 0 f / 17 f / 24 f / 41 f positions; Easy Ease on all keys, then strong eases with long handles (first key outgoing influence about 86%, read mid-drag; the others assumed similar, inferred)
-variations: the smoothing is optional (said "if you want")
-pitfalls: none given
-build notes: by script — on the matte layer: Scale setValueAtTime at 0, 17, 24, 41 frames (÷23.976) with [68,68], [100,100], [100,100], [68,68]; Rotation ("ADBE Rotate Z") with 23, 0, 0, −22; apply KeyframeEase(0, 86) in and out on every key to match the first-key handle read mid-drag (the other keys' values inferred). The null's Rotation loops with loopOut("offset"), but the video does not show any loop on the matte's Scale and Rotation, so as built here they play once (0–41 f); a single card that leaves the frame after 41 f does not need more, and in a multi-card chain each copy carries its own keys (see the next step of the video, not part of this recipe).
-unknowns: the influence of every handle (the first key's outgoing 86.23% was read mid-drag); whether the matte's keys are looped by an expression; why the left-side lean (−22°) differs from the right-side lean (+23°) by one degree; a clean playback of the single-card effect (only the chained build of 04 is played clean)
