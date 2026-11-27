@@ -47,11 +47,11 @@ The picks were chosen from titles, chapter lists and descriptions. Nobody has wa
 | 9 | SonduckFilm, [Create Callout Titles](https://www.youtube.com/watch?v=VZuHQVaC7oA) | flag-a-problem | 8 min | high | skipped 2026-11-26: the callout labels what's in the shot and its price, which reads as point-at-detail (five recipes already), not as a warning (rule 5) |
 | 10 | fail-then-fix, built from pieces 5, 11 and 13 | fail-then-fix | none | none | not started |
 | 11 | Zuyns, [How to Animate Notifications Like Apple](https://www.youtube.com/watch?v=tYjqtArZtds) | introduce-tool as support only (not flag-a-problem or fail-then-fix) | 9 min | low | done: 5 written, 5 proven (accepted by Joe 2026-11-26), 0 held |
-| 12 | Motion Nations, [This LOGO Animation Method is so POWERFUL](https://www.youtube.com/watch?v=Nh3TenxxQzQ) (glow outline logo reveal) | introduce-tool | 12 min | low | next (picked 2026-11-26) |
+| 12 | Motion Nations, [This LOGO Animation Method is so POWERFUL](https://www.youtube.com/watch?v=Nh3TenxxQzQ) (glow outline logo reveal) | introduce-tool | 12 min | low | done: 6 written, 6 proven (accepted by Joe 2026-11-26), 0 held |
 | 13 | After Effects Channel, [Cross animation in after effects with trim paths](https://www.youtube.com/watch?v=UehuuNiZVuk) | flag-a-problem | 3½ min | low | not started |
 | 14 | Smertimba Graphics, [Countdown Timer Tutorial](https://www.youtube.com/watch?v=99FUeOo4fiQ) | show-time | 2 min | low | not started |
 
-**After piece 11, no job gained a main recipe: introduce-tool has a proven recipe only as a support job (03, the bounce drop-in, whose main job is add-impact), and flag-a-problem and fail-then-fix gained nothing (05's proof plays a warning card and its fix, but 05 is tagged list-items).** **After piece 4, no empty job was filled: introduce-tool and flag-a-problem are still empty (make-concrete gained a second recipe).** **After piece 3, 7 of the 11 empty jobs were still empty (step-through-process is filled; show-proof and compare gained recipes).** **After piece 2, 8 of the 11 empty jobs were still empty (call-to-action is filled).** **After piece 1, 9 of the 11 empty jobs were still empty.** **The plan expected only before-after and fail-then-fix to be empty after pieces 1–4; that did not hold, so pieces 7 and 9 are still needed for introduce-tool and flag-a-problem.** If you only have time for a few, do those four.
+**After piece 12, introduce-tool is filled: four proven recipes take it as their main job (02, 04, 05 and 06, the glow-outline logo reveal), and 01 supports it. Five jobs still have no main recipe: count-things, show-time, before-after, fail-then-fix and flag-a-problem.** **After piece 11, no job gained a main recipe: introduce-tool has a proven recipe only as a support job (03, the bounce drop-in, whose main job is add-impact), and flag-a-problem and fail-then-fix gained nothing (05's proof plays a warning card and its fix, but 05 is tagged list-items).** **After piece 4, no empty job was filled: introduce-tool and flag-a-problem are still empty (make-concrete gained a second recipe).** **After piece 3, 7 of the 11 empty jobs were still empty (step-through-process is filled; show-proof and compare gained recipes).** **After piece 2, 8 of the 11 empty jobs were still empty (call-to-action is filled).** **After piece 1, 9 of the 11 empty jobs were still empty.** **The plan expected only before-after and fail-then-fix to be empty after pieces 1–4; that did not hold, so pieces 7 and 9 are still needed for introduce-tool and flag-a-problem.** If you only have time for a few, do those four.
 
 **Piece 11 (picked 2026-11-26, done the same day).** After piece 4, six jobs have no proven technique: count-things, show-time, before-after, fail-then-fix, introduce-tool and flag-a-problem (before-after and fail-then-fix have only paper pieces). Piece 7's captions show five finishing looks, none for these jobs. Piece 11 puts an app's logo and name on a notification card, which is introduce-tool as the job list defines it. The same card can carry a warning, and its second notification pushing the first aside is the shape fail-then-fix needs. It is 9 minutes, narrated and needs no plugins. It filled less than that: introduce-tool only as a support job, through 03 (whose main job is add-impact), and neither flag-a-problem nor fail-then-fix. No job gained a main recipe, and the next pick is open.
 
@@ -59,7 +59,7 @@ The picks were chosen from titles, chapter lists and descriptions. Nobody has wa
 
 **Run order (Joe, 2026-11-26: "let the full plan rip").** One session at a time. Each starts from the current `public/main`, runs its piece through proofs and Joe's acceptance, then opens its PR and merges it. Only then does the next session start: the pieces share the drafts, the generated cookbook and one After Effects. Pieces that fill an empty job go first.
 
-1. Piece 12, the logo reveal (introduce-tool).
+1. Piece 12, the logo reveal (introduce-tool). Done 2026-11-26.
 2. Pieces 5, 13 and 14 in one session, one after another: before-after, flag-a-problem, show-time. Each is under 4 minutes.
 3. Piece 10, the fail-then-fix worked scene. It chains a problem marked as wrong (13's cross, or 11's red warning card), the change (piece 5), and the fixed state.
 4. Piece 8 (make-concrete, which has 2 recipes).
@@ -241,6 +241,22 @@ Skipped on their captions (rule 5): pieces 7 and 9. A run stops and asks Joe bef
   - before-after: piece 5.
   - These three are each under 4 minutes. One session could learn them one after another and fill three empty jobs.
   - count-things: still no tutorial found.
+- **Done so far (2026-11-26):** the video teaches what its captions say. Six recipes, all passed, none held:
+  - 01 edge-only outline from the logo (light-the-hero, supports introduce-tool; a variant of tYRvoI04pJk #04);
+  - 02 three coloured edge sweeps that spin in and meet (introduce-tool; a variant of tYRvoI04pJk #04);
+  - 03 four stacked Glows blooming the outline (light-the-hero, supports finish-the-look; a variant of YBeMmC43Q1U #20);
+  - 04 animated sweep width, so the outline starts hidden and spreads (introduce-tool; a variant of tYRvoI04pJk #04);
+  - 05 the solid logo fading in over the glowing outline with CC Composite, under one hot flare and a small scale-down (introduce-tool; new);
+  - 06 swapping the logo or a word inside the finished setup (introduce-tool; new).
+
+  Saving the preset (10:25) was dropped as a technique, since the plan counts it a build aid at most. Fx Studio's video was not needed. Lessons 53–57 came from this run.
+- **Proofs (2026-11-26):** all six built at 9:16 for an invented video-editing app, Lumenfold. Its lockup is a generated white droplet mark over the name, set in Montserrat. 06 carries the stack over to the name alone, set in Montserrat Black. The first mark (short straight sides) and its navy ground fought the glows, so the lead made a mark of long smooth curves on a near-black ground and rebuilt all six (lesson 57).
+  - The last reviews say 01, 02, 04 and 05 match.
+  - 03 is close: its line runs more magenta than the tutorial's, and its white haze is about half as strong.
+  - 06 matches in part: the swap and the rest state match, but the trace phase floods.
+
+  Joe accepted all six on 2026-11-26 ("Accept all six"). Their stills are in the arsenal, and `find introduce-tool` now returns 02, 04, 05 and 06 as main recipes. $38.22 of the $40 was spent. The run record is `quality/reports/2026-11-26-channel-learner-Nh3TenxxQzQ/report.md`.
+- **Filled:** introduce-tool, with four main recipes (02, 04, 05 and 06). 01 supports it too.
 
 ### 13. After Effects Channel, cross with trim paths
 
