@@ -1,6 +1,6 @@
 {
   "vocab": "jobs-v1",
-  "version": "9bc897bd",
+  "version": "7011d3d8",
   "jobs": [
     "land-number",
     "count-things",
@@ -169,7 +169,7 @@
       },
       "revision": "e51aa5c0",
       "still": "quality/renders/channel-study/201iywIy74c/proof/04/build.png",
-      "taught_by": 8,
+      "taught_by": 10,
       "variants": []
     },
     {
@@ -800,6 +800,41 @@
       "variants": []
     },
     {
+      "id": "01-slider-driven-countdown-timer-expression",
+      "video": "99FUeOo4fiQ",
+      "n": 1,
+      "name": "Slider-driven minutes:seconds countdown timer",
+      "line": "Put a live countdown clock (MM:SS) on screen when a scene needs a timer, a deadline or a ticking tension beat. Only one number is keyed, so the length is changed by editing two key values.",
+      "status": "proven",
+      "kind": "technique",
+      "job": "show-time",
+      "support": [
+        "land-number"
+      ],
+      "mood": [
+        "dark",
+        "bold",
+        "minimal"
+      ],
+      "needs": [
+        "type"
+      ],
+      "duration": 4,
+      "motion": "one-shot",
+      "difficulty": 2,
+      "group": "value slider rig",
+      "why": "'a countdown clock or deadline ticking down on screen' ... a Slider keyed from 60 to 0 drives a MM:SS readout that stops at 00:00",
+      "section": {
+        "file": "99FUeOo4fiQ.md",
+        "heading": "Slider-driven minutes:seconds countdown timer"
+      },
+      "revision": "aac50b01",
+      "still": "quality/renders/channel-study/99FUeOo4fiQ/proof/01/build.png",
+      "taught_by": 5,
+      "variant_of": "01-value-driven-counter",
+      "variants": []
+    },
+    {
       "id": "01-edge-only-outline-from-logo",
       "video": "Nh3TenxxQzQ",
       "n": 1,
@@ -1040,8 +1075,10 @@
       },
       "revision": "bec7b246",
       "still": "quality/renders/channel-study/SKU3QdqKLOs/proof/01/build.png",
-      "taught_by": 4,
-      "variants": []
+      "taught_by": 5,
+      "variants": [
+        "01-slider-driven-countdown-timer-expression"
+      ]
     },
     {
       "id": "02-ring-fills-to-value",
@@ -1076,7 +1113,7 @@
       },
       "revision": "05485478",
       "still": "quality/renders/channel-study/SKU3QdqKLOs/proof/02/build.png",
-      "taught_by": 4,
+      "taught_by": 5,
       "variants": []
     },
     {
@@ -1111,7 +1148,7 @@
       },
       "revision": "19e03b63",
       "still": "quality/renders/channel-study/SKU3QdqKLOs/proof/03/build.png",
-      "taught_by": 4,
+      "taught_by": 5,
       "variants": []
     },
     {
@@ -1146,7 +1183,7 @@
       },
       "revision": "b09ebf07",
       "still": "quality/renders/channel-study/SKU3QdqKLOs/proof/04/build.png",
-      "taught_by": 4,
+      "taught_by": 5,
       "variants": []
     },
     {
@@ -1182,6 +1219,41 @@
       "revision": "59a59810",
       "still": "quality/renders/channel-study/SKU3QdqKLOs/proof/05/build.png",
       "taught_by": 1,
+      "variants": []
+    },
+    {
+      "id": "01-before-after-sliding-matte-wipe",
+      "video": "SSAsTdXmKl0",
+      "n": 1,
+      "name": "Before/after reveal with a sliding rectangle matte and thin edge line",
+      "line": "Show the same subject before and after one change. The \"after\" picture sits over the \"before\" picture and is uncovered by a straight vertical edge that sweeps across and then back.",
+      "status": "proven",
+      "kind": "technique",
+      "job": "before-after",
+      "support": [
+        "compare"
+      ],
+      "mood": [
+        "dark",
+        "sleek",
+        "clean"
+      ],
+      "needs": [
+        "photo",
+        "shapes"
+      ],
+      "duration": 5,
+      "motion": "one-shot",
+      "difficulty": 2,
+      "group": "media in shape matte",
+      "why": "'show the same subject before and after one change': a straight edge with a hairline sweeps across and back, uncovering the finished render over its wire-mesh state",
+      "section": {
+        "file": "SSAsTdXmKl0.md",
+        "heading": "Before/after reveal with a sliding rectangle matte and thin edge line"
+      },
+      "revision": "138bf9d4",
+      "still": "quality/renders/channel-study/SSAsTdXmKl0/proof/01/build.png",
+      "taught_by": 3,
       "variants": []
     },
     {
@@ -1464,6 +1536,72 @@
       },
       "revision": "b061556e",
       "still": "quality/renders/channel-study/Tf0EiCGOEYs/proof/08/build.png",
+      "taught_by": 10,
+      "variants": []
+    },
+    {
+      "id": "01-trim-paths-travelling-round-cap-line",
+      "video": "UehuuNiZVuk",
+      "n": 1,
+      "name": "Round-capped line that draws on and then wipes off (Trim Paths)",
+      "line": "A designer reaches for this when a plain stroke should grow along its path and then have its tail chase the head off the far end, as a quick graphic accent or as the building block for a larger line design.",
+      "status": "proven",
+      "kind": "technique",
+      "job": "add-impact",
+      "support": [],
+      "mood": [
+        "dark",
+        "minimal",
+        "clean"
+      ],
+      "needs": [
+        "shapes"
+      ],
+      "duration": 2,
+      "motion": "one-shot",
+      "difficulty": 2,
+      "group": "trim paths draw-on",
+      "why": "'a plain stroke should grow along its path and then have its tail chase the head off the far end, as a quick graphic accent': one round-capped line with Trim Paths End and Start both keyed and eased, so a capsule travels across and vanishes",
+      "section": {
+        "file": "UehuuNiZVuk.md",
+        "heading": "Round-capped line that draws on and then wipes off (Trim Paths)"
+      },
+      "revision": "c770918c",
+      "still": "quality/renders/channel-study/UehuuNiZVuk/proof/01/build.png",
+      "taught_by": 10,
+      "variants": []
+    },
+    {
+      "id": "02-duplicate-rotate-lines-into-cross",
+      "video": "UehuuNiZVuk",
+      "n": 2,
+      "name": "Two travelling lines turned into an X by duplicating and rotating",
+      "line": "A designer reaches for this when one animated stroke (see recipe 01-trim-paths-travelling-round-cap-line) should become a symbol or accent such as a cross, a close mark or a plus-style hit, by reusing the same animation on turned copies.",
+      "status": "proven",
+      "kind": "technique",
+      "job": "flag-a-problem",
+      "support": [
+        "add-impact"
+      ],
+      "mood": [
+        "bold",
+        "clean",
+        "minimal"
+      ],
+      "needs": [
+        "shapes"
+      ],
+      "duration": 2,
+      "motion": "one-shot",
+      "difficulty": 2,
+      "group": "trim paths draw-on",
+      "why": "'a wrong answer or a warning that must read as wrong before it is explained': two round-capped strokes duplicated and turned to plus and minus 45 degrees draw across each other into an X, then clear",
+      "section": {
+        "file": "UehuuNiZVuk.md",
+        "heading": "Two travelling lines turned into an X by duplicating and rotating"
+      },
+      "revision": "09c4e2c9",
+      "still": "quality/renders/channel-study/UehuuNiZVuk/proof/02/build.png",
       "taught_by": 10,
       "variants": []
     },
@@ -2323,7 +2461,7 @@
       },
       "revision": "8c6d3c5f",
       "still": "quality/renders/channel-study/YBeMmC43Q1U/proof/25/build.png",
-      "taught_by": 2,
+      "taught_by": 3,
       "variants": [
         "01-rounded-shape-matte-media-card"
       ]
@@ -2361,7 +2499,7 @@
       },
       "revision": "6305ccdf",
       "still": null,
-      "taught_by": 2,
+      "taught_by": 3,
       "variant_of": "25-custom-media-frame",
       "variants": []
     },
@@ -3443,7 +3581,7 @@
       },
       "revision": "aa3d7518",
       "still": "quality/renders/channel-study/nHh0NRo8G2U/proof/01/build.png",
-      "taught_by": 8,
+      "taught_by": 10,
       "variants": []
     },
     {
@@ -3550,7 +3688,7 @@
       },
       "revision": "71fe9a82",
       "still": "quality/renders/channel-study/nHh0NRo8G2U/proof/04/build.png",
-      "taught_by": 8,
+      "taught_by": 10,
       "variants": []
     },
     {
@@ -3654,7 +3792,7 @@
       },
       "revision": "4731c114",
       "still": "quality/renders/channel-study/nHh0NRo8G2U/proof/07/build.png",
-      "taught_by": 8,
+      "taught_by": 10,
       "variants": []
     },
     {
@@ -3688,7 +3826,7 @@
       },
       "revision": "24d327a4",
       "still": "quality/renders/channel-study/nHh0NRo8G2U/proof/08/build.png",
-      "taught_by": 8,
+      "taught_by": 10,
       "variants": []
     },
     {
@@ -3758,7 +3896,7 @@
       },
       "revision": "e2f0e818",
       "still": "quality/renders/channel-study/nHh0NRo8G2U/proof/10/build.png",
-      "taught_by": 8,
+      "taught_by": 10,
       "variants": []
     },
     {
@@ -3932,7 +4070,7 @@
       },
       "revision": "7eb6b455",
       "still": "quality/renders/channel-study/nHh0NRo8G2U/proof/15/build.png",
-      "taught_by": 8,
+      "taught_by": 10,
       "variants": []
     },
     {
@@ -4035,7 +4173,7 @@
       },
       "revision": "7854bb63",
       "still": "quality/renders/channel-study/tYRvoI04pJk/proof/03/build.png",
-      "taught_by": 8,
+      "taught_by": 10,
       "variants": []
     },
     {

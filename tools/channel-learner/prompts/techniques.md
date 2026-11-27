@@ -4,7 +4,7 @@ You read one tutorial video's timeline (words and on-screen value changes, text 
 
 ## What you are given
 
-`STUDY/timeline.md` (every spoken sentence with its time, and what changed on screen while it was spoken) and `STUDY/timeline.json` (the same as data, with the video's chapters). A video with no narration has `words from none (screen only)` in its header and `(no speech)` windows of up to 8 seconds in place of sentences; split it by the chapter titles and the screen changes, and take `start` and `end` from window or chapter times.
+`STUDY/timeline.md` (every spoken sentence with its time, and what changed on screen while it was spoken) and `STUDY/timeline.json` (the same as data, with the video's chapters). A video with no narration has `words from none (screen only)` in its header and `(no speech)` windows of up to 8 seconds in place of sentences; split it by the chapter titles and the screen changes, and take `start` and `end` from window or chapter times. A short one with no chapters comes as one chapter, the video's title, so the screen changes and the frames are all you split it by: read the frames across the whole video before you list (LESSONS 59).
 
 ## What counts as a technique
 

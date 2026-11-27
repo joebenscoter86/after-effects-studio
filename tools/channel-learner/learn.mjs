@@ -211,12 +211,18 @@ function noWordsReason(state) {
 }
 
 // A tutorial with music and no narration: whisper ran and heard no speech. With chapters
-// to split it by, the timeline is built from the screen alone (screenOnlySentences);
-// without chapters there is nothing to hang the techniques on, so it stops.
+// to split it by, the timeline is built from the screen alone (screenOnlySentences). A short
+// video without chapters is built the same way as one span, since a lister can read a few
+// minutes of screen whole (LESSONS 59); a longer one has nothing to hang the techniques on,
+// so it stops.
 const SCREEN_ONLY = 'none (screen only)';
+export const SCREEN_ONLY_UNCHAPTERED_MAX_S = 300;
+/** Below this agreement with whisper, the creator's captions are taken as misread (LESSONS 60). */
+export const MIN_CREATOR_AGREEMENT = 0.8;
 const chaptersOf = (info) => (info?.chapters ?? []).map((c) => ({ title: c.title, start: c.start_time, end: c.end_time }));
-const screenOnly = (state, info) => done(state, 'whisper') && chaptersOf(info).length > 0;
-const noSpeechReason = (state) => `no speech: whisper ran (${state.steps.whisper?.note ?? 'done'}) but heard only music or markers, and the video has no chapters to split it by`;
+const screenOnly = (state, info) => done(state, 'whisper')
+  && (chaptersOf(info).length > 0 || (info?.duration > 0 && info.duration <= SCREEN_ONLY_UNCHAPTERED_MAX_S));
+const noSpeechReason = (state) => `no speech: whisper ran (${state.steps.whisper?.note ?? 'done'}) but heard only music or markers, and the video has no chapters to split it by and is longer than ${SCREEN_ONLY_UNCHAPTERED_MAX_S / 60} min`;
 
 // YouTube's "Sign in to confirm you're not a bot". Retrying soon only makes it worse.
 const BOT_CHECK = /confirm you.?re not a bot|sign in to confirm/i;
@@ -366,7 +372,7 @@ async function gather(url, dir, d, redo) {
 
   const sources = await wordSources(dir, info);
   if (sources.length === 0 && screenOnly(state, info)) {
-    d.log('gather done; no speech (music only), so align will build the timeline from the screen and the chapters');
+    d.log(`gather done; no speech (music only), so align will build the timeline from the screen and ${chaptersOf(info).length ? 'the chapters' : 'one span (a short video with no chapters)'}`);
     return 0;
   }
   if (sources.length === 0) {
@@ -398,6 +404,17 @@ async function align(dir, d, redo) {
     await saveState(dir, state);
     d.log(`stopped: ${state.stopped.reason}`);
     return 2;
+  }
+  // The creator's captions come first, but a creator track that disagrees with whisper on
+  // more than a fifth of its words has been read wrong (LESSONS 60): take whisper's words.
+  let cmp = null;
+  if (sources[0]?.name === 'captions-creator' && sources[1]?.name === 'whisper') {
+    cmp = compareTranscripts(sources[0].words, sources[1].words);
+    if (cmp.agreement < MIN_CREATOR_AGREEMENT) {
+      d.log(`creator captions agree with whisper on only ${Math.round(cmp.agreement * 100)} %, so the words come from whisper`);
+      sources.splice(0, 2, sources[1], sources[0]);
+      cmp = null;
+    }
   }
   const [chosen, other] = sources.length ? sources : [{ name: SCREEN_ONLY, words: [] }];
   const sentences = sources.length
@@ -486,9 +503,9 @@ async function align(dir, d, redo) {
     await writeFile(join(dir, 'timeline.json'), JSON.stringify(timeline, null, 2) + '\n');
     await writeFile(join(dir, 'timeline.md'), renderTimelineMarkdown(timeline));
     if (other) {
-      const cmp = compareTranscripts(chosen.words, other.words);
+      const check = cmp ?? compareTranscripts(chosen.words, other.words);
       await writeFile(join(dir, 'transcript-check.json'),
-        JSON.stringify({ a: chosen.name, b: other.name, ...cmp }, null, 2) + '\n');
+        JSON.stringify({ a: chosen.name, b: other.name, ...check }, null, 2) + '\n');
     }
     state.words = chosen.name;
     return `words from ${chosen.name}; ${sentences.length} sentences, ${kept.length} frames; `

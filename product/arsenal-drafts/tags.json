@@ -2807,6 +2807,90 @@
       "difficulty": 2,
       "group": null,
       "why": "'put my own logo, or a word, into this glowing outline reveal': drop new artwork into the logo pre-comp, add a white Fill, and the finished stack draws it with light, blooms and lands it as a crisp white mark"
+    },
+    "SSAsTdXmKl0#01": {
+      "id": "01-before-after-sliding-matte-wipe",
+      "kind": "technique",
+      "job": "before-after",
+      "support": [
+        "compare"
+      ],
+      "mood": [
+        "dark",
+        "sleek",
+        "clean"
+      ],
+      "needs": [
+        "photo",
+        "shapes"
+      ],
+      "duration": 5,
+      "motion": "one-shot",
+      "difficulty": 2,
+      "group": "media in shape matte",
+      "why": "'show the same subject before and after one change': a straight edge with a hairline sweeps across and back, uncovering the finished render over its wire-mesh state"
+    },
+    "99FUeOo4fiQ#01": {
+      "id": "01-slider-driven-countdown-timer-expression",
+      "kind": "technique",
+      "job": "show-time",
+      "support": [
+        "land-number"
+      ],
+      "mood": [
+        "dark",
+        "bold",
+        "minimal"
+      ],
+      "needs": [
+        "type"
+      ],
+      "duration": 4,
+      "motion": "one-shot",
+      "difficulty": 2,
+      "group": "value slider rig",
+      "why": "'a countdown clock or deadline ticking down on screen' ... a Slider keyed from 60 to 0 drives a MM:SS readout that stops at 00:00",
+      "variant_of": "SKU3QdqKLOs#01"
+    },
+    "UehuuNiZVuk#01": {
+      "id": "01-trim-paths-travelling-round-cap-line",
+      "kind": "technique",
+      "job": "add-impact",
+      "support": [],
+      "mood": [
+        "dark",
+        "minimal",
+        "clean"
+      ],
+      "needs": [
+        "shapes"
+      ],
+      "duration": 2,
+      "motion": "one-shot",
+      "difficulty": 2,
+      "group": "trim paths draw-on",
+      "why": "'a plain stroke should grow along its path and then have its tail chase the head off the far end, as a quick graphic accent': one round-capped line with Trim Paths End and Start both keyed and eased, so a capsule travels across and vanishes"
+    },
+    "UehuuNiZVuk#02": {
+      "id": "02-duplicate-rotate-lines-into-cross",
+      "kind": "technique",
+      "job": "flag-a-problem",
+      "support": [
+        "add-impact"
+      ],
+      "mood": [
+        "bold",
+        "clean",
+        "minimal"
+      ],
+      "needs": [
+        "shapes"
+      ],
+      "duration": 2,
+      "motion": "one-shot",
+      "difficulty": 2,
+      "group": "trim paths draw-on",
+      "why": "'a wrong answer or a warning that must read as wrong before it is explained': two round-capped strokes duplicated and turned to plus and minus 45 degrees draw across each other into an X, then clear"
     }
   }
 }

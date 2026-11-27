@@ -2,7 +2,7 @@
  "arsenal": "The library at three levels: styles (a look a section can borrow: colour, type, light, material), worlds (a set a section lives in) and recipes (one technique for one beat). Among the recipes, pieces are runnable code: one file each, called by name. Every entry has a still and says what it provides. Look at a level as pictures with ae_arsenal browse; ask per beat by job, by what an entry provides, or in plain words, with find (pieces come first); read any entry with get (a piece answers with its call); list the jobs and the provides vocabulary with jobs.",
  "tool": "ae_arsenal",
  "vocab": "jobs-v1",
- "version": "a816c8b7",
+ "version": "67deb222",
  "documents": [
   {
    "id": "arsenal-index",
@@ -24,14 +24,20 @@
   },
   {
    "id": "arsenal-line",
-   "title": "Arsenal recipes: line jobs: what the viewer must get from this line (part 1 of 2)",
+   "title": "Arsenal recipes: line jobs: what the viewer must get from this line (part 1 of 3)",
    "path": "arsenal/recipes-line.md",
    "kind": "recipes"
   },
   {
    "id": "arsenal-line-2",
-   "title": "Arsenal recipes: line jobs: what the viewer must get from this line (part 2 of 2)",
+   "title": "Arsenal recipes: line jobs: what the viewer must get from this line (part 2 of 3)",
    "path": "arsenal/recipes-line-2.md",
+   "kind": "recipes"
+  },
+  {
+   "id": "arsenal-line-3",
+   "title": "Arsenal recipes: line jobs: what the viewer must get from this line (part 3 of 3)",
+   "path": "arsenal/recipes-line-3.md",
    "kind": "recipes"
   },
   {
@@ -342,9 +348,9 @@
   }
  ],
  "counts": {
-  "recipes": 150,
-  "proven": 114,
-  "stills": 157,
+  "recipes": 154,
+  "proven": 118,
+  "stills": 161,
   "pieces": 20,
   "style_blocks": 5,
   "styles": 34,

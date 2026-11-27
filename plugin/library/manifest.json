@@ -748,14 +748,14 @@
       "title": "Technique arsenal index: documents, vocabulary and counts",
       "path": "arsenal/index.json",
       "kind": "catalog",
-      "sha256": "f01700749dcc174f70b130cf5c01527199f1d13b2eeac226355b17509b69a3b1"
+      "sha256": "bb6077131ce10c3272d0323bf30cb4dc3c8a8ad5fba7fbbe1274c6e24d20f972"
     },
     {
       "id": "arsenal-catalog",
       "title": "Library catalog: one record per style, world, recipe and piece, queried by ae_arsenal",
       "path": "arsenal/catalog.json",
       "kind": "catalog",
-      "sha256": "bb5e38a487f68a2f69be40ea2fb294092c251c49e02ee57b3b59540a20ebac3a"
+      "sha256": "9ada9489e3cd9852a15590e87a6c4ea2dc7c948406d665fee414d8bf68ee388c"
     },
     {
       "id": "arsenal-jobs",
@@ -766,31 +766,38 @@
     },
     {
       "id": "arsenal-line",
-      "title": "Arsenal recipes: line jobs: what the viewer must get from this line (part 1 of 2)",
+      "title": "Arsenal recipes: line jobs: what the viewer must get from this line (part 1 of 3)",
       "path": "arsenal/recipes-line.md",
       "kind": "recipes",
-      "sha256": "8c3739dcf7b4033d04bd18941bad825c2140801169e6e9133ef42654989bd655"
+      "sha256": "52b83d5507a9b3a7c4f1965efd9a5f6d0b6e7500903314e98f57b9b830bc572c"
     },
     {
       "id": "arsenal-line-2",
-      "title": "Arsenal recipes: line jobs: what the viewer must get from this line (part 2 of 2)",
+      "title": "Arsenal recipes: line jobs: what the viewer must get from this line (part 2 of 3)",
       "path": "arsenal/recipes-line-2.md",
       "kind": "recipes",
-      "sha256": "c33df8371bc9f5e8c54cda34659d372191f6f60c79c7b1b2d59c2848609f9595"
+      "sha256": "c1695f1639aff570c38b99e87cda34abf61f6b256fea7aafcc86cff70a196566"
+    },
+    {
+      "id": "arsenal-line-3",
+      "title": "Arsenal recipes: line jobs: what the viewer must get from this line (part 3 of 3)",
+      "path": "arsenal/recipes-line-3.md",
+      "kind": "recipes",
+      "sha256": "eba754c76444133027978f5a81161e269f7c1edd8481811c12796820afd3aa7a"
     },
     {
       "id": "arsenal-picture",
       "title": "Arsenal recipes: picture jobs: how the picture has to read, whatever the line says (part 1 of 2)",
       "path": "arsenal/recipes-picture.md",
       "kind": "recipes",
-      "sha256": "f63932ad0e7d37ee85322a58237a2ec57aeff43bb2a2d9821f0f352c5cae6aa8"
+      "sha256": "095cf7cbba262ff087265c653b51d660174fdbe83f3d55253112147d31c28668"
     },
     {
       "id": "arsenal-picture-2",
       "title": "Arsenal recipes: picture jobs: how the picture has to read, whatever the line says (part 2 of 2)",
       "path": "arsenal/recipes-picture-2.md",
       "kind": "recipes",
-      "sha256": "59248a9072939743e8b9de1b7405e378a9e8ab71f3ae74e96c245c85cd3c4876"
+      "sha256": "5fdb6355a4323eaca6810bc8397a0eb5732216e6221b4ebbddd0618b2053e998"
     },
     {
       "id": "arsenal-connective",

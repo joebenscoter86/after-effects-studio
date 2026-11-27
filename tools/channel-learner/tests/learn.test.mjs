@@ -288,6 +288,23 @@ test('align takes creator captions first, then whisper, then automatic captions'
   }
 });
 
+// LESSONS 60: a creator track whose words disagree with whisper is read wrong, not spoken wrong.
+test('align falls back to whisper when the creator captions agree with it on under 80 %', async () => {
+  const scrambled = json3([[0, 'Set'], [500, 'amount.'], [1000, 'the'], [3000, 'Blur.'], [3400, 'Open'], [3800, 'Gaussian']]);
+  const opts = { info: info({ subtitles: { en: [{ ext: 'json3' }] } }), captions: scrambled };
+  const dir = await gathered(opts);
+  try {
+    const { deps, logs } = fakes(dir, opts);
+    assert.equal(await run(['align', dir], deps), 0);
+    assert.equal((await readJson(join(dir, 'timeline.json'))).video.wordsFrom, 'whisper');
+    const check = await readJson(join(dir, 'transcript-check.json'));
+    assert.equal(check.a, 'whisper');
+    assert.equal(check.b, 'captions-creator');
+    assert.ok(check.agreement < 0.8);
+    assert.ok(logs.some((l) => /creator captions agree with whisper on only \d+ %/.test(l)), logs.join('\n'));
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
 test('align stops with exit 2 when there are no words', async () => {
   const dir = await gathered({ captionsFail: true, whisperFail: true, expectGather: 2 });
   try {
@@ -319,10 +336,28 @@ test('a music-only video with chapters gathers and aligns screen-only', async ()
   } finally { await rm(dir, { recursive: true, force: true }); }
 });
 
-test('a music-only video without chapters still stops with exit 2', async () => {
+test('a long music-only video without chapters still stops with exit 2', async () => {
   const dir = await gathered({ ...music, info: info({ duration: 600, chapters: [] }), expectGather: 2 });
   try {
     assert.match((await readJson(join(dir, 'state.json'))).stopped.reason, /no speech/);
+    assert.match((await readJson(join(dir, 'state.json'))).stopped.reason, /longer than 5 min/);
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
+// SSAsTdXmKl0 (explainer piece 5): 3½ minutes of music, no chapters (LESSONS 59).
+test('a short music-only video without chapters aligns screen-only as one span', async () => {
+  const short = { ...music, info: info({ duration: 210, chapters: [] }) };
+  const dir = await gathered(short);
+  try {
+    const { deps } = fakes(dir, short);
+    assert.equal(await run(['align', dir], deps), 0);
+    const tl = await readJson(join(dir, 'timeline.json'));
+    assert.equal(tl.video.wordsFrom, 'none (screen only)');
+    assert.equal(tl.chapters.length, 1, 'the whole video is one chapter');
+    const s = tl.chapters[0].sentences;
+    assert.equal(s[0].start, 0);
+    assert.equal(s.at(-1).end, 210);
+    assert.ok(s.every((x) => x.end - x.start <= 8 + 1e-9 && x.text === '(no speech)'), 'windows of at most 8 s');
   } finally { await rm(dir, { recursive: true, force: true }); }
 });
 
