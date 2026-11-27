@@ -313,6 +313,16 @@ test('builders set Glow Threshold on its 0-255 script scale (lesson 56)', () => 
   assert.match(text, /61\.2/);
 });
 
+// Lesson 57: an angular mark lit in pieces under an edge light, and a navy ground read as haze.
+test('art that a light traces matches the reference outline, and a glow sits on the reference ground level (lesson 57)', () => {
+  const art = fs.readFileSync(path.join(PROMPTS, 'art.md'), 'utf8');
+  assert.match(art, /long smooth curves/);
+  assert.match(art, /straight sides/);
+  assert.match(art, /ground/i);
+  const lead = fs.readFileSync(path.join(PROMPTS, 'video-lead.md'), 'utf8');
+  assert.match(lead, /art\.md rule 2/, 'art the lead hands over in lead notes meets the same rule');
+});
+
 test('proofs are built at 9:16, the phone frame the owner reviews on: the art, script and comp rules all say so', () => {
   for (const f of ['prove-author.md', 'prove.md', 'art.md']) {
     const text = fs.readFileSync(path.join(PROMPTS, f), 'utf8');

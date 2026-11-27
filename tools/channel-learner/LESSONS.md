@@ -270,6 +270,11 @@ The first video's 25 recipes all passed the check. Building them found three rec
 - **Why.** `prove-run.md` noted that Drop Shadow's Opacity reads 0 to 255 by script, but not that other parameters the panel shows as a percent do too, nor how to find out.
 - **Rule.** `prove-run.md` names Glow Threshold beside Drop Shadow's Opacity, with the conversion, and says to check any percent parameter's range with `effect.describe`. 03's build notes carry a lead note for its rebuild. Test in `tests/run-stage.test.mjs`.
 
+### 57. The lead's shared art fought the technique (explainer piece 12, Nh3TenxxQzQ 03, 04, 05, 06, 2026-11-26)
+- **What happened.** The lead generated one mark and one ground for all six proofs before the art stage: three folded bands round a play triangle (short straight sides), on a near-black navy plate whose centre read about 32/34/69. 01 and 02 matched on them. 03 to 06 came back "partly" twice. The edge light lit the angular mark in short separate pieces, and the four Glows turned each into a blob where the tutorial's smooth logo lights in one crescent. The navy centre read as haze, so the reviews could not tell glow from ground. The lead's own test showed the Glow stack works: around a 4 px white ring it gives 50 % at 20 px out. The lead then generated a mark of long smooth curves (a droplet with a curled tip and a notch), graded the ground to near-black (centre about 6/6/12), and rebuilt all six so the set shows one tool.
+- **Why.** `art.md` rule 2 asks what the technique's effect needs in order to read, but its examples are fog, shadows and textures, nothing for a light that traces an outline or a glow that sums lit line. The lead notes' art was never checked against that rule: art runs read it, the lead did not.
+- **Rule.** `art.md` rule 2: a subject that a light traces or blooms matches the reference's kind of outline, and a ground under a glow stays at the reference's level. `video-lead.md` step 6: art the lead makes for the lead notes meets art.md rule 2. Test in `tests/run-stage.test.mjs`.
+
 ## Still open
 - The 24 "matches" on the first video were given before the look line existed.
 - Nothing yet tests the prompts themselves. A cheap test: keep technique 11's first recipe as a fixture and confirm a fresh checker fails it on check 8.
