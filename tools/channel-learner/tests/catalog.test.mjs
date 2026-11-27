@@ -160,6 +160,34 @@ test('build: refuses a tag whose id does not name the recipe at that place', () 
   });
 });
 
+// ---------- composed recipes ----------
+// composed.md holds recipes that chain proven recipes into one beat, learned from no video (explainer cookbook piece 10).
+
+test('composed: a recipe in composed.md has no video and lists what it composes, recipes and pieces', () => {
+  const chain = recipe(1, 'chain', { body: '\ncomposes: 01-a, 02-b; piece-tick' });
+  withDir({ 'vidA.md': [recipe(1, 'a'), recipe(2, 'b')], 'composed.md': [chain] }, (dir) => {
+    const cat = buildCatalog({ draftsDir: dir, jobs: JOBS, tags: tagsOf({ 'vidA#1': tag('01-a'), 'vidA#2': tag('02-b'), 'composed#1': tag('01-chain', { job: 'hand-over' }) }) });
+    const r = cat.recipes.find((x) => x.id === '01-chain');
+    assert.equal(r.video, null);
+    assert.deepEqual(r.composes, ['01-a', '02-b', 'piece-tick']);
+    assert.deepEqual(r.section, { file: 'composed.md', heading: 'Technique chain' });
+    assert.equal(cat.recipes.find((x) => x.id === '01-a').video, 'vidA');
+    assert.equal('composes' in cat.recipes.find((x) => x.id === '01-a'), false);
+  });
+});
+
+test('composed: refuses a composed recipe naming a recipe that is not in the drafts, one with no composes line, and a composes line elsewhere', () => {
+  withDir({ 'vidA.md': [recipe(1, 'a')], 'composed.md': [recipe(1, 'chain', { body: '\ncomposes: 01-a, 07-gone' })] }, (dir) => {
+    assert.throws(() => buildCatalog({ draftsDir: dir, jobs: JOBS, tags: tagsOf({ 'vidA#1': tag('01-a'), 'composed#1': tag('01-chain') }) }), /01-chain composes 07-gone, which is no recipe in the drafts/);
+  });
+  withDir({ 'vidA.md': [recipe(1, 'a')], 'composed.md': [recipe(1, 'chain')] }, (dir) => {
+    assert.throws(() => buildCatalog({ draftsDir: dir, jobs: JOBS, tags: tagsOf({ 'vidA#1': tag('01-a'), 'composed#1': tag('01-chain') }) }), /01-chain is in composed\.md but has no composes line/);
+  });
+  withDir({ 'vidA.md': [recipe(1, 'a', { body: '\ncomposes: 01-a' })] }, (dir) => {
+    assert.throws(() => buildCatalog({ draftsDir: dir, jobs: JOBS, tags: tagsOf({ 'vidA#1': tag('01-a') }) }), /01-a has a composes line, but only composed\.md holds composed recipes/);
+  });
+});
+
 // ---------- variants ----------
 
 // A variant's status line followed by the two lines a variant's draft carries.

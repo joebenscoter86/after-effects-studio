@@ -198,6 +198,56 @@ pitfalls: none given
 build notes: by script — background solid at the bottom, about RGB 228,228,228. Shape-layer matte with Rectangle (about 525 × 390 px at full size), image layer matted and parented as in 05, image scaled to cover. Position keys: setValueAtTime at 0 and 6.0 s with the middle three points roving (or at about 1.4, 3.4, 4.8 s before setting them roving) on the five path points above (comp pixels) with spatial tangents to round the curve (setSpatialTangentsAtKey), roving on keys 2–4 (setRovingAtKey); pasting a mask path into Position is interface-only, so either do that by hand or approximate the curve with tangents. Scale ("ADBE Scale") [0,0] at 0 s and [100,100] at 6 s; Rotation ("ADBE Rotate Z") −25 at 0 s and 0 at 6 s (negative is counter-clockwise in After Effects; the panel's +19 gives the opposite lean to the result); on the 6 s keys apply incoming KeyframeEase(0, 33) (Easy Ease) for Position and KeyframeEase(0, 100) for Scale and Rotation (Scale takes one ease object per dimension: [e,e] or [e,e,e]); leave the 0 s keys linear. Check a render of the leading card against the measured growth: about 22 % of full width at 0.5 s, 68 % at 1.5 s, 85 % at 2.5 s, and the target by path position in step 7. Copies: duplicate both layers, replaceSource the image, shift both layers' startTime by k × about 0.3 s, and order the stack so the pair with startTime 0 is on top and each later pair sits below the one before (moveAfter), matte directly above its image. Title: two text layers centred, dark green about RGB 7,33,27, sizes as in layout.
 unknowns: the exact pen path vertices and handles (read from the screen, not from values); the middle keys' times (roving, so they shift with the eases); the end Scale and Rotation values (100 % / 0° inferred); the start Rotation actually used for the result (about −25° measured; the panel showed +19° and the change is not shown); how the early growth of Scale and Rotation was made (the change happens off screen between; 100 % incoming influence on the 6 s keys reproduces it, an expression is not ruled out); how each copy's image was replaced (not shown in the build); the exact stagger per copy and the final count; the title's font and the grain layer's settings. The result is the author's pre-made finished example shown at the start of the span in a separate 60 fps comp (shown) that also holds the title and a noise layer not built here; its path, card size, lean and stacking match the build comp's own playback after the span, which has the same title. The mouse arrow wanders across the viewer during the finished example's playback, so the clean window is only about 0.15 s (the arrow); the slow zoom of the recording moves the picture by a few pixels, and the crop above is inside the picture at both ends.
 
+## Fail, then fix: a red X on the wrong state, a wipe to the fixed one, a tick on the result
+id: 01-red-x-then-wipe-then-tick
+revision: da4cc538
+job: fail-then-fix; support: flag-a-problem, before-after
+status: proven (accepted 2026-11-26)
+composes: 02-duplicate-rotate-lines-into-cross, 01-before-after-sliding-matte-wipe, piece-tick
+what it does for a beat: Show something going wrong and then the fix making it right, as one beat: the wrong state is struck with a red X, a straight edge wipes the fixed state on over it and takes the X away, and a tick draws on the result.
+what it looks like: One subject fills the frame in its wrong state (a garbled render, a failed upload, a broken layout). A red X draws across the thing that is wrong in about half a second, snapping through the middle of its stroke as the cross recipe does, and stays. A beat later a vertical edge with a thin pale hairline sweeps from the left side to the right; left of it is the same subject fixed, on the same pixels, and the X goes with the wrong picture as the edge passes it. A small label in each state names the one thing that changed, and the edge swaps it with its picture. Once the edge has left the frame, a white tick draws on a green disc that arrived with the fixed picture, and the fixed state holds.
+
+ingredients:
+- The cross: recipe 02-duplicate-rotate-lines-into-cross, which turns the travelling line of recipe 01-trim-paths-travelling-round-cap-line into an X. Read both with ae_arsenal get.
+- The wipe: recipe 01-before-after-sliding-matte-wipe (a rectangle keyed on x, duplicated as the track matte of the upper picture, with a stroke copy riding its edge). Only its forward leg is used.
+- The tick: piece-tick (PCS.tick, loaded with pcs-core.jsx; ae_arsenal get piece-tick gives the call).
+- Two pictures of the same subject, wrong and fixed, registered pixel for pixel, each filling the frame. Make the fixed one first and the wrong one as an edit of it, so only the wrong part differs.
+- Type for the two labels (one line each).
+
+steps:
+1. Make the comp at the frame the beat plays in (1080 × 1920 at 9:16), 30 fps, 6 s.
+2. Make a precomp "wrong", the comp's size: the wrong picture full frame at 100 %, its label, and the X. Build the X inside this precomp as recipe 02 does (two copies of the round-capped Trim Paths line, Rotation +45 and −45, the same Position), centred on the thing that is wrong. The X lives in the wrong state's precomp so that the wipe takes it away with the picture it marks.
+3. Make a precomp "fixed", the comp's size: the fixed picture full frame at 100 %, its label, and a green disc for the tick (an ellipse shape, no stroke). The disc arrives with the fixed picture as the edge uncovers it.
+4. In the main comp, build recipe 01's stack over the two precomps, bottom to top: "wrong", "fixed" (Track Matte: Alpha Matte "Fill"), "Fill", "Line". Size both rectangles about 7 % larger than the comp each way (1160 × 2060 for 1080 × 1920), Position y at the comp's centre.
+5. Key the X (inside "wrong"): both arms carry the same keys. Trim Paths End 0 → 100 over 17 frames, from 0.4 s; speed 0 and influence 92 % on both keys. Leave Start at 0 with no keys: in this chain the X stays drawn until the wipe takes it, instead of clearing as recipe 02's X does.
+6. Key the wipe (Position x of "Fill" and "Line", the same keys on both) from 1.8 s: the forward leg only, then no more keys, so the fixed state stays. See timing and easing for the keys.
+7. Put PCS.tick on the disc in the main comp, above "Line" (or inside "fixed", over the disc), starting 0.1 s after the edge has left the frame.
+8. Leave the fixed state still to the end of the comp.
+
+layout: Figures are for a 1080 × 1920 frame; scale them with the frame's width.
+- Pictures: full frame, centred, unmoved, both at 100 %; check the registration by overlaying them at half opacity before building.
+- X: the arms' paths at ±372 px from the centre, so the X is about 545 px across with its caps (about half the frame's width), stroke 16.4 px with round caps, red about #D7263D. These are the flag-a-problem proof's figures for recipe 02 at 9:16. Centre it on the thing that is wrong; it may sit off the frame's middle.
+- Edge: the matte rectangle's right edge is the edge (Position x + 580 for a 1160 px rectangle). The hairline is recipe 01's: pale muted amber about 160, 150, 115, 1.5 px, no glow.
+- Labels: one short line each (the setting, the step or the version that changed), on a dark pill about 70 % opaque, white type with a cap height about 1.6 % of the frame's height. Write them so they share every word but the one that changed ("TEXT MODE · OFF", "TEXT MODE · ON"). Left-justify both texts at one x and give both pills one width, the longer label's, at one place in their precomps, so the shared words sit on the same pixels and the edge changes only the last word. Centred labels of different lengths do not line up: in the first proof the shorter one sat 16 px further right, and its letters jumped as the edge crossed them.
+- Disc and tick: a green disc about 190 px across (about 18 % of the width), clear of the thing the fix is about (beside the label works); PCS.tick with size about 150 and a white colour, centred on the disc.
+
+timing and easing: 30 fps, comp 6 s. Times are from the start of the beat.
+- 0.0–0.4 s: the wrong state alone, so it is seen before it is marked.
+- 0.4 s: the X draws (End 0 → 100 over 17 frames, 92 % influence), complete at about 0.97 s. Recipe 02's snap: the middle frame carries about half the stroke.
+- 0.97–1.8 s: the X held whole, about 0.8 s, long enough to read the state as wrong.
+- 1.8 s: the wipe's forward leg, as the before-after proof fitted it to the tutorial's finished clip, with a soft start added so no hairline shows before the wipe. Keys on Position x (time after 1.8 s, x, speed in px/s, influence 33.33 % in and out): 0.0 s −581 (speed 0, the edge just off the left side); 0.3 s −529 (250); 0.7 s −411.5 (500); 1.1 s −126.4 (856); 1.3 s 73 (864); 1.5 s 219 (580); 1.9 s 392 (310); 2.3 s 468 (125); 2.8 s 530 (0). The edge passes the X's middle at about 1.2 s into the leg (3.0 s) and leaves the frame at about 2.55 s into the leg (about 4.35 s).
+- 4.45 s: the tick draws, 0.3 s.
+- 4.75–6.0 s: the fixed state holds with its tick, at least 1 s.
+
+pitfalls:
+- An X that clears on its own (recipe 02's Start keys) before the wipe reads as the mistake going away by itself; keep it drawn and let the wipe take it.
+- An X in the main comp above the stack stays on the fixed picture after the wipe. It has to be inside the wrong state's precomp.
+- A wipe that returns (recipe 01's hold-and-back) undoes the fix; stop after the forward leg.
+- Pictures that are not registered make the edge cut two different subjects, and the change no longer reads as one change.
+- A tick that starts while the edge is still on the frame competes with the wipe; wait until it has left.
+
+build notes: All by script, no dialogs. Build recipe 02's X as its own steps say (a horizontal path from (−372, 0) to (372, 0), round-cap stroke, Trim Paths; duplicate; Rotation ±45), inside the "wrong" precomp, and set the temporal ease with KeyframeEase(0, 92) on both End keys. Build recipe 01's two rectangles in the main comp and set the track matte with layer.setTrackMatte(fillLayer, TrackMatteType.ALPHA) on "fixed". Set the wipe's keys with setValueAtTime and setTemporalEaseAtKey(k, [new KeyframeEase(speed, 33.33)], [new KeyframeEase(speed, 33.33)]). For the tick, $.evalFile pcs-core.jsx, PCS.need('tick'), then PCS.tick(comp, { size: 150, color: [1, 1, 1], t: 4.45, dur: 0.3 }) and set its Position to the disc's centre.
+
 ## Bevelled 3D text wrapped in a tiled material
 id: 01-bevelled-3d-text-material-texture
 revision: 593535c4
@@ -1168,67 +1218,3 @@ variations: the narrator says the light sweep can be linked by expression or the
 pitfalls: duplicated layers lose the rim light because CC Light Sweep Center is a fixed position (said); timing looks bad until eased (said); lines must finish in step with the button animation (said).
 build notes: Duplicate layers, set Parent to the null (null position animated with a 2-key Position). On line layers add Trim Paths > End keyframes and Glow x3 (Glow Radius 50/100/150). On the button layers add CC Light Sweep x4 (match names not certain). Flipping by Scale -100 % with anchor at the line's base. Easing and graph-editor curves are manual. 
 unknowns: Final trim-path key values and times; scale pop-in start/end values and key times; final per-copy CC Light Sweep centres; which curve layer is left or right; final layer start times after the text nudge; influence values of the null ease; the draw-in is never played cleanly on screen, so the result line is a still of the finished layout, not of the animation.
-
-## Typed-on note text that deletes and retypes, with word-by-word fade and a hold-key camera push
-id: 09-typewriter-rewrite-text-effect
-revision: 10edb078
-job: make-concrete; support: reveal-headline, keep-it-alive
-status: proven (accepted 2026-11-26)
-what it does for a beat: Reach for it when a fake notes or chat window needs its text to appear as if someone is writing it, changing their mind and retyping, and then the shot needs a little extra life so the held text is not static.
-what it looks like: Inside a pale rounded card with a heading, two short lines of dark sans-serif regular-weight text (a title line and one short sentence) are typed out letter by letter with a thin vertical bar cursor at the end. The typing runs forward, backs up almost to nothing, then runs forward again. The words also fade up one at a time on top of this; later the view pushes in and drifts using the card's parent null.
-
-ingredients:
-- Animation preset "Blinking Cursor Typewriter Console" — stock (ships in Effects & Presets, folder Text > Animate In; the search box reads "type") (shown)
-- Text layer converted to paragraph text — built-in (said; menu path inferred)
-- Text animator Opacity with a Range Selector (Advanced > Based On: Words) — built-in (shown)
-- Hold keyframes (right-click > Toggle Hold Keyframe) — built-in (said; menu inferred)
-- Easy Ease (F9) and Graph Editor — built-in (said)
-- Null layer driving Position and Scale (the card's parent chain ends at a null) — built-in (said, shown)
-
-steps:
-1. Make the dummy copy: a title line, on the next line, a short sentence. The narrator generated filler text. The narrator first says to make the video-script title bold (about 35:56), and later says the bottom text needs to be regular (about 37:29). Both lines end up regular weight (shown, character panel on Regular, both lines regular). Both lines look bold in the early preview, which is only the building state. (said / shown)
-   - The text must be a paragraph (box) text, left aligned, not a point-text layer (said)
-   - Font: SF Pro; weight Bold while building, Regular in the finished picture (shown)
-   - Size: 77.5 px at layer scale 46.3 % is a layer value (shown); the text sits under a parent chain (a shape layer at 72 %, and nulls above), so it is not an on-screen size. Aim for capitals about 1.9 % and ascenders (b, l) about 2.2 % of the picture height (measured at full size, picture 1080 px high: capitals about 20 px, ascenders about 24 px).
-2. Cut the sentence short: the author selects the tail "how important hooks are" and removes it, so the line reads "This video will be about" and the layer's name shortens the same way (and every later frame). The typed result has that short sentence only. (shown)
-3. Apply the preset to the text layer with the layer selected. (shown : effect stack on the layer holds Animation, Cursor On/Off, Cursor Shape, Cursor Blink Speed)
-   - Animation (slider): drives how much text is typed, 0 to 100 (shown)
-   - Cursor On/Off: checked (shown)
-   - Cursor Shape: Vertical Bar (shown)
-   - Cursor Blink Speed: 4.00 (shown)
-4. Open the layer's keyframes (U) and parent the layer to the card's shape layer (the layer the other card elements follow). (said)
-5. Retime the slider keys so typing starts after the card has appeared; the narrator only says to move the end of the typing to "around here" on the timeline and gives no duration. (said, no numbers)
-   - The preset's own slider keys sit at about 7.2 s and 8.4 s on the 25 fps timeline at first (shown, keys at 1436 and 1598 px; 128 px per second, 07s tick at 1414); first key value not read, last key 100; the author moves them (said)
-6. Make the typing go back and forth: add more slider keys so the value runs up to 100, falls back to a low value, then climbs to 100 again. (said "go back and forth a few times"; key values inferred from the preview)
-   - In the slider reads 64.00 with a key selected and the playhead past the last slider key: a held value in the middle of an edit, not a value on a run up. Typed text reads "This video will be about|" and "This video|" in alternating preview frames (shown). Backing up reaches an empty line in one preview frame (crop, where the heading is gone too, so the typewriter covers both lines) — inferred it goes back almost to zero. Values of the middle keys are not given.
-7. With the text layer selected: Animate > Opacity (Add Animator). (said)
-   - Opacity of that animator: 50 % (said). Not read on screen, so left under unknowns.
-   - Range Selector 1 > Advanced > Based On: Words (said; shown, dropdown open, then Words)
-   - Range Selector Mode Add, Amount 100 %, Shape Square, Smoothness 100 %, Ease High 0 %, Ease Low 0 % (shown — defaults)
-8. Animate Range Selector Start: key at 0 % early on the layer (said "set a keyframe for start"), then a later key a bit further on so the words fade in one by one (said "go a bit further and then fade it in"). The later value is not said or shown. Start shown as 0 % at about 7:05 with a second key about 0.64 s later (shown, keys at 980 and 1021 px, 64 px per second).
-   - Only this animator is shown. A slider reading 53.12 shows briefly while dragging, a pass-through value (timeline note)
-9. Tidy and ease the keys: select them, press F9, open the Graph Editor and pull the handles for a stronger ease. (said)
-10. Trim the layer so the blinking cursor is not visible before the typing starts: put the playhead where typing begins and press Alt+[ (said "alt left bracket"). (said; layer's start moved to about 7:05, shown where its bar starts at about x 980)
-11. Move the text block a bit better into place (the narrator aligns it and moves it a bit further down, about 37:41–37:48) before keying the push; amounts not given. (said) Then give the held scene movement. Select the top-level null and key Position and Scale on it. The stack is: the card's shape layers parent to "Null 1" (layer 23); Null 1 is itself parented to "Null 2" (layer 22, Parent: None, shown). Null 2 is the root and the keyed one; Null 1 is its child and carries no keys. (said; shown)
-   - First key, at the playhead's time of about 10:05 comp time: Scale 300 %, Position 1920, 770 (shown; layer Opacity 0 % on this null)
-   - One frame later: Scale 472 %, Position 2487.6, 1195.2 (shown at 10:06)
-   - A later key a little further on: Position 2379.6, 1195.2 – a small drift of about 108 px left (shown at 11:04; only Position is keyed there, Scale 472 % is a held value); "not too much" (said)
-   - The author deletes and redoes the push keys at about 38:36–38:44; the recipe shows the redone state and the source range ends.
-   - Make the first keys hold keys (said); the move is a cut to the close framing, then the drift
-12. Drag the keys left, so the push starts where the text movement ends (said). The keys' final times are not given. (shows the first key dragged to ~9.5 s while time display reads 11:04.)
-
-layout: All measured on small frames where the picture is 960 x 540 (picture x 301–1261, y 141–681).
-- Card : 65 % of picture width, 81 % of its height, left edge 17 % in from left, top 9 % down; large corner radius (about 5 % of width) measured.
-- Heading "Notes": left edge 21.9 % across, baseline at about 24 % down (22 % is its centre); cap height about 4.5 % of picture height. Measured.
-- Typed block: left edge 21.9 % (same as heading), first line centre 31 % down, second line centre 35.5 % down, line spacing 4.4 % of picture height; capitals about 1.9 % and ascenders about 2.2 % of height. The finished regular-weight sentence "This video will be about" runs small-frame x 510–698 of the picture's 301–1261, about 19.5 % of picture width (measured); the bold building state is wider, x 510–718, about 21.7 %. Box wide enough not to wrap. Measured.
-- Title text in dark near-black, body in dark grey (regular); cursor: thin vertical bar, dark core 2 px wide on the 3840 frame (about 4 px at half darkness once blurred by the recording) of the same colour directly after the last letter (shown crop/ crop). Cursor extent (measured on full-size, picture 1080 px high, cursor in its on phase): about 34 px tall = 3.1 % of picture height, from about 2 px above the ascender top (y 653) to about 8 px below the baseline (y 677), so it is about 1.4 x the ascender height (24 px) and about 1.7 x the capital height (20 px); overhang under the baseline about 8 px (0.4 of capital height). Taller than the letters, set directly against the last letter. It is Cursor Shape Vertical Bar, shown; the preset sets the height, no size control appears in the effect stack. In the cursor is in its off phase, so that frame shows none.
-- Colours: card white on a light grey ground, three traffic-light dots top left (red, yellow, green), 1.5 % of picture width each. Result of the card is not produced by this tip; it is the card from earlier tips (the neighbouring recipes in this video).
-- Word fade: during the preview, individual letters/words render lighter grey and fade up (crops show half-faded "Scr" next to solid "Video"). The heading "Notes" also looks half-faded in those crops; its animator is not shown, so how it fades is unknown.
-- Final push : comp view is 472 % null scale, the card fills about 1.3 x the picture width; text sentence width 30.7 % of picture width in that framing. At 300 % scale the card is 65 % wide, similar to the first framing.
-- Motion: typing speed is not measurable from the recording (preview speed varies). The drift is 108 px left (comp units) over the keys' span.
-
-timing and easing: Typing: slider keys retimed by hand; Easy Ease (F9) then more easing in the Graph Editor on the Range Selector keys, handle values not shown. Hold keys on the first null keys, then free keys for the drift. Keys' exact seconds not shown; only the preset's original two slider keys (about 7.2 s and 8.4 s) are readable.
-variations: Cursor Shape can be changed from Vertical Bar in the effect (menu seen in the effect stack); blink speed is a slider. Opacity animator can be Characters rather than Words (the dropdown also offers Characters, Characters Excluding Spaces, Lines; shown).
-pitfalls: The text must be paragraph text, not point text, and the typing text layer must be cut off with Alt+[ so no cursor shows before it starts (said). First keys of the camera push must be hold keys or it looks odd (said).
-build notes: Add the preset by selecting the text layer and double-clicking it in Effects & Presets (Animation Presets > Text > Animate In). Effect names appear as "Animation", "Cursor On/Off", "Cursor Shape", "Cursor Blink Speed" (preset-created expression controls, so they cannot be added by name from the Effects menu). Text animator: Text > Animator > Opacity; Range Selector Advanced > Based On = Words; key Start 0 to 100 %. Null: add a null, link the card's parent chain to it, key Position and Scale with setInterpolationTypeAtKey(HOLD) for the first keys. Cursor preset must be applied by hand or the preset file loaded with applyPreset.
-unknowns: Opacity animator's own value on the final result (said 50 %, not read on screen); slider key values apart from the last (100); the later Range Selector Start value; the heading's own animation; how far the text block was moved; the null's second key times; the preset's file name beyond what Effects & Presets shows; ease handle values; font colours; the final picture after the push is a different framing from the first and plays no typing on screen in this stretch. The result crop shows both lines bold (building state, before the switch to Regular); the finished weight is regular.

@@ -2891,6 +2891,28 @@
       "difficulty": 2,
       "group": "trim paths draw-on",
       "why": "'a wrong answer or a warning that must read as wrong before it is explained': two round-capped strokes duplicated and turned to plus and minus 45 degrees draw across each other into an X, then clear"
+    },
+    "composed#01": {
+      "id": "01-red-x-then-wipe-then-tick",
+      "kind": "technique",
+      "job": "fail-then-fix",
+      "support": [
+        "flag-a-problem",
+        "before-after"
+      ],
+      "mood": [
+        "bold",
+        "clean"
+      ],
+      "needs": [
+        "photo",
+        "shapes"
+      ],
+      "duration": 6,
+      "motion": "one-shot",
+      "difficulty": 3,
+      "group": null,
+      "why": "\"Show something going wrong, then the fix making it right, as a story beat\": the wrong state is struck with a red X, the fixed state wipes on over it and takes the X away, and a tick draws on the result"
     }
   }
 }

@@ -748,14 +748,14 @@
       "title": "Technique arsenal index: documents, vocabulary and counts",
       "path": "arsenal/index.json",
       "kind": "catalog",
-      "sha256": "bb6077131ce10c3272d0323bf30cb4dc3c8a8ad5fba7fbbe1274c6e24d20f972"
+      "sha256": "812ec5caf6dbd14d9f64b91e4cc48ced1c44cd098d0ef5b4addd6e562343560c"
     },
     {
       "id": "arsenal-catalog",
       "title": "Library catalog: one record per style, world, recipe and piece, queried by ae_arsenal",
       "path": "arsenal/catalog.json",
       "kind": "catalog",
-      "sha256": "9ada9489e3cd9852a15590e87a6c4ea2dc7c948406d665fee414d8bf68ee388c"
+      "sha256": "3a2eb09d902c4e5450bd0000ece6329a4dcecd1ef7ca807612074e17ca390ef6"
     },
     {
       "id": "arsenal-jobs",
@@ -776,14 +776,14 @@
       "title": "Arsenal recipes: line jobs: what the viewer must get from this line (part 2 of 3)",
       "path": "arsenal/recipes-line-2.md",
       "kind": "recipes",
-      "sha256": "c1695f1639aff570c38b99e87cda34abf61f6b256fea7aafcc86cff70a196566"
+      "sha256": "458e6ab415b35c54031ec8b61bbaddc875f8170a230f8b51c8fd22e818386309"
     },
     {
       "id": "arsenal-line-3",
       "title": "Arsenal recipes: line jobs: what the viewer must get from this line (part 3 of 3)",
       "path": "arsenal/recipes-line-3.md",
       "kind": "recipes",
-      "sha256": "eba754c76444133027978f5a81161e269f7c1edd8481811c12796820afd3aa7a"
+      "sha256": "280ccd82d1530d387bd6b93fc0539da40709abe866b2e3bf6afc6e07085a4183"
     },
     {
       "id": "arsenal-picture",

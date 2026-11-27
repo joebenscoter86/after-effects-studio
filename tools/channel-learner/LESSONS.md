@@ -308,6 +308,16 @@ The first video's 25 recipes all passed the check. Building them found three rec
 - **Why.** The review compares with the finished result, but nothing told the lead that a note about motion must aim at the same thing.
 - **Rule.** `video-lead.md` step 6: a lead note about motion aims the build at the finished result's timing, as the review will measure it, never at the author's on-screen keys when the recipe's `layout` says the result plays differently. Test in `tests/run-stage.test.mjs`.
 
+### 64. Centred labels jumped as the wipe crossed them (explainer piece 10, composed 01, 2026-11-26)
+- **What happened.** The fail-then-fix chain swaps a label with its picture: "TEXT MODE · OFF" under the wrong render, "TEXT MODE · ON" under the fixed one. The recipe said to put both "in the same place", and the lead's brief centred both pills at x 540. The ON pill is 31 px narrower, so its words sat 16 px further right, and as the hairline crossed, "TEXT MODE ·" split and jumped (at 3.0 s "MODE" showed a cut D). The independent review said "partly" for that alone; the X, the wipe and the tick each matched their proofs.
+- **Why.** "The same place" was read as the same centre. Nothing said that labels which change one word across an edge must keep their shared words on the same pixels.
+- **Rule.** The recipe's `layout:` (composed.md 01): both labels share every word but the changed one, left-justified at one x, with one pill width, the longer label's. `art.md` rule 2 says the same to brief writers, and `prove-run.md` ("What earlier builds learned") tells builders to do it even where a brief says "centred", and to check the first letter's stem in both states. Test in `tests/run-stage.test.mjs`.
+
+### 65. Support-only pieces outranked a job's main recipe (explainer piece 10, 2026-11-26)
+- **What happened.** Once composed 01 was proven, `find fail-then-fix` returned four pieces that only support the job (flip, tick, tip-away, two-sided) and then composed 01, the job's only main recipe, fifth of five. One more support-only piece would have pushed it out of the default shortlist. Six other jobs had a support-only piece on top (compare, introduce-tool, flag-a-problem, add-impact, move-camera, keep-it-alive).
+- **Why.** The runtime ranked pieces before written recipes whatever their job tier ("the piece is what to build with"), which holds when both serve the job as their main one, not when the piece only supports it. The dev mirror (`catalog.mjs`) has no pieces, so its tests never met the case.
+- **Rule.** `plugin/runtime/src/tools/arsenal.ts` `findTechniques`: main-job entries first, then support-only ones, with pieces first within each. Tests in `plugin/runtime/tests/arsenal.test.ts`: fail-then-fix returns composed 01 first, and on the shipped catalog no support-only entry ranks above a main one for any job. Joe approved the change ("apprved, whatever you suggest").
+
 ## Still open
 - The 24 "matches" on the first video were given before the look line existed.
 - Nothing yet tests the prompts themselves. A cheap test: keep technique 11's first recipe as a fixture and confirm a fresh checker fails it on check 8.

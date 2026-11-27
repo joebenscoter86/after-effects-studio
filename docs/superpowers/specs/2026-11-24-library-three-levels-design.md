@@ -55,7 +55,7 @@ Every entry, at every level, carries the same core fields. Existing arsenal fiel
 - `needs`: as today (footage, screen, logo...), plus `blender` and `plates` where true.
 - `cost`: `renderer` (classic, advanced-3d, blender) and a measured seconds per frame where known.
 - `status`: proven or unproven, as today.
-- `composes`: ids this entry has been proven with. A world lists recipes proven inside it. A direction lists the worlds and recipes it draws on.
+- `composes`: ids this entry has been proven with. A world lists recipes proven inside it. A direction lists the worlds and recipes it draws on. A composed recipe (product/arsenal-drafts/composed.md, learned from no video) lists the recipes and pieces it chains into one beat, from its draft's `composes:` line; the build refuses a part that is in no catalog.
 - `mood`, `job`, `support`: as today. `job` stays required for recipes only.
 - `shelf`: `shipped` or `user` (see below).
 
@@ -129,7 +129,7 @@ Checked against the code at commit 741342b. Where the design and the code disagr
 - **`find`** with `job` is unchanged (162 asks across every job compared field for field with the old catalog; only the catalog version string differs). A `find` with `job` and `level`/`provides` together is refused rather than guessed at.
 - **`get` for a world** returns its catalog facts and its `STYLE.md` (the same reply `ae_library` gives). Builders and slots arrive with step 4.
 - **`cost`**: recipes carry the renderer only (none has a measured time); styles carry seconds per frame measured from their proof card (After Effects render of the 10.8 s, 324-frame proof; Blender plates not counted). `needs: blender` comes from the style index; no recipe needs Blender, and no entry was marked `plates`.
-- **`composes`** is empty everywhere for now: nothing records which recipes were proven inside which style.
+- **`composes`** is empty on styles for now: nothing records which recipes were proven inside which style. Pieces list the pieces they work with, and composed recipes (2026-11-26, explainer piece 10) the parts they chain.
 - **The catalog's list** is renamed from `recipes` to `entries`, and gains `levels` and `provides` (the vocabulary). The catalog version moves because it now covers every entry.
 
 ## Pieces, and the "direction" level renamed (added 2026-11-24, pieces build stage 1)
@@ -139,7 +139,7 @@ Plan: `docs/experiments/2026-11-24-rebrief-test/comp-room-pieces-plan.md` in Con
 - **"direction" is renamed "style".** The level as designed above ("how a whole piece holds together": material family, light, camera, signature moves, rhythm) is not what the entries at that level are. All 27 of them are the visual styles, which are looks a section can borrow: colour, type, light, material. Nothing in the catalog holds the whole-film record the design describes, and the two hand-written direction records in Content are not shipped. Calling the styles "directions" told an agent they decide the whole film, which they do not. The levels are now `style`, `world`, `recipe`. A whole-film direction can come back later as its own level once there are real records for it; renaming keeps every style entry where it was and only corrects the label.
 - **Pieces** are runnable recipes: `plugin/library/pieces/<name>.jsx`, one object or one move per file, with a header the build reads (what it does, when to use it, jobs, provides, needs, works with, the call, options, returns, an example). Each has a proof scene in `pieces/proof/<name>.jsx` whose render becomes its still. They are catalog entries with `level: recipe`, `kind: piece`, `use_for`, `requires` (pieces they load themselves) and `call`. Shared helpers live in one file, `pieces/pcs-core.jsx`.
 - A piece holds no look: colours, type, light and material come from a style object passed to `PCS.use`. The two in `pcs-core.jsx` are labelled examples.
-- **`find`** by job ranks pieces ahead of written recipes on the same job. **`find` with `query`** takes plain words ("something that turns over"), keeps the entries carrying the most of its words, and lists pieces first. **`get`** for a piece returns its call (load line with this install's path, signature, options, returns, example, works with, notes), not prose.
+- **`find`** by job ranks entries whose main job is the asked one ahead of entries that only support it, and pieces ahead of written recipes within each (changed 2026-11-26, explainer piece 10: support-only pieces had put fail-then-fix's one main recipe fifth of five). **`find` with `query`** takes plain words ("something that turns over"), keeps the entries carrying the most of its words, and lists pieces first. **`get`** for a piece returns its call (load line with this install's path, signature, options, returns, example, works with, notes), not prose.
 
 ## Styles as data (added 2026-11-24, pieces build stage 2)
 

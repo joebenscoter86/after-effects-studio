@@ -364,6 +364,17 @@ test('a lead note about motion aims at the finished result, not the author\'s ke
   assert.match(lead, /never at the author's on-screen key times/);
 });
 
+test('labels that change across a wipe keep their shared words on the same pixels: brief writers and builders left-justify them at one x (lesson 64)', () => {
+  const art = fs.readFileSync(path.join(PROMPTS, 'art.md'), 'utf8');
+  assert.match(art, /Paired labels share their words on the same pixels/);
+  assert.match(art, /left-justify both texts at one x and give both pills one width/);
+  const run = fs.readFileSync(path.join(PROMPTS, 'prove-run.md'), 'utf8');
+  assert.match(run, /Labels that change across a wipe or a swap/);
+  assert.match(run, /even where a brief says "centred"/, 'a builder corrects a brief that centres them');
+  const composed = fs.readFileSync(path.join(PROMPTS, '..', '..', '..', 'product', 'arsenal-drafts', 'composed.md'), 'utf8');
+  assert.match(composed, /Left-justify both texts at one x and give both pills one width/, 'the fail-then-fix recipe says so for its own labels');
+});
+
 test('proofs are built at 9:16, the phone frame the owner reviews on: the art, script and comp rules all say so', () => {
   for (const f of ['prove-author.md', 'prove.md', 'art.md']) {
     const text = fs.readFileSync(path.join(PROMPTS, f), 'utf8');

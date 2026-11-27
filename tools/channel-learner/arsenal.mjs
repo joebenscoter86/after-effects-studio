@@ -456,7 +456,8 @@ export function buildArsenal({ catalog, jobs, examples, draftsDir, stills = {}, 
   const drafts = new Map();
   const textOf = (r) => {
     if (!drafts.has(r.section.file)) drafts.set(r.section.file, sectionsOf(fs.readFileSync(path.join(draftsDir, r.section.file), 'utf8')));
-    const s = drafts.get(r.section.file).find((t) => t.startsWith(`## ${r.section.heading}\n`) && new RegExp(`^id:\\s*(?:${r.video}-)?${r.id.replace(r.video + '-', '')}\\s*$`, 'm').test(t));
+    const own = r.video ? r.id.replace(`${r.video}-`, '') : r.id;   // a composed recipe has no video
+    const s = drafts.get(r.section.file).find((t) => t.startsWith(`## ${r.section.heading}\n`) && new RegExp(`^id:\\s*(?:${r.video ? `${r.video}-` : ''})?${own}\\s*$`, 'm').test(t));
     if (!s) throw new Error(`refused: no section "${r.section.heading}" (${r.id}) in ${r.section.file}`);
     return s;
   };
@@ -483,7 +484,7 @@ export function buildArsenal({ catalog, jobs, examples, draftsDir, stills = {}, 
       id: r.id, revision: r.revision, level: 'recipe', name: r.name, line: scrubLine(r.line, videos), status: r.status, kind: r.kind, job: r.job, support: r.support,
       mood: r.mood, needs: r.needs, duration: r.duration, motion: r.motion, difficulty: r.difficulty, taught_by: r.taught_by,
       ...(r.variant_of ? { variant_of: r.variant_of } : {}), variants: r.variants ?? [],
-      provides: (lv?.provides ?? []).map(normProvides), cost: { renderer: lv?.renderer ?? 'classic' }, composes: [], shelf: 'shipped',
+      provides: (lv?.provides ?? []).map(normProvides), cost: { renderer: lv?.renderer ?? 'classic' }, composes: r.composes ?? [], shelf: 'shipped',
       section: { document: docId(g), heading: r.name }, still,
       ...(still ? {} : { no_still: noStillReason(r) ?? 'no still made yet from its proof render' }),
     });
@@ -557,6 +558,12 @@ export function buildArsenal({ catalog, jobs, examples, draftsDir, stills = {}, 
   // Pieces first: when a piece and a written recipe fit, the piece is what to build with. Then the house style.
   const entries = [...pieceRecords, ...records, ...blockRecords, ...styleRecords];
   for (const e of entries) if (!e.still && !e.no_still) throw new Error(`refused: ${e.id} has no still and no reason for it`);
+  // A composed recipe's recipes were checked against the drafts (catalog.mjs); its pieces and styles are checked here,
+  // when this build has them (a build without levels.json has neither, and cannot tell).
+  const entryIds = new Set(entries.map((e) => e.id));
+  const knowable = (c) => (c.startsWith(PIECE_PREFIX) ? pieces.length > 0 : c.startsWith(STYLE_PREFIX) ? styles.length + styleBlocks.length > 0 : true);
+  const unknownParts = records.flatMap((r) => r.composes.filter((c) => knowable(c) && !entryIds.has(c)).map((c) => `${r.id} composes ${c}, which is in no catalog`));
+  if (unknownParts.length) throw new Error(`refused: ${unknownParts.join('; ')}`);
   // The catalog version: the recipes' as before when there are no styles, else over every entry.
   const version = styleRecords.length ? sha8(entries.map((e) => `${e.id}@${e.revision}`).sort().join('\n')) : catalog.version;
   files.set('catalog.json', `${JSON.stringify({ vocab: catalog.vocab, version, jobs: catalog.jobs, levels: LEVELS, provides: levels?.provides ?? {}, entries }, null, 1)}\n`);
@@ -574,7 +581,7 @@ export function buildArsenal({ catalog, jobs, examples, draftsDir, stills = {}, 
     ]),
   ];
   const index = {
-    arsenal: 'The library at three levels: styles (a look a section can borrow: colour, type, light, material), worlds (a set a section lives in) and recipes (one technique for one beat). Among the recipes, pieces are runnable code: one file each, called by name. Every entry has a still and says what it provides. Look at a level as pictures with ae_arsenal browse; ask per beat by job, by what an entry provides, or in plain words, with find (pieces come first); read any entry with get (a piece answers with its call); list the jobs and the provides vocabulary with jobs.',
+    arsenal: 'The library at three levels: styles (a look a section can borrow: colour, type, light, material), worlds (a set a section lives in) and recipes (one technique for one beat). Among the recipes, pieces are runnable code: one file each, called by name. Every entry has a still and says what it provides. Look at a level as pictures with ae_arsenal browse; ask per beat by job, by what an entry provides, or in plain words, with find (by job, main-job entries first and pieces first among them; in plain words, pieces first); read any entry with get (a piece answers with its call); list the jobs and the provides vocabulary with jobs.',
     tool: 'ae_arsenal', vocab: catalog.vocab, version, documents,
     counts: {
       recipes: records.length, proven: records.filter((r) => r.status === 'proven').length, stills: Object.keys(shippedStills).length,

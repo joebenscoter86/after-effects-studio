@@ -207,6 +207,7 @@ Proven techniques in the arsenal, each a still of our own proof build. The ae_ar
 ![Cards growing along a drawn path into a stacked trail](library/arsenal/stills/06-path-trail-scale-rotate-in.jpg)
 ![Counter-spinning tunnel from stacked card boxes](library/arsenal/stills/08-tunnel-from-stacked-boxes.jpg)
 ![Wide-lens camera inside the card ring](library/arsenal/stills/11-wide-lens-camera-distortion.jpg)
+![Fail, then fix: a red X on the wrong state, a wipe to the fixed one, a tick on the result](library/arsenal/stills/01-red-x-then-wipe-then-tick.jpg)
 ![Bevelled 3D text wrapped in a tiled material](library/arsenal/stills/01-bevelled-3d-text-material-texture.jpg)
 ![Shadowless parallel light as an extra backlight](library/arsenal/stills/03-parallel-rim-light-no-shadows.jpg)
 ![Soft front fill from a point light with smooth falloff](library/arsenal/stills/04-point-light-falloff-front-fill.jpg)

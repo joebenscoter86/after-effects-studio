@@ -1,8 +1,8 @@
 {
- "arsenal": "The library at three levels: styles (a look a section can borrow: colour, type, light, material), worlds (a set a section lives in) and recipes (one technique for one beat). Among the recipes, pieces are runnable code: one file each, called by name. Every entry has a still and says what it provides. Look at a level as pictures with ae_arsenal browse; ask per beat by job, by what an entry provides, or in plain words, with find (pieces come first); read any entry with get (a piece answers with its call); list the jobs and the provides vocabulary with jobs.",
+ "arsenal": "The library at three levels: styles (a look a section can borrow: colour, type, light, material), worlds (a set a section lives in) and recipes (one technique for one beat). Among the recipes, pieces are runnable code: one file each, called by name. Every entry has a still and says what it provides. Look at a level as pictures with ae_arsenal browse; ask per beat by job, by what an entry provides, or in plain words, with find (by job, main-job entries first and pieces first among them; in plain words, pieces first); read any entry with get (a piece answers with its call); list the jobs and the provides vocabulary with jobs.",
  "tool": "ae_arsenal",
  "vocab": "jobs-v1",
- "version": "67deb222",
+ "version": "273fa4e9",
  "documents": [
   {
    "id": "arsenal-index",
@@ -348,9 +348,9 @@
   }
  ],
  "counts": {
-  "recipes": 154,
-  "proven": 118,
-  "stills": 161,
+  "recipes": 155,
+  "proven": 119,
+  "stills": 162,
   "pieces": 20,
   "style_blocks": 5,
   "styles": 34,
