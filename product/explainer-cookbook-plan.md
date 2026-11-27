@@ -249,13 +249,19 @@ Skipped on their captions (rule 5): pieces 7 and 9. A run stops and asks Joe bef
   - 05 the solid logo fading in over the glowing outline with CC Composite, under one hot flare and a small scale-down (introduce-tool; new);
   - 06 swapping the logo or a word inside the finished setup (introduce-tool; new).
 
-  Saving the preset (10:25) was dropped as a technique, since the plan counts it a build aid at most. Fx Studio's video was not needed. Lessons 53–57 came from this run.
+  Saving the preset (10:25) was dropped as a technique, since the plan counts it a build aid at most. Fx Studio's video was not needed. Lessons 53–58 came from this run.
 - **Proofs (2026-11-26):** all six built at 9:16 for an invented video-editing app, Lumenfold. Its lockup is a generated white droplet mark over the name, set in Montserrat. 06 carries the stack over to the name alone, set in Montserrat Black. The first mark (short straight sides) and its navy ground fought the glows, so the lead made a mark of long smooth curves on a near-black ground and rebuilt all six (lesson 57).
   - The last reviews say 01, 02, 04 and 05 match.
   - 03 is close: its line runs more magenta than the tutorial's, and its white haze is about half as strong.
   - 06 matches in part: the swap and the rest state match, but the trace phase floods.
 
-  Joe accepted all six on 2026-11-26 ("Accept all six"). Their stills are in the arsenal, and `find introduce-tool` now returns 02, 04, 05 and 06 as main recipes. $38.22 of the $40 was spent. The run record is `quality/reports/2026-11-26-channel-learner-Nh3TenxxQzQ/report.md`.
+  Joe accepted all six on 2026-11-26 ("Accept all six"). Their stills are in the arsenal, and `find introduce-tool` now returns 02, 04, 05 and 06 as main recipes. $38.22 of the $40 was spent.
+
+  Joe then approved one more round on 03 and 06, with the budget raised to $55.
+  - 03's sixth build replaced the accepted one. Its line now goes in mostly white, as the tutorial's does, and its far haze is stronger. It still reviews "close".
+  - 06's fourth build did not dim its trace, so the accepted 06 stays (lesson 58).
+
+  The video's total is $40.01. The run record is `quality/reports/2026-11-26-channel-learner-Nh3TenxxQzQ/report.md`.
 - **Filled:** introduce-tool, with four main recipes (02, 04, 05 and 06). 01 supports it too.
 
 ### 13. After Effects Channel, cross with trim paths

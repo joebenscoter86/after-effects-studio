@@ -79,9 +79,10 @@ var fontName = wantFont;
 if (!fonts || fonts.length === 0 || fonts[0].isSubstitute) {
   fontName = "Montserrat-ExtraBold"; // fallback from the lead notes
 }
-var nm = P.text(lk, "Lumenfold", { size: 100, font: fontName, tracking: 40, name: "name" });
+var nm = P.text(lk, (state === "lockup") ? "Lumenfold" : "LUMENFOLD", { size: 100, font: fontName, tracking: 40, name: "name" });
 var r = nm.sourceRectAtTime(0, false);
-var ts = (lockW / r.width) * 100;
+var nameWpx = (state === "lockup") ? lockW : (args.nameFrac || 0.75) * W; // type-only name in capitals: 0.75 of frame width at 100% scale (lead note, fix round)
+var ts = (nameWpx / r.width) * 100;
 P.tf(nm, "ADBE Scale").setValue([ts, ts]);
 var nameH = r.height * ts / 100;
 var cx = W / 2, cy = 0.46 * H;

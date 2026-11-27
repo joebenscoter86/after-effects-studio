@@ -1163,7 +1163,7 @@ unknowns: the duplicate glow is never shown, so which glow carries 39 and which 
 
 ## Four stacked Glow effects blooming a thin outline
 id: 03-stacked-glow-on-outline
-revision: 1426e5ca
+revision: 3ae98bab
 job: light-the-hero; support: finish-the-look
 status: proven (accepted 2026-11-26)
 variant of: 20-two-pass-glow

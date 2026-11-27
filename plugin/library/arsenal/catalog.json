@@ -1,6 +1,6 @@
 {
  "vocab": "jobs-v1",
- "version": "a85de696",
+ "version": "a816c8b7",
  "jobs": [
   "land-number",
   "count-things",
@@ -2827,7 +2827,7 @@
   },
   {
    "id": "03-stacked-glow-on-outline",
-   "revision": "1426e5ca",
+   "revision": "3ae98bab",
    "level": "recipe",
    "name": "Four stacked Glow effects blooming a thin outline",
    "line": "When a thin bright outline on black needs to read as lit from within, with a tight hot edge, a near halo and a wide soft haze. One Glow is flat; several at growing radii give the falloff.",
@@ -2866,7 +2866,7 @@
    },
    "still": {
     "path": "arsenal/stills/03-stacked-glow-on-outline.jpg",
-    "sha256": "7aec312227fd7c7f6a1161a3b73b9339fb6a1278036929076fc4ca3bc6028716"
+    "sha256": "d949b5892d930f7cbf3fa0f7a77c60ae3268536d0e88b530a79d22c05a2facd4"
    }
   },
   {

@@ -1,6 +1,6 @@
 {
   "vocab": "jobs-v1",
-  "version": "665d3270",
+  "version": "9bc897bd",
   "jobs": [
     "land-number",
     "count-things",
@@ -899,7 +899,7 @@
         "file": "Nh3TenxxQzQ.md",
         "heading": "Four stacked Glow effects blooming a thin outline"
       },
-      "revision": "1426e5ca",
+      "revision": "3ae98bab",
       "still": "quality/renders/channel-study/Nh3TenxxQzQ/proof/03/build.png",
       "taught_by": 2,
       "variant_of": "20-two-pass-glow",
@@ -1007,7 +1007,7 @@
         "heading": "Swap the logo or text inside a finished glow-reveal setup"
       },
       "revision": "220eebe5",
-      "still": "quality/renders/channel-study/Nh3TenxxQzQ/proof/06/build.png",
+      "still": "quality/renders/channel-study/Nh3TenxxQzQ/proof/06/build-third.png",
       "taught_by": 1,
       "variants": []
     },

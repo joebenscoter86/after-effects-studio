@@ -89,7 +89,7 @@ fill.property("Color").setValue([0, 0, 0]);
 // three CC Light Sweeps as in 02 (Sweep Intensity 0, Edge Intensity 90, Edge Thickness 4, Width 79, Sharp, Add), Directions 14/251/118 at time 0.
 var cols = args.cols || [[1, 0, 0.8], [1, 1, 1], [1, 0.4, 0.8]];  // ASSUMED colour owners (sweep 1 magenta lights the top and tail, sweep 2 white the left crescent, sweep 3 pink): white, magenta, pink (recipe: white left crescent, magenta top and tail, pink fragment)
 var d0 = args.dirs || [14, 251, 118];
-var wd = args.widths || [30, 170, 79];
+var wd = args.widths || [30, 230, 79];
 var i, sw;
 for (i = 0; i < 3; i++) {
   sw = P.effect(inner, "CC Light Sweep");
@@ -110,7 +110,7 @@ for (i = 0; i < 3; i++) {
 if (!args.noMask) {
   var mkMask = ol.property("ADBE Mask Parade").addProperty("ADBE Mask Atom");
   var msh = new Shape();
-  msh.vertices = args.maskVerts || [[250, 440], [730, 440], [730, 640], [560, 640], [440, 700], [395, 730], [250, 730]];
+  msh.vertices = args.maskVerts || [[250, 440], [730, 440], [730, 640], [560, 640], [440, 720], [395, 750], [250, 750]];
   msh.closed = true;
   mkMask.property("ADBE Mask Shape").setValue(msh);
 }
