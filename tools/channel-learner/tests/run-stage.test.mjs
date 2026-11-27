@@ -306,6 +306,13 @@ test('builders read an effect menu by its default before setting it by number (l
   assert.match(text, /before (?:you )?(?:replace|substitute|swap)/i, 'a mechanism is not swapped before the setting is tested');
 });
 
+// Lesson 56: 03's builder set Glow Threshold 24 for the recipe's 24 %; by script the scale is 0-255.
+test('builders set Glow Threshold on its 0-255 script scale (lesson 56)', () => {
+  const text = fs.readFileSync(path.join(PROMPTS, 'prove-run.md'), 'utf8');
+  assert.match(text, /Glow Threshold/);
+  assert.match(text, /61\.2/);
+});
+
 test('proofs are built at 9:16, the phone frame the owner reviews on: the art, script and comp rules all say so', () => {
   for (const f of ['prove-author.md', 'prove.md', 'art.md']) {
     const text = fs.readFileSync(path.join(PROMPTS, f), 'utf8');

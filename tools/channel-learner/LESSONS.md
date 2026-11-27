@@ -265,6 +265,11 @@ The first video's 25 recipes all passed the check. Building them found three rec
 - **Why.** Menu choices are set by number, and the numbers need not follow the order of the labels a recipe or a menu shows. `prove-run.md` said to look up parameter names, not to read a menu's default before setting it, and nothing asked a builder to test a setting alone before replacing it.
 - **Rule.** `prove-run.md` ("What earlier builds learned"): read a fresh effect's default before setting a menu by number (a "left at default" setting is that value), and test a setting that seems not to work on a scratch comp before replacing or substituting anything. 05's build notes carry a lead note for its rebuild. Test in `tests/run-stage.test.mjs`.
 
+### 56. Glow Threshold set as a percent on a 0–255 scale (explainer piece 12, Nh3TenxxQzQ 03, 2026-11-26)
+- **What happened.** Recipe 03 stacks four Glows at threshold 24 %. Its builder set `Glow Threshold` to 24, which by script is 24 out of 255 (9.4 %), so far more of the lockup's outline glowed; the review found the frame fogged grey. The builders of 04 and 05 set 61.2 and read it back. `effect.describe` on a built Glow shows the range: 0 to 255, units "percent".
+- **Why.** `prove-run.md` noted that Drop Shadow's Opacity reads 0 to 255 by script, but not that other parameters the panel shows as a percent do too, nor how to find out.
+- **Rule.** `prove-run.md` names Glow Threshold beside Drop Shadow's Opacity, with the conversion, and says to check any percent parameter's range with `effect.describe`. 03's build notes carry a lead note for its rebuild. Test in `tests/run-stage.test.mjs`.
+
 ## Still open
 - The 24 "matches" on the first video were given before the look line existed.
 - Nothing yet tests the prompts themselves. A cheap test: keep technique 11's first recipe as a fixture and confirm a fresh checker fails it on check 8.
