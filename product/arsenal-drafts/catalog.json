@@ -1,6 +1,6 @@
 {
   "vocab": "jobs-v1",
-  "version": "b7cb11e6",
+  "version": "665d3270",
   "jobs": [
     "land-number",
     "count-things",
@@ -797,6 +797,218 @@
       "revision": "3fd59519",
       "still": null,
       "taught_by": 3,
+      "variants": []
+    },
+    {
+      "id": "01-edge-only-outline-from-logo",
+      "video": "Nh3TenxxQzQ",
+      "n": 1,
+      "name": "Edge-only light outline from a solid logo",
+      "line": "Turn a solid-colour logo into a thin glowing rim line with nothing inside it, as the base for an animated outline reveal.",
+      "status": "proven",
+      "kind": "technique",
+      "job": "light-the-hero",
+      "support": [
+        "introduce-tool"
+      ],
+      "mood": [
+        "dark",
+        "glow",
+        "sleek"
+      ],
+      "needs": [
+        "shapes"
+      ],
+      "duration": 2,
+      "motion": "still",
+      "difficulty": 2,
+      "group": "edge light sweep",
+      "why": "'a solid-colour logo into a thin glowing rim line with nothing inside it, as the base for an animated outline reveal': a black Fill plus one edge-only CC Light Sweep leaves a hairline of light along the logo's top edges",
+      "section": {
+        "file": "Nh3TenxxQzQ.md",
+        "heading": "Edge-only light outline from a solid logo"
+      },
+      "revision": "b84f5ffe",
+      "still": "quality/renders/channel-study/Nh3TenxxQzQ/proof/01/build.png",
+      "taught_by": 5,
+      "variant_of": "04-light-sweep-edge-on-buttons",
+      "variants": []
+    },
+    {
+      "id": "02-multi-colour-edge-lines-converging",
+      "video": "Nh3TenxxQzQ",
+      "n": 2,
+      "name": "Three coloured edge sweeps that spin in and meet at one angle",
+      "line": "Reveal a logo as thin bright outlines that start at different angles, race around it and lock together at one point. Use it when a logo needs a sleek outline intro before the fill or glow arrives.",
+      "status": "proven",
+      "kind": "technique",
+      "job": "introduce-tool",
+      "support": [
+        "light-the-hero",
+        "add-impact"
+      ],
+      "mood": [
+        "dark",
+        "sleek",
+        "glow"
+      ],
+      "needs": [
+        "shapes"
+      ],
+      "duration": 5,
+      "motion": "one-shot",
+      "difficulty": 3,
+      "group": "edge light sweep",
+      "why": "'a logo mark needs a sleek outline intro before the fill arrives': three coloured CC Light Sweep edge lines on an invisible-fill logo race round it and lock together at one point",
+      "section": {
+        "file": "Nh3TenxxQzQ.md",
+        "heading": "Three coloured edge sweeps that spin in and meet at one angle"
+      },
+      "revision": "f2f7c4ae",
+      "still": "quality/renders/channel-study/Nh3TenxxQzQ/proof/02/build.png",
+      "taught_by": 5,
+      "variant_of": "04-light-sweep-edge-on-buttons",
+      "variants": []
+    },
+    {
+      "id": "03-stacked-glow-on-outline",
+      "video": "Nh3TenxxQzQ",
+      "n": 3,
+      "name": "Four stacked Glow effects blooming a thin outline",
+      "line": "When a thin bright outline on black needs to read as lit from within, with a tight hot edge, a near halo and a wide soft haze. One Glow is flat; several at growing radii give the falloff.",
+      "status": "proven",
+      "kind": "technique",
+      "job": "light-the-hero",
+      "support": [
+        "finish-the-look"
+      ],
+      "mood": [
+        "dark",
+        "glow",
+        "sleek"
+      ],
+      "needs": [
+        "shapes"
+      ],
+      "duration": 1,
+      "motion": "still",
+      "difficulty": 1,
+      "group": "double glow",
+      "why": "'a thin bright logo outline on black needs to read as lit from within, a hot edge, a near halo and a wide soft haze': four duplicated Glows at radii 50, 165, 480 and 1000 on the outline layer",
+      "section": {
+        "file": "Nh3TenxxQzQ.md",
+        "heading": "Four stacked Glow effects blooming a thin outline"
+      },
+      "revision": "1426e5ca",
+      "still": "quality/renders/channel-study/Nh3TenxxQzQ/proof/03/build.png",
+      "taught_by": 2,
+      "variant_of": "20-two-pass-glow",
+      "variants": []
+    },
+    {
+      "id": "04-animated-light-sweep-width-reveal",
+      "video": "Nh3TenxxQzQ",
+      "n": 4,
+      "name": "Animated light-sweep width: outline brightens, spreads, starts hidden",
+      "line": "Make a rim-lit logo come alive: the lit edges widen and brighten over the first seconds, and at the start nothing is visible, so the outline fades in while it keeps turning.",
+      "status": "proven",
+      "kind": "technique",
+      "job": "introduce-tool",
+      "support": [
+        "light-the-hero",
+        "add-impact"
+      ],
+      "mood": [
+        "dark",
+        "glow",
+        "sleek"
+      ],
+      "needs": [
+        "shapes"
+      ],
+      "duration": 6,
+      "motion": "one-shot",
+      "difficulty": 3,
+      "group": "edge light sweep",
+      "why": "'a logo has to arrive out of black as lit edges that spread and keep turning, before the solid mark lands': the stacked CC Light Sweeps with Width keyed from 0 so the rims fade in and Direction keyed so they circle the mark (the silhouette itself is never drawn, so this is the outline half of the arrival)",
+      "section": {
+        "file": "Nh3TenxxQzQ.md",
+        "heading": "Animated light-sweep width: outline brightens, spreads, starts hidden"
+      },
+      "revision": "3901f108",
+      "still": "quality/renders/channel-study/Nh3TenxxQzQ/proof/04/build.png",
+      "taught_by": 5,
+      "variant_of": "04-light-sweep-edge-on-buttons",
+      "variants": []
+    },
+    {
+      "id": "05-fill-reveal-with-composite-and-highlight",
+      "video": "Nh3TenxxQzQ",
+      "n": 5,
+      "name": "Solid logo fading in over a glowing outline, with a hot highlight and a small scale-down",
+      "line": "When a thin glowing outline logo should land as a finished, solid, clean logo: the outline's glow dies away, a flare flashes over the top of the shape, the solid fill fades in and the whole logo settles slightly smaller.",
+      "status": "proven",
+      "kind": "technique",
+      "job": "introduce-tool",
+      "support": [
+        "add-impact",
+        "light-the-hero"
+      ],
+      "mood": [
+        "dark",
+        "glow",
+        "sleek"
+      ],
+      "needs": [
+        "shapes"
+      ],
+      "duration": 7,
+      "motion": "one-shot",
+      "difficulty": 3,
+      "group": "edge light sweep",
+      "why": "'a named product's logo should arrive on black: a glowing outline blooms, a flare flashes and the solid mark lands clean': CC Composite opacity fade of the solid over the keyed light-sweep outline and stacked glows, with sweep widths to 0, a Sweep Intensity flare and a small scale-down",
+      "section": {
+        "file": "Nh3TenxxQzQ.md",
+        "heading": "Solid logo fading in over a glowing outline, with a hot highlight and a small scale-down"
+      },
+      "revision": "4dcda4ff",
+      "still": "quality/renders/channel-study/Nh3TenxxQzQ/proof/05/build.png",
+      "taught_by": 5,
+      "variants": []
+    },
+    {
+      "id": "06-swap-logo-or-text-procedurally",
+      "video": "Nh3TenxxQzQ",
+      "n": 6,
+      "name": "Swap the logo or text inside a finished glow-reveal setup",
+      "line": "When a glowing outline-and-flash logo reveal is already built on a pre-composed logo, this reuses it for another mark or a word. Replace the artwork inside the pre-comp and the whole animation carries over unchanged.",
+      "status": "proven",
+      "kind": "technique",
+      "job": "introduce-tool",
+      "support": [
+        "light-the-hero"
+      ],
+      "mood": [
+        "dark",
+        "glow",
+        "sleek"
+      ],
+      "needs": [
+        "shapes",
+        "type"
+      ],
+      "duration": 6,
+      "motion": "one-shot",
+      "difficulty": 2,
+      "group": null,
+      "why": "'put my own logo, or a word, into this glowing outline reveal': drop new artwork into the logo pre-comp, add a white Fill, and the finished stack draws it with light, blooms and lands it as a crisp white mark",
+      "section": {
+        "file": "Nh3TenxxQzQ.md",
+        "heading": "Swap the logo or text inside a finished glow-reveal setup"
+      },
+      "revision": "220eebe5",
+      "still": "quality/renders/channel-study/Nh3TenxxQzQ/proof/06/build.png",
+      "taught_by": 1,
       "variants": []
     },
     {
@@ -1945,8 +2157,10 @@
       },
       "revision": "295cc9bc",
       "still": "quality/renders/channel-study/YBeMmC43Q1U/proof/20/build.png",
-      "taught_by": 1,
-      "variants": []
+      "taught_by": 2,
+      "variants": [
+        "03-stacked-glow-on-outline"
+      ]
     },
     {
       "id": "21-texture-through-a-matte",
@@ -3856,8 +4070,12 @@
       },
       "revision": "59a070f6",
       "still": "quality/renders/channel-study/tYRvoI04pJk/proof/04/build.png",
-      "taught_by": 1,
-      "variants": []
+      "taught_by": 5,
+      "variants": [
+        "01-edge-only-outline-from-logo",
+        "02-multi-colour-edge-lines-converging",
+        "04-animated-light-sweep-width-reveal"
+      ]
     },
     {
       "id": "05-duplicate-and-stagger-layout",

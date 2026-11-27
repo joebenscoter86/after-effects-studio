@@ -267,6 +267,12 @@ function runBlock(stage, unit, ctx) {
     // the last fix changed: lines that passed a full check are not re-opened (LESSONS.md, lesson 37).
     const narrow = round >= 3;
     L.push(`- This is round ${round}: write \`round: ${round}${narrow ? ' (changed lines only)' : ''}\` as the first line of checks/${unit}.md.${narrow ? ` Check only the lines changed since round ${round - 1}.` : ''}`);
+    // A variant's merge lines that no check has confirmed are among the changed lines (LESSONS.md
+    // lesson 54: one changed-lines check re-checked the fix before and wrote no merge line).
+    const r = recipeFile(ctx, unit);
+    const merged = r && /^variant of:/m.test(fs.readFileSync(r, 'utf8'));
+    const confirmed = fs.existsSync(checkFile(ctx, unit)) && /^\s*(?:-\s*)?merge:\s*confirmed\b/m.test(fs.readFileSync(checkFile(ctx, unit), 'utf8'));
+    if (merged && !confirmed) L.push(`- The recipe has merge lines (\`variant of:\` and \`differs:\`, after \`status:\`) that no check has confirmed: they are among the lines you check. Check them against the parent's section as check.md item 11 says, and write \`merge: confirmed\` or \`merge: refused\` on its own line.`);
   }
   if (stage === 'prove-review') {
     L.push(`- The contact sheets are made: \`PROOF/${unit}/sheet.png\`${fs.existsSync(path.join(ctx.proof, unit, 'sheet-motion.png')) ? ` and \`PROOF/${unit}/sheet-motion.png\`` : ''}.`);

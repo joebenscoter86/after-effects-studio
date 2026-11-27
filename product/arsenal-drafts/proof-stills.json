@@ -105,5 +105,11 @@
  "02-null-hierarchy-for-grouped-motion": "quality/renders/channel-study/tYjqtArZtds/proof/02/build.png",
  "03-expression-bounce-drop-in": "quality/renders/channel-study/tYjqtArZtds/proof/03/build.png",
  "04-staggered-element-offsets": "quality/renders/channel-study/tYjqtArZtds/proof/04/build.png",
- "05-stacked-second-notification-with-push-back": "quality/renders/channel-study/tYjqtArZtds/proof/05/build.png"
+ "05-stacked-second-notification-with-push-back": "quality/renders/channel-study/tYjqtArZtds/proof/05/build.png",
+ "01-edge-only-outline-from-logo": "quality/renders/channel-study/Nh3TenxxQzQ/proof/01/build.png",
+ "02-multi-colour-edge-lines-converging": "quality/renders/channel-study/Nh3TenxxQzQ/proof/02/build.png",
+ "03-stacked-glow-on-outline": "quality/renders/channel-study/Nh3TenxxQzQ/proof/03/build.png",
+ "04-animated-light-sweep-width-reveal": "quality/renders/channel-study/Nh3TenxxQzQ/proof/04/build.png",
+ "05-fill-reveal-with-composite-and-highlight": "quality/renders/channel-study/Nh3TenxxQzQ/proof/05/build.png",
+ "06-swap-logo-or-text-procedurally": "quality/renders/channel-study/Nh3TenxxQzQ/proof/06/build.png"
 }

@@ -272,6 +272,61 @@ test('every check after round 2 looks only at the lines changed since the check 
   }
 });
 
+// Lesson 54: after the match step wrote 04's merge lines, its changed-lines check re-checked the
+// previous fix and wrote no merge line, so assemble could not take the variant.
+test('a check of a recipe whose merge lines no check has confirmed is told to check them and write merge:', async () => {
+  const dir = study(['01']);
+  const recipe = path.join(dir, 'recipes', '01-trick.md');
+  const cases = [
+    ['## Technique 01\nstatus: unproven\nvariant of: 04-parent (abc #04)\ndiffers: shared ...\n', 'round: 3 (changed lines only)\nverdict: pass\n', true],
+    ['## Technique 01\nstatus: unproven\nvariant of: 04-parent (abc #04)\ndiffers: shared ...\n', 'round: 4 (changed lines only)\nverdict: pass\nmerge: confirmed\n', false],
+    ['## Technique 01\nstatus: unproven\nvariant of: 04-parent (abc #04)\ndiffers: shared ...\n', 'round: 4 (changed lines only)\nverdict: fail\nmerge: refused\n', true],
+    ['## Technique 01\nstatus: unproven\n', 'round: 2\nverdict: pass\n', false],
+  ];
+  for (const [body, check, told] of cases) {
+    fs.writeFileSync(recipe, body);
+    fs.writeFileSync(path.join(dir, 'checks', '01.md'), check);
+    const t = Date.now() / 1000 + 5;
+    fs.utimesSync(recipe, t, t);
+    const { claude, calls } = fakeClaude(() => {});
+    await runStage('check', { study: dir, only: ['01'] }, { ...quiet, claude });
+    const runBlock = calls[0].input.slice(calls[0].input.indexOf('## This run'));
+    const said = /merge lines/.test(runBlock) && /`merge: confirmed` or `merge: refused`/.test(runBlock);
+    assert.equal(said, told, `${check.split('\n').join(' | ')}: ${told ? 'told' : 'not told'} to check the merge lines`);
+  }
+});
+
+// Lesson 55: a builder set CC Composite's Composite Original to 1 for "In front"; the default,
+// which is In front, is 3, so the original showed at full strength and the build swapped mechanisms.
+test('builders read an effect menu by its default before setting it by number (lesson 55)', () => {
+  const text = fs.readFileSync(path.join(PROMPTS, 'prove-run.md'), 'utf8');
+  assert.match(text, /menu/i);
+  assert.match(text, /Composite Original/);
+  assert.match(text, /default value/i);
+  assert.match(text, /before (?:you )?(?:replace|substitute|swap)/i, 'a mechanism is not swapped before the setting is tested');
+  // And Glow Colors: a fresh Glow's default (2, A & B Colors) is not the tutorial's Original Colors (1).
+  assert.match(text, /Glow Colors/);
+  assert.doesNotMatch(text, /"left at default" setting is that value/, 'a fresh default is not taken for the tutorial\'s setting');
+});
+
+// Lesson 56: 03's builder set Glow Threshold 24 for the recipe's 24 %; by script the scale is 0-255.
+test('builders set Glow Threshold on its 0-255 script scale (lesson 56)', () => {
+  const text = fs.readFileSync(path.join(PROMPTS, 'prove-run.md'), 'utf8');
+  assert.match(text, /Glow Threshold/);
+  assert.match(text, /61\.2/);
+});
+
+// Lesson 57: an angular mark lit in pieces under an edge light, and a navy ground read as haze.
+test('art that a light traces matches the reference outline, and a glow sits on the reference ground level (lesson 57)', () => {
+  const art = fs.readFileSync(path.join(PROMPTS, 'art.md'), 'utf8');
+  assert.match(art, /long smooth curves/);
+  assert.match(art, /straight sides/);
+  assert.match(art, /type weight/, 'and type a light traces matches the reference word\'s weight');
+  assert.match(art, /ground/i);
+  const lead = fs.readFileSync(path.join(PROMPTS, 'video-lead.md'), 'utf8');
+  assert.match(lead, /art\.md rule 2/, 'art the lead hands over in lead notes meets the same rule');
+});
+
 test('proofs are built at 9:16, the phone frame the owner reviews on: the art, script and comp rules all say so', () => {
   for (const f of ['prove-author.md', 'prove.md', 'art.md']) {
     const text = fs.readFileSync(path.join(PROMPTS, f), 'utf8');

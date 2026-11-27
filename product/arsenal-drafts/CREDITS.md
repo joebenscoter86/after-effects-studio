@@ -16,3 +16,4 @@ The recipes in this folder were learned from public tutorials. The techniques ar
 | `201iywIy74c.md` | [Bart_VFX](https://www.youtube.com/channel/UCH04vkzlXlDTNqeQpSayj1w) | [5 Editing Ideas You Should Try \| After Effects](https://www.youtube.com/watch?v=201iywIy74c) |
 | `tYRvoI04pJk.md` | [TomsProject](https://www.youtube.com/channel/UCVg8JEJOOLjFSx43tPbx3yQ) | [SaaS Motion Graphics Masterclass: Every Technique You Need](https://www.youtube.com/watch?v=tYRvoI04pJk) |
 | `tYjqtArZtds.md` | [Zuyns](https://www.youtube.com/channel/UCNtmXS6PG2w1cK8mByxC7Lg) | [How to Animate Notifications Like Apple in After Effects](https://www.youtube.com/watch?v=tYjqtArZtds) |
+| `Nh3TenxxQzQ.md` | [Motion Nations](https://www.youtube.com/channel/UC5oZfKcyeB3O1sKrxVTibAg) | [This LOGO Animation Method is so POWERFUL - After Effects Tutorial \| No Plugins - Glow Outline Logo](https://www.youtube.com/watch?v=Nh3TenxxQzQ) |

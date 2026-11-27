@@ -23,6 +23,7 @@
 // Exit codes: 0 done, 1 a step failed, 2 stopped because the video has no usable words,
 // 3 stopped because YouTube asked to confirm we are not a bot (gather stops at once and
 // does not try again; run it again later).
+// A video download refused with HTTP 403 is fetched once more before the step fails.
 //
 // --redo <step> also clears every later step. A redone gather step fetches its file again
 // (the old one is set aside and put back if the fetch fails). audio.wav and whisper.json
@@ -221,6 +222,8 @@ const noSpeechReason = (state) => `no speech: whisper ran (${state.steps.whisper
 const BOT_CHECK = /confirm you.?re not a bot|sign in to confirm/i;
 const isBotCheck = (e) => BOT_CHECK.test(errText(e));
 const botReason = (e) => `youtube bot check: ${errText(e).split('\n')[0].trim()}`;
+// yt-dlp's "unable to download video data: HTTP Error 403: Forbidden".
+const HTTP_403 = /HTTP Error 403/;
 
 // Run one step unless done. `body` returns a note (or { note, extra }). Failure records `stopped`.
 async function step(dir, state, name, body) {
@@ -306,7 +309,18 @@ async function gather(url, dir, d, redo) {
   await saveState(dir, state);
   d.log(`gather ${state.video.id}: ${state.video.title}`);
 
-  if (!(await step(dir, state, 'video', () => adoptOrFetch(dir, 'source.mp4', () => d.downloadVideo({ url, dir }), fresh('video'))))) return failed();
+  // A 403 here is YouTube refusing one signed stream URL; a fresh yt-dlp call gets new URLs and
+  // has worked at once (LESSONS.md lesson 53). One more try only: it is not the bot check.
+  const download = async () => {
+    try {
+      await d.downloadVideo({ url, dir });
+    } catch (e) {
+      if (isBotCheck(e) || !HTTP_403.test(errText(e))) throw e;
+      d.log('video download refused with HTTP 403; fetching it once more');
+      await d.downloadVideo({ url, dir });
+    }
+  };
+  if (!(await step(dir, state, 'video', () => adoptOrFetch(dir, 'source.mp4', download, fresh('video'))))) return failed();
 
   // Captions are fetched apart from the video: a failure here (HTTP 429 is common) is noted,
   // does not stop gather, and is retried on the next run.
