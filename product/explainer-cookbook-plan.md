@@ -28,6 +28,7 @@ When a brief agent asks `ae_arsenal find` for one of these, it gets an empty lis
 2. **How many empty jobs one tutorial fills.**
 3. **Whether the learner can use it.** Every step must be possible by script: no puppet pins, brush strokes or trackers placed by hand, and no paid plugins. Free plugins are fine (standing yes).
 4. **Cost.** A 5-minute video is one easy session; a 50-minute one is a long session with many recipes.
+5. **The finished result must already be the job (added 2026-11-26).** A recipe is tagged for what the tutorial's own result shows, not for what it could be used for. Pieces 4 and 11 were picked because their results could carry introduce-tool and flag-a-problem. Instead their recipes were tagged call-to-action, relate-things, add-impact and list-items. Pick a video whose result, as the author shows it, already is the job: a logo arriving for introduce-tool, a cross or a warning for flag-a-problem, a timer for show-time.
 
 The picks were chosen from titles, chapter lists and descriptions. Nobody has watched them yet, so step 1 of every piece is a quick check that the video really teaches what its chapters say.
 
@@ -41,15 +42,31 @@ The picks were chosen from titles, chapter lists and descriptions. Nobody has wa
 | 4 | TomsProject, [SaaS Motion Graphics Masterclass](https://www.youtube.com/watch?v=tYRvoI04pJk) | make-concrete (not introduce-tool or flag-a-problem) | 52 min | medium | done: 13 written, 13 proven (accepted by Joe 2026-11-26), 0 held |
 | 5 | Move Shapes, [Simple Before & After Transition](https://www.youtube.com/watch?v=SSAsTdXmKl0) | before-after | 3 min | low | not started |
 | 6 | Flat Pack FX, [Stylized Timeline Animation](https://www.youtube.com/watch?v=9AtjrBHF560) | step-through-process | 14 min | low | not started |
-| 7 | SonduckFilm, [5 Trendy SaaS Motion Graphics](https://www.youtube.com/watch?v=qe8_xGizSF0) | introduce-tool, flag-a-problem (the captions suggest neither) | 7 min | low | not started |
+| 7 | SonduckFilm, [5 Trendy SaaS Motion Graphics](https://www.youtube.com/watch?v=qe8_xGizSF0) | introduce-tool, flag-a-problem (the captions suggest neither) | 7 min | low | skipped 2026-11-26: the captions show five finishing looks, none for an empty job (rule 5) |
 | 8 | SonduckFilm, [Create Explainer Video Animations](https://www.youtube.com/watch?v=lAUAVwYWFdI) | make-concrete | 13 min | medium | not started |
-| 9 | SonduckFilm, [Create Callout Titles](https://www.youtube.com/watch?v=VZuHQVaC7oA) | flag-a-problem | 8 min | high | not started |
-| 10 | fail-then-fix, built from pieces 5, 9 and 11 | fail-then-fix | none | none | not started |
+| 9 | SonduckFilm, [Create Callout Titles](https://www.youtube.com/watch?v=VZuHQVaC7oA) | flag-a-problem | 8 min | high | skipped 2026-11-26: the callout labels what's in the shot and its price, which reads as point-at-detail (five recipes already), not as a warning (rule 5) |
+| 10 | fail-then-fix, built from pieces 5, 11 and 13 | fail-then-fix | none | none | not started |
 | 11 | Zuyns, [How to Animate Notifications Like Apple](https://www.youtube.com/watch?v=tYjqtArZtds) | introduce-tool as support only (not flag-a-problem or fail-then-fix) | 9 min | low | done: 5 written, 5 proven (accepted by Joe 2026-11-26), 0 held |
+| 12 | Motion Nations, [This LOGO Animation Method is so POWERFUL](https://www.youtube.com/watch?v=Nh3TenxxQzQ) (glow outline logo reveal) | introduce-tool | 12 min | low | next (picked 2026-11-26) |
+| 13 | After Effects Channel, [Cross animation in after effects with trim paths](https://www.youtube.com/watch?v=UehuuNiZVuk) | flag-a-problem | 3½ min | low | not started |
+| 14 | Smertimba Graphics, [Countdown Timer Tutorial](https://www.youtube.com/watch?v=99FUeOo4fiQ) | show-time | 2 min | low | not started |
 
 **After piece 11, no job gained a main recipe: introduce-tool has a proven recipe only as a support job (03, the bounce drop-in, whose main job is add-impact), and flag-a-problem and fail-then-fix gained nothing (05's proof plays a warning card and its fix, but 05 is tagged list-items).** **After piece 4, no empty job was filled: introduce-tool and flag-a-problem are still empty (make-concrete gained a second recipe).** **After piece 3, 7 of the 11 empty jobs were still empty (step-through-process is filled; show-proof and compare gained recipes).** **After piece 2, 8 of the 11 empty jobs were still empty (call-to-action is filled).** **After piece 1, 9 of the 11 empty jobs were still empty.** **The plan expected only before-after and fail-then-fix to be empty after pieces 1–4; that did not hold, so pieces 7 and 9 are still needed for introduce-tool and flag-a-problem.** If you only have time for a few, do those four.
 
 **Piece 11 (picked 2026-11-26, done the same day).** After piece 4, six jobs have no proven technique: count-things, show-time, before-after, fail-then-fix, introduce-tool and flag-a-problem (before-after and fail-then-fix have only paper pieces). Piece 7's captions show five finishing looks, none for these jobs. Piece 11 puts an app's logo and name on a notification card, which is introduce-tool as the job list defines it. The same card can carry a warning, and its second notification pushing the first aside is the shape fail-then-fix needs. It is 9 minutes, narrated and needs no plugins. It filled less than that: introduce-tool only as a support job, through 03 (whose main job is add-impact), and neither flag-a-problem nor fail-then-fix. No job gained a main recipe, and the next pick is open.
+
+**Next (picked 2026-11-26, after piece 11): piece 12.** The same six jobs still have no main recipe. Piece 12 is a logo reveal: the author's result is a mark arriving, drawn by glowing coloured edges, which is introduce-tool on its face (rule 5). Introduce-tool comes up in nearly every tool explainer. The build works from any layer with transparency, so it suits a generated mark or a tool's name set in type. It is 12 minutes, narrated, with no plugins and 351,000 views.
+
+**Run order (Joe, 2026-11-26: "let the full plan rip").** One session at a time. Each starts from the current `public/main`, runs its piece through proofs and Joe's acceptance, then opens its PR and merges it. Only then does the next session start: the pieces share the drafts, the generated cookbook and one After Effects. Pieces that fill an empty job go first.
+
+1. Piece 12, the logo reveal (introduce-tool).
+2. Pieces 5, 13 and 14 in one session, one after another: before-after, flag-a-problem, show-time. Each is under 4 minutes.
+3. Piece 10, the fail-then-fix worked scene. It chains a problem marked as wrong (13's cross, or 11's red warning card), the change (piece 5), and the fixed state.
+4. Piece 8 (make-concrete, which has 2 recipes).
+5. Piece 6 (step-through-process, which has 4; for variety).
+6. count-things: search for a tutorial whose result is objects you can count (an icon array, a unit chart). Add it as a piece and learn it if one is found.
+
+Skipped on their captions (rule 5): pieces 7 and 9. A run stops and asks Joe before going past its video's $40 budget.
 
 **Off the plan (2026-11-25):** Bart_VFX, [5 Editing Ideas You Should Try](https://www.youtube.com/watch?v=201iywIy74c), learned at Joe's request: 5 written, 5 proven (accepted by Joe 2026-11-25), 0 held. The new recipes serve reveal-headline, fill-the-backdrop and add-depth, so no empty job is filled. The run record is `quality/reports/2026-11-25-channel-learner-201iywIy74c/report.md`.
 
@@ -154,11 +171,18 @@ The picks were chosen from titles, chapter lists and descriptions. Nobody has wa
 ### 9. SonduckFilm, callout titles
 
 - **Why:** a callout that marks a spot, for flag-a-problem.
+- **Check against rule 5 (2026-11-26):** this was picked from its title. A callout title is a line and a label pointing at a spot, which reads as point-at-detail unless the author styles it as a warning. Read the captions before running it.
+- **Skipped (2026-11-26).** The captions show a neutral callout:
+  - two text layers naming what's in the shot and its price;
+  - a gradient-ramped ring with a 30 px stroke;
+  - a thin angled pointer line ending in a white dot.
+
+  Nothing marks it as wrong, so it would be tagged point-at-detail, which already has five recipes. Piece 13 takes flag-a-problem instead.
 - **Risk:** step 3 attaches the callout with the 3D camera tracker, which is driven from the interface. Keep the callout design and animation recipes (steps 1–2) and hold the tracking. Its sibling, [Hand-Drawn Marker & Arrows](https://www.youtube.com/watch?v=ZGahTJcpwz8), was left out on purpose: it draws with the brush tool by hand, the same problem that got the puppet-pin recipes dropped.
 
 ### 10. fail-then-fix, from pieces we already have
 
-- No tutorial teaches it as one thing. Once flag-a-problem (piece 9; piece 11 did not fill it) and before-after (piece 5) are proven, write one worked scene that chains them: the problem marked as wrong, then the change, then the fixed state. File it as a build aid that names those recipes, or as a worked scene in the library.
+- No tutorial teaches it as one thing. Once flag-a-problem (piece 13; piece 11 did not fill it, though its red warning card can play the problem) and before-after (piece 5) are proven, write one worked scene that chains them: the problem marked as wrong, then the change, then the fixed state. File it as a build aid that names those recipes, or as a worked scene in the library.
 
 ### 11. Zuyns, Apple-style notifications
 
@@ -189,6 +213,48 @@ The picks were chosen from titles, chapter lists and descriptions. Nobody has wa
 - **Proofs (2026-11-26):** all five built at 9:16 on generated art for an invented app, Larkvault, with Inter Tight standing in for SF Pro. 05's first card is a red "Backup failed" warning that the "Backup complete" card lands over. Every review ends "matches": 04 and 05 on their first builds, 01 and 02 on their second, 03 on its third. Phone MP4s sent, and Joe accepted all five on 2026-11-26; their stills are in the arsenal, and `find introduce-tool` now returns 03. The run record is `quality/reports/2026-11-26-channel-learner-tYjqtArZtds/report.md`.
 - **Filled:** introduce-tool as support only, through 03, whose main job is add-impact. No recipe takes introduce-tool as its main job.
 - **Not filled:** flag-a-problem and fail-then-fix. 05's proof plays a red warning card and the fix landing over it, but 05 is tagged list-items, so neither job gained a recipe. Pieces 9 and 10 stay on the plan for them.
+
+### 12. Motion Nations, glow outline logo reveal
+
+- **Why (picked 2026-11-26):** the author's result is a logo arriving, drawn by glowing coloured edges. A named mark arriving is introduce-tool ("the app's name with its real logo"), with no reframing needed (rule 5). The effect is procedural: it works on any layer with transparency, a mark or a word, and the author saves it as a preset to reuse.
+- **What it teaches (from the captions):**
+  1. The logo sits in its own comp, nested in the main comp.
+  2. Fill turns the logo black, so only its edges will show; on a background, the layer goes to Add.
+  3. CC Light Sweep is set to edge only (Sweep Intensity 0, centred) to make the outline.
+  4. The layer is duplicated twice, and each copy gets its own colour and its own angle.
+  5. Direction is keyed to send the coloured edges around the mark.
+  6. Glow is added, and then the logo itself is revealed and composited.
+  7. Last come the procedural controls and saving the preset.
+- **Watch for:**
+  - The author's demo logo is a real brand's. The proof needs a generated mark that looks real but is no real brand, plus the tool's name in type, so the beat reads as a named tool.
+  - Saving the preset (10:25) is a build aid at most. The preset itself is on Patreon; the video builds the effect from scratch, and the recipe is that build.
+  - The CC Light Sweep edge outline is the mechanism of tYRvoI04pJk #04 (edge light on buttons, light-the-hero), so the merge step may make it a variant. Lesson 43 keeps a variant findable for introduce-tool, which its parent doesn't serve. Tag it for introduce-tool, not for the light.
+  - A shorter take on the same effect, with every value said aloud, is Fx Studio, [Clean Logo Reveal Tutorial in After Effects](https://www.youtube.com/watch?v=lRyUAE5r6MA) (4 min):
+    - CC Light Sweep width 80, edge intensity 90;
+    - three Glows at radius 50, 200 and 500;
+    - CC Composite fading the logo in.
+
+    If piece 12's recipe comes out thin, use it as a second source. Don't learn it as a separate piece.
+- **Other candidates found (2026-11-26), each one whose result is the job:**
+  - flag-a-problem: After Effects Channel, [Cross animation in after effects with trim paths](https://www.youtube.com/watch?v=UehuuNiZVuk), 3½ min. An X drawn by two trimmed strokes; it reads as wrong once it's red over the thing it marks.
+  - show-time: Smertimba Graphics, [Countdown Timer Tutorial](https://www.youtube.com/watch?v=99FUeOo4fiQ), 2 min (in piece 11's notes).
+  - before-after: piece 5.
+  - These three are each under 4 minutes. One session could learn them one after another and fill three empty jobs.
+  - count-things: still no tutorial found.
+
+### 13. After Effects Channel, cross with trim paths
+
+- **Why (picked 2026-11-26):** an X drawn by two trimmed strokes. In red, over the thing it marks, it reads as wrong before anything is explained, which is flag-a-problem (rule 5). 3½ minutes, narrated, no plugins.
+- **What it teaches (from the captions):**
+  - a pen-drawn line with no fill and a round cap;
+  - Trim Paths keyed with End 0 → 100, then Start 0 → 100 a little later, so the line travels;
+  - the lines put together into the cross.
+- **Watch for:** the recipe may be thin. Prove it as a red X landing over a wrong answer, so the proof shows the job. Run it in the same session as pieces 5 and 14.
+
+### 14. Smertimba Graphics, countdown timer
+
+- **Why (picked 2026-11-26):** a countdown made from one expression. A clock that runs and stops on its time is show-time ("ready in 15 minutes"). 2 minutes, narrated, no plugins.
+- **Watch for:** the expression is shown on screen or in the description; copy it word for word into `extras.md` (lesson 36). Prove it as a timer that stops on the beat's number. Run it in the same session as pieces 5 and 13.
 
 ## How to run one piece in a fresh session
 
