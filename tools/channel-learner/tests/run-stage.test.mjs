@@ -346,6 +346,24 @@ test('a scripted expression-engine change is followed by a reopen before the bui
   assert.match(run, /reopen/i, 'a builder knows the setting only reaches the render after a reopen');
 });
 
+test('a snapping move is not written or built as Easy Ease: influences reach the measured step, and the build measures it (lesson 62)', () => {
+  const distil = fs.readFileSync(path.join(PROMPTS, 'distil.md'), 'utf8');
+  assert.match(distil, /snapping move written as Easy Ease/);
+  assert.match(distil, /1\.5 × the average at 33 %/, 'the writer knows how soft the default is');
+  assert.match(distil, /5–8 × at 90–95 %/, 'and what a high influence gives');
+  assert.match(distil, /odd number of frames/, 'and that the frame count decides whether the peak lands on one frame');
+  const check = fs.readFileSync(path.join(PROMPTS, 'check.md'), 'utf8');
+  assert.match(check, /Easy Ease or a default influence where the played frames step much harder/);
+  const run = fs.readFileSync(path.join(PROMPTS, 'prove-run.md'), 'utf8');
+  assert.match(run, /ease is checked by numbers, never on the four-moment sheet/);
+});
+
+test('a lead note about motion aims at the finished result, not the author\'s keys (lesson 63)', () => {
+  const lead = fs.readFileSync(path.join(PROMPTS, 'video-lead.md'), 'utf8');
+  assert.match(lead, /lead note about motion aims the build at the finished result's timing/);
+  assert.match(lead, /never at the author's on-screen key times/);
+});
+
 test('proofs are built at 9:16, the phone frame the owner reviews on: the art, script and comp rules all say so', () => {
   for (const f of ['prove-author.md', 'prove.md', 'art.md']) {
     const text = fs.readFileSync(path.join(PROMPTS, f), 'utf8');
