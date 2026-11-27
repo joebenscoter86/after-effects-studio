@@ -250,6 +250,16 @@ The first video's 25 recipes all passed the check. Building them found three rec
 - **Why.** `check.md` says to write `STUDY/checks/<n>.md`, and a short changed-lines check can end by printing what it would have written. Nothing caught a well-formed check left only in the message.
 - **Rule.** `run-stage.mjs` (`savePrintedCheck`): when a check run leaves no fresh check file and its last message holds a check for its own recipe, with a verdict, the runner saves it, notes that it did, and judges it as usual. Test in `tests/run-stage.test.mjs`.
 
+### 53. YouTube refused the video download once with a 403 (explainer piece 12, Nh3TenxxQzQ, 2026-11-26)
+- **What happened.** The first gather fetched the video's details, then stopped at the video step with exit 1: yt-dlp's `unable to download video data: HTTP Error 403: Forbidden`. It was not the bot check, so nothing said whether to wait. The same command run again a minute later fetched everything, and the rest of gather and align ran clean.
+- **Why.** A 403 on the stream is YouTube refusing one signed stream address; a fresh yt-dlp call asks for new addresses. Gather treated it like any other failure and left the lead to guess whether a retry was safe, when the rule for the bot check (exit 3) is never to retry it in a loop.
+- **Rule.** `learn.mjs`: a video download refused with HTTP 403 (and not the bot check) is fetched once more, with one log line saying so; a second refusal fails the step as before. Test in `tests/learn.test.mjs`.
+
+### 54. A changed-lines check missed the merge lines it was run for (explainer piece 12, Nh3TenxxQzQ 04, 2026-11-26)
+- **What happened.** The match step wrote `variant of:` and `differs:` into 01–04, and the lead ran their checks. 04 had passed round 3, so this was round 4, changed lines only. Its checker re-checked the round-3 fix (the Width keys), passed it, and wrote no `merge:` line, so `assemble.mjs` could not take 04 as a variant. The lead added a note to the check naming the merge lines as the change, and round 5 confirmed the merge ($0.11). 01 and 03 were confirmed at the first try, and 02's merge was refused, rightly: its `differs:` line stated the parent's inferred purpose as fact.
+- **Why.** A changed-lines check works out what changed from the check before it, which lists the last fix. Nothing told it that the match step had changed the recipe since. check.md item 11 only applies "when there is" a merge, and the runner said nothing about one.
+- **Rule.** `run-stage.mjs`: a check run for a recipe with a `variant of:` line, whose check file does not yet say `merge: confirmed`, is told that the merge lines are among the lines to check, and to write `merge: confirmed` or `merge: refused` on its own line. Test in `tests/run-stage.test.mjs`.
+
 ## Still open
 - The 24 "matches" on the first video were given before the look line existed.
 - Nothing yet tests the prompts themselves. A cheap test: keep technique 11's first recipe as a fixture and confirm a fresh checker fails it on check 8.

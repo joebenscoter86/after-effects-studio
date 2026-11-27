@@ -49,6 +49,7 @@ function fakes(dir, opts = {}) {
       count('downloadVideo');
       bot('video');
       if (opts.downloadFail) throw new Error('HTTP Error 503');
+      if ((calls.downloadVideo ?? 0) <= (opts.download403 ?? 0)) throw new Error('ERROR: unable to download video data: HTTP Error 403: Forbidden');
       await writeFile(join(d, 'source.mp4'), opts.video ?? 'video');
     },
     fetchCaptions: async ({ dir: d, lang, auto }) => {
@@ -406,6 +407,22 @@ test('a YouTube bot check stops gather at once with exit 3 and a plain reason', 
         step: at, reason: 'youtube bot check: ERROR: [video] vid1: Sign in to confirm you’re not a bot. Try again later',
       });
       assert.equal(logs.filter((l) => /bot check/.test(l)).length, 1, `${at}: one line logged`);
+    } finally { await rm(dir, { recursive: true, force: true }); }
+  }
+});
+
+// Lesson 53: YouTube refused one signed stream URL with a 403; a fresh yt-dlp call right after fetched it.
+test('a 403 on the video download is fetched once more; a second 403 stops gather with exit 1', async () => {
+  for (const [times, code, downloads] of [[1, 0, 2], [2, 1, 2]]) {
+    const dir = await tempDir();
+    try {
+      const { deps, calls, logs } = fakes(dir, { download403: times });
+      assert.equal(await run(['gather', 'https://example.invalid/watch?v=vid1', '--out', dir], deps), code, `${times} refusals`);
+      assert.equal(calls.downloadVideo, downloads, `${times} refusals: the video is asked for twice at most`);
+      assert.equal(logs.filter((l) => /403/.test(l) && /once more/.test(l)).length, 1, `${times} refusals: one line says it tries again`);
+      const state = await readJson(join(dir, 'state.json'));
+      if (code === 0) assert.ok(existsSync(join(dir, 'source.mp4')));
+      else assert.match(state.stopped.reason, /HTTP Error 403/);
     } finally { await rm(dir, { recursive: true, force: true }); }
   }
 });

@@ -272,6 +272,30 @@ test('every check after round 2 looks only at the lines changed since the check 
   }
 });
 
+// Lesson 54: after the match step wrote 04's merge lines, its changed-lines check re-checked the
+// previous fix and wrote no merge line, so assemble could not take the variant.
+test('a check of a recipe whose merge lines no check has confirmed is told to check them and write merge:', async () => {
+  const dir = study(['01']);
+  const recipe = path.join(dir, 'recipes', '01-trick.md');
+  const cases = [
+    ['## Technique 01\nstatus: unproven\nvariant of: 04-parent (abc #04)\ndiffers: shared ...\n', 'round: 3 (changed lines only)\nverdict: pass\n', true],
+    ['## Technique 01\nstatus: unproven\nvariant of: 04-parent (abc #04)\ndiffers: shared ...\n', 'round: 4 (changed lines only)\nverdict: pass\nmerge: confirmed\n', false],
+    ['## Technique 01\nstatus: unproven\nvariant of: 04-parent (abc #04)\ndiffers: shared ...\n', 'round: 4 (changed lines only)\nverdict: fail\nmerge: refused\n', true],
+    ['## Technique 01\nstatus: unproven\n', 'round: 2\nverdict: pass\n', false],
+  ];
+  for (const [body, check, told] of cases) {
+    fs.writeFileSync(recipe, body);
+    fs.writeFileSync(path.join(dir, 'checks', '01.md'), check);
+    const t = Date.now() / 1000 + 5;
+    fs.utimesSync(recipe, t, t);
+    const { claude, calls } = fakeClaude(() => {});
+    await runStage('check', { study: dir, only: ['01'] }, { ...quiet, claude });
+    const runBlock = calls[0].input.slice(calls[0].input.indexOf('## This run'));
+    const said = /merge lines/.test(runBlock) && /`merge: confirmed` or `merge: refused`/.test(runBlock);
+    assert.equal(said, told, `${check.split('\n').join(' | ')}: ${told ? 'told' : 'not told'} to check the merge lines`);
+  }
+});
+
 test('proofs are built at 9:16, the phone frame the owner reviews on: the art, script and comp rules all say so', () => {
   for (const f of ['prove-author.md', 'prove.md', 'art.md']) {
     const text = fs.readFileSync(path.join(PROMPTS, f), 'utf8');
