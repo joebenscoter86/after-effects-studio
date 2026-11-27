@@ -10,6 +10,13 @@ import { statusOf } from './assemble.mjs';
 
 const hash = (text) => createHash('sha256').update(text).digest('hex').slice(0, 8);
 const KINDS = ['technique', 'build-aid', 'unmatched'];
+/**
+ * The one draft learned from no video: recipes that chain proven recipes into one beat (a fail marked, the fix wiped on,
+ * a tick). Each carries `composes: <id>, <id>, ...` naming the recipes and pieces it chains; its tags key is composed#<n>.
+ */
+export const COMPOSED_DRAFT = 'composed.md';
+const COMPOSED_OTHER = /^(?:piece|style)-/;   // pieces and styles are checked where they are known (arsenal.mjs)
+const composesOf = (text) => ((text.match(/^composes:\s*(.+)$/m) || [, ''])[1]).split(/[;,]\s*/).map((x) => x.trim()).filter(Boolean);
 
 /** Recipe sections of one draft: each `## ` section that has an `id:` line, with its full text. */
 function sectionsOf(text) {
@@ -28,12 +35,13 @@ export function buildCatalog({ draftsDir, tags, jobs, proofs = {} }) {
 
   const drafts = [];
   for (const file of fs.readdirSync(draftsDir).filter((f) => f.endsWith('.md')).sort()) {
-    const video = file.replace(/\.md$/, '');
+    const base = file.replace(/\.md$/, '');
+    const video = file === COMPOSED_DRAFT ? null : base;
     sectionsOf(fs.readFileSync(path.join(draftsDir, file), 'utf8')).forEach((text, i) => {
       const id = text.match(/^id:\s*(\S+)/m)[1];
       const n = /^\d+-/.test(id) ? parseInt(id, 10) : i + 1;
       const name = text.match(/^## (.+)$/m)[1].trim();
-      drafts.push({ key: keyOf(video, n), id, video, n, name, text, file });
+      drafts.push({ key: keyOf(base, n), id, video, n, name, text, file, composes: composesOf(text) });
     });
   }
 
@@ -53,6 +61,14 @@ export function buildCatalog({ draftsDir, tags, jobs, proofs = {} }) {
   for (const d of drafts) {
     const t = tagged[d.key];
     if (t?.id && t.id !== d.id && t.id !== `${d.video}-${d.id}`) problems.push(`tag ${t.key}: id ${t.id} does not name the recipe there, ${d.id}`);
+  }
+  // Composed recipes: only composed.md holds them, each names what it chains, and every recipe it names is in the drafts.
+  const draftIds = new Set(drafts.map((d) => tagged[d.key]?.id || d.id));
+  for (const d of drafts) {
+    const rid = tagged[d.key]?.id || d.id;
+    if (d.file !== COMPOSED_DRAFT) { if (d.composes.length) problems.push(`${rid} has a composes line, but only ${COMPOSED_DRAFT} holds composed recipes`); continue; }
+    if (!d.composes.length) problems.push(`${rid} is in ${COMPOSED_DRAFT} but has no composes line`);
+    for (const c of d.composes) if (!COMPOSED_OTHER.test(c) && !draftIds.has(c)) problems.push(`${rid} composes ${c}, which is no recipe in the drafts`);
   }
   // Variants (design, "One technique, one entry"): a tag's variant_of names its parent's `<video>#<nn>`, one level only,
   // the same kind; the draft carries `variant of: <parent id> (<video> #<n>)` and `differs: ...` after its status line.
@@ -103,6 +119,7 @@ export function buildCatalog({ draftsDir, tags, jobs, proofs = {} }) {
       taught_by: taughtBy(d),
       ...(t.variant_of !== undefined && t.variant_of !== null ? { variant_of: idAt(normKey(String(t.variant_of))) } : {}),
       variants: (variantsOf[d.key] || []).map((v) => idAt(v.key)),
+      ...(d.composes.length ? { composes: d.composes } : {}),
     };
   });
   const dup = recipes.map((r) => r.id).filter((id, i, all) => all.indexOf(id) !== i);
@@ -177,6 +194,9 @@ export function findTechniques(catalog, ask) {
   }
 
   const overlap = (r) => lower(r.mood).filter((m) => mood.includes(m));
+  // The job tier comes first, so a recipe whose main job is the asked one ranks above every recipe that only supports it.
+  // The runtime (plugin/runtime/src/tools/arsenal.ts) keeps the same rule with pieces in it: main job first, then pieces first
+  // within it (explainer piece 10). This catalog holds no pieces.
   const ranked = hits.map((r) => ({ r, key: [tier(r), r.status === 'proven' ? 0 : 1, -r.taught_by, -overlap(r).length, distance(r.duration, ask.duration)] }))
     .sort((a, b) => { for (let i = 0; i < a.key.length; i++) if (a.key[i] !== b.key[i]) return a.key[i] - b.key[i]; return 0; })
     .slice(0, limit);

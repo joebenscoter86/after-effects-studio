@@ -3,7 +3,7 @@
 // Among the recipes, pieces are runnable code (library/pieces/<name>.jsx): one file each, called by name.
 // One tool, ae_arsenal, with four actions:
 //   browse  a level as labelled tiles, a page at a time: id, name and provides under each still
-//   find    by job, a ranked shortlist for one beat, pieces first (product/arsenal-catalog-design.md, "The query"); by
+//   find    by job, a ranked shortlist for one beat, main-job entries first, pieces first among them (product/arsenal-catalog-design.md, "The query"); by
 //           level and/or provides, entries across levels; or by plain words (query), pieces first
 //   get     any entry by id: a piece's call, a recipe's full text, or a style's document; a warning when a pinned
 //           revision is not the shipped one
@@ -160,8 +160,10 @@ export function findTechniques(catalog: ArsenalCatalog, ask: BeatAsk): FindAnswe
 
   const overlap = (r: ArsenalRecipe) => lower(r.mood).filter((m) => mood.includes(m));
   const ranked = hits
-    // Pieces first: when a piece and a written recipe both fit the job, the piece is what to build with.
-    .map((r) => ({ r, key: [r.kind === "piece" ? 0 : 1, tier(r)!, r.status === "proven" ? 0 : 1, -r.taught_by, -overlap(r).length, distance(r.duration, ask.duration)] }))
+    // Main job first: an entry whose primary job is the asked one comes before every entry that only supports it, piece
+    // or not (explainer piece 10: four support-only pieces put fail-then-fix's one main recipe fifth of five). Within each,
+    // pieces first: when a piece and a written recipe both fit, the piece is what to build with.
+    .map((r) => ({ r, key: [tier(r) === 0 ? 0 : 1, r.kind === "piece" ? 0 : 1, tier(r)!, r.status === "proven" ? 0 : 1, -r.taught_by, -overlap(r).length, distance(r.duration, ask.duration)] }))
     .sort((a, b) => { for (let i = 0; i < a.key.length; i++) if (a.key[i] !== b.key[i]) return a.key[i] - b.key[i]; return 0; })
     .slice(0, limit);
 
@@ -512,7 +514,7 @@ export const arsenalTool = defineTool({
   name: "ae_arsenal", title: "Library: styles, worlds, recipes and pieces", group: "document", effect: "read", blockedInReadOnly: false,
   description: "The library at three levels, each entry with a still from our own proof build and what it provides: styles (a look a section can borrow: colour, type, light, material), worlds (a set a section lives in: floor, light, environment, materials) and recipes (one technique for one beat). Among the recipes, pieces are runnable code: one file each, called by name, built and lit (thickness, light, shadow, overshoot) but carrying no look of their own. " +
     "action browse shows a level as labelled stills, a page at a time (level, provides, shelf, page, page_size); start a brief there. " +
-    "action find with job returns a ranked shortlist for one beat, pieces first, then written recipes (job, and optionally support, duration, mood, assets, constraints.status, exclude, limit; proven only unless constraints.status is any; relaxed names any filter loosened when nothing passed; never another job; a candidate taught in other ways lists their ids as variants, and a variant learned for a job its parent does not serve comes up on its own with variant_of). " +
+    "action find with job returns a ranked shortlist for one beat: entries whose main job is the asked one first, then those that only support it, pieces before written recipes within each (job, and optionally support, duration, mood, assets, constraints.status, exclude, limit; proven only unless constraints.status is any; relaxed names any filter loosened when nothing passed; never another job; a candidate taught in other ways lists their ids as variants, and a variant learned for a job its parent does not serve comes up on its own with variant_of). " +
     "action find with query (plain words, e.g. \"something that turns over\"), level and/or provides (e.g. \"material: glass\", \"floor: gloss-dark\") returns entries across levels, pieces first when the words fit one. " +
     "An unknown job, level or provides word is refused with the valid ones: pick one, never invent one. action jobs lists the job and provides vocabularies. " +
     "action get takes any id (and the pinned revision) with its still: a piece answers with its call (the load line, signature, options, returns and a short example) to run in eval.run; a recipe with its text; a style or world with its document. Offline; no After Effects needed.",

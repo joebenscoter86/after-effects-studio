@@ -1,6 +1,6 @@
 {
   "vocab": "jobs-v1",
-  "version": "7011d3d8",
+  "version": "bd52f497",
   "jobs": [
     "land-number",
     "count-things",
@@ -2852,6 +2852,46 @@
       "still": "quality/renders/channel-study/ZqRE3ho8iP4/proof/11/build.png",
       "taught_by": 1,
       "variants": []
+    },
+    {
+      "id": "01-red-x-then-wipe-then-tick",
+      "video": null,
+      "n": 1,
+      "name": "Fail, then fix: a red X on the wrong state, a wipe to the fixed one, a tick on the result",
+      "line": "Show something going wrong and then the fix making it right, as one beat: the wrong state is struck with a red X, a straight edge wipes the fixed state on over it and takes the X away, and a tick draws on the result.",
+      "status": "proven",
+      "kind": "technique",
+      "job": "fail-then-fix",
+      "support": [
+        "flag-a-problem",
+        "before-after"
+      ],
+      "mood": [
+        "bold",
+        "clean"
+      ],
+      "needs": [
+        "photo",
+        "shapes"
+      ],
+      "duration": 6,
+      "motion": "one-shot",
+      "difficulty": 3,
+      "group": null,
+      "why": "\"Show something going wrong, then the fix making it right, as a story beat\": the wrong state is struck with a red X, the fixed state wipes on over it and takes the X away, and a tick draws on the result",
+      "section": {
+        "file": "composed.md",
+        "heading": "Fail, then fix: a red X on the wrong state, a wipe to the fixed one, a tick on the result"
+      },
+      "revision": "da4cc538",
+      "still": "quality/renders/channel-study/composed/proof/01/still.png",
+      "taught_by": 1,
+      "variants": [],
+      "composes": [
+        "02-duplicate-rotate-lines-into-cross",
+        "01-before-after-sliding-matte-wipe",
+        "piece-tick"
+      ]
     },
     {
       "id": "01-bevelled-3d-text-material-texture",

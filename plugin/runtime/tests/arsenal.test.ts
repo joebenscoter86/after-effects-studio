@@ -201,6 +201,39 @@ describe("the shipped arsenal", () => {
     expect(findTechniques(loadCatalog(LIB), { vocab: "jobs-v1", job: "count-things" }).results).toEqual([]);
   });
 
+  // Explainer cookbook piece 10: fail-then-fix is filled by a recipe composed from proven parts, not learned from a video.
+  it("fail-then-fix, proven only, returns the composed red X, wipe and tick as a main recipe", () => {
+    const cat = loadCatalog(LIB);
+    const out = findTechniques(cat, { vocab: "jobs-v1", job: "fail-then-fix" });
+    const main = out.results.find((r) => r.id === "01-red-x-then-wipe-then-tick");
+    expect(main, out.results.map((r) => r.id).join(", ")).toBeDefined();
+    expect(main!.status).toBe("proven");
+    expect(main!.fit).toMatch(/primary job fail-then-fix/);
+    expect(out.relaxed).toBeUndefined();
+    // the job's one main recipe comes first, ahead of the pieces that only support the job
+    expect(out.results[0].id).toBe("01-red-x-then-wipe-then-tick");
+  });
+
+  it("for every job, no entry that only supports the job ranks above one whose main job it is", () => {
+    const cat = loadCatalog(LIB);
+    for (const job of cat.jobs) {
+      for (const status of ["proven", "any"] as const) {
+        const fits = findTechniques(cat, { vocab: cat.vocab, job, constraints: { status }, limit: 500 }).results.map((r) => /primary job /.test(r.fit));
+        const firstSupport = fits.indexOf(false);
+        expect(firstSupport === -1 || !fits.slice(firstSupport).includes(true), `${job} (${status})`).toBe(true);
+      }
+    }
+  });
+
+  it("every composed recipe names proven entries the catalog holds", () => {
+    const cat = loadCatalog(LIB);
+    const composed = cat.entries.filter((e) => e.kind === "technique" && e.composes.length);
+    expect(composed.map((e) => e.id)).toContain("01-red-x-then-wipe-then-tick");
+    for (const e of composed) {
+      for (const part of e.composes) expect(cat.entries.find((x) => x.id === part)?.status, `${e.id} composes ${part}`).toBe("proven");
+    }
+  });
+
   it("every variant can be found for each of its jobs, as itself or through its parent", () => {
     const cat = loadCatalog(LIB);
     const variants = cat.entries.filter((r) => r.variant_of && r.kind === "technique");
@@ -594,8 +627,15 @@ describe("pieces: the rules", () => {
     expect(out.results[0]).toMatchObject({ kind: "piece", call: "PCS.flip(layer, { t })" });
     expect(out.results[0].fit).toMatch(/^piece: runnable code, get returns its call; primary job before-after/);
     expect(out.results[1]).not.toHaveProperty("kind");
-    // a piece that only supports the asked job still comes before a recipe whose primary job it is
-    expect(findTechniques(catalog(), ask({ job: "hand-over" })).results.map((r) => r.id)).toEqual(["piece-flip"]);
+  });
+
+  it("a job find ranks a written recipe whose main job it is above a piece that only supports it (explainer piece 10)", () => {
+    const cat = catalog();
+    cat.entries.push(rec(5, "handrecipe", { status: "proven", job: "hand-over" }));
+    const out = findTechniques(cat, ask({ job: "hand-over" }));
+    expect(out.results.map((r) => r.id)).toEqual(["05-handrecipe", "piece-flip"]);
+    expect(out.results[0].fit).toMatch(/^primary job hand-over/);
+    expect(out.results[1].fit).toMatch(/supports hand-over/);
   });
 
   it("plain words drop the common ones and are cut to their stems", () => {

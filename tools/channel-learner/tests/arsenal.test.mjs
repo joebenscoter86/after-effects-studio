@@ -284,6 +284,16 @@ test('guard: passes on Content\'s jobs file and drafts accepted by a named perso
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 });
 
+test('composed: a composed recipe ships what it composes, keeps its composes line, and its file name is no video to scrub', () => {
+  const { files } = build([{ slug: 'a', status: 'proven' }, { slug: 'chain', video: 'composed', lines: 'composes: 01-a\nwhat it looks like: Two composed parts.' }]);
+  const cat = JSON.parse(files.get('catalog.json'));
+  assert.deepEqual(cat.entries.find((e) => e.id === '01-chain').composes, ['01-a']);
+  assert.deepEqual(cat.entries.find((e) => e.id === '01-a').composes, []);
+  const text = files.get('recipes-line.md');
+  assert.match(text, /^composes: 01-a$/m);
+  assert.match(text, /^what it looks like: Two composed parts\.$/m);
+});
+
 test('guard: the repo\'s own drafts and jobs file build, and the shipped arsenal names no private name', () => {
   const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
   const drafts = path.join(root, 'product', 'arsenal-drafts');
@@ -808,4 +818,14 @@ test('style blocks: the shipped folder reads clean, house is the default, and th
   assert.deepEqual(styleBlockProblems(blocks, { vocab: levels.provides, styleIds }), []);
   assert.deepEqual(blocks.filter((x) => x.block.default).map((x) => x.id), ['house']);
   for (const x of blocks.filter((y) => y.block.role === 'example')) assert.match(x.block.title, /^Example: /, x.id);
+});
+
+test('composed: refuses a composed recipe whose piece is in no catalog, when the build has the pieces', () => {
+  const { dir, catalog } = fixture([{ slug: 'a', status: 'proven' }, { slug: 'chain', video: 'composed', lines: 'composes: 01-a, piece-flip, piece-gone' }], { '01-a': 'x.png' });
+  const levels = { ...levelsFor(catalog), provides: PIECE_VOCAB, styles: {} };
+  const args = { catalog, jobs: JOBS, examples: EXAMPLES, draftsDir: dir, stills: { '01-a': Buffer.from('jpeg') }, creators: [], styles: [], styleDocs: {} };
+  try {
+    assert.throws(() => buildArsenal({ ...args, levels, pieces: [pieceOf('flip', PIECE_TEXT), pieceOf('plate', PLATE_TEXT)] }), /01-chain composes piece-gone, which is in no catalog/);
+    assert.doesNotThrow(() => buildArsenal({ ...args }), 'a build without pieces cannot tell, and does not refuse');
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 });

@@ -2,6 +2,70 @@
 
 Generated from the recipe drafts; do not edit by hand. Recipes whose primary job is in this group. Find candidates for a beat with ae_arsenal find; read one with ae_arsenal get, or a section here by its heading.
 
+## Typed-on note text that deletes and retypes, with word-by-word fade and a hold-key camera push
+id: 09-typewriter-rewrite-text-effect
+revision: 10edb078
+job: make-concrete; support: reveal-headline, keep-it-alive
+status: proven (accepted 2026-11-26)
+what it does for a beat: Reach for it when a fake notes or chat window needs its text to appear as if someone is writing it, changing their mind and retyping, and then the shot needs a little extra life so the held text is not static.
+what it looks like: Inside a pale rounded card with a heading, two short lines of dark sans-serif regular-weight text (a title line and one short sentence) are typed out letter by letter with a thin vertical bar cursor at the end. The typing runs forward, backs up almost to nothing, then runs forward again. The words also fade up one at a time on top of this; later the view pushes in and drifts using the card's parent null.
+
+ingredients:
+- Animation preset "Blinking Cursor Typewriter Console" — stock (ships in Effects & Presets, folder Text > Animate In; the search box reads "type") (shown)
+- Text layer converted to paragraph text — built-in (said; menu path inferred)
+- Text animator Opacity with a Range Selector (Advanced > Based On: Words) — built-in (shown)
+- Hold keyframes (right-click > Toggle Hold Keyframe) — built-in (said; menu inferred)
+- Easy Ease (F9) and Graph Editor — built-in (said)
+- Null layer driving Position and Scale (the card's parent chain ends at a null) — built-in (said, shown)
+
+steps:
+1. Make the dummy copy: a title line, on the next line, a short sentence. The narrator generated filler text. The narrator first says to make the video-script title bold (about 35:56), and later says the bottom text needs to be regular (about 37:29). Both lines end up regular weight (shown, character panel on Regular, both lines regular). Both lines look bold in the early preview, which is only the building state. (said / shown)
+   - The text must be a paragraph (box) text, left aligned, not a point-text layer (said)
+   - Font: SF Pro; weight Bold while building, Regular in the finished picture (shown)
+   - Size: 77.5 px at layer scale 46.3 % is a layer value (shown); the text sits under a parent chain (a shape layer at 72 %, and nulls above), so it is not an on-screen size. Aim for capitals about 1.9 % and ascenders (b, l) about 2.2 % of the picture height (measured at full size, picture 1080 px high: capitals about 20 px, ascenders about 24 px).
+2. Cut the sentence short: the author selects the tail "how important hooks are" and removes it, so the line reads "This video will be about" and the layer's name shortens the same way (and every later frame). The typed result has that short sentence only. (shown)
+3. Apply the preset to the text layer with the layer selected. (shown : effect stack on the layer holds Animation, Cursor On/Off, Cursor Shape, Cursor Blink Speed)
+   - Animation (slider): drives how much text is typed, 0 to 100 (shown)
+   - Cursor On/Off: checked (shown)
+   - Cursor Shape: Vertical Bar (shown)
+   - Cursor Blink Speed: 4.00 (shown)
+4. Open the layer's keyframes (U) and parent the layer to the card's shape layer (the layer the other card elements follow). (said)
+5. Retime the slider keys so typing starts after the card has appeared; the narrator only says to move the end of the typing to "around here" on the timeline and gives no duration. (said, no numbers)
+   - The preset's own slider keys sit at about 7.2 s and 8.4 s on the 25 fps timeline at first (shown, keys at 1436 and 1598 px; 128 px per second, 07s tick at 1414); first key value not read, last key 100; the author moves them (said)
+6. Make the typing go back and forth: add more slider keys so the value runs up to 100, falls back to a low value, then climbs to 100 again. (said "go back and forth a few times"; key values inferred from the preview)
+   - In the slider reads 64.00 with a key selected and the playhead past the last slider key: a held value in the middle of an edit, not a value on a run up. Typed text reads "This video will be about|" and "This video|" in alternating preview frames (shown). Backing up reaches an empty line in one preview frame (crop, where the heading is gone too, so the typewriter covers both lines) — inferred it goes back almost to zero. Values of the middle keys are not given.
+7. With the text layer selected: Animate > Opacity (Add Animator). (said)
+   - Opacity of that animator: 50 % (said). Not read on screen, so left under unknowns.
+   - Range Selector 1 > Advanced > Based On: Words (said; shown, dropdown open, then Words)
+   - Range Selector Mode Add, Amount 100 %, Shape Square, Smoothness 100 %, Ease High 0 %, Ease Low 0 % (shown — defaults)
+8. Animate Range Selector Start: key at 0 % early on the layer (said "set a keyframe for start"), then a later key a bit further on so the words fade in one by one (said "go a bit further and then fade it in"). The later value is not said or shown. Start shown as 0 % at about 7:05 with a second key about 0.64 s later (shown, keys at 980 and 1021 px, 64 px per second).
+   - Only this animator is shown. A slider reading 53.12 shows briefly while dragging, a pass-through value (timeline note)
+9. Tidy and ease the keys: select them, press F9, open the Graph Editor and pull the handles for a stronger ease. (said)
+10. Trim the layer so the blinking cursor is not visible before the typing starts: put the playhead where typing begins and press Alt+[ (said "alt left bracket"). (said; layer's start moved to about 7:05, shown where its bar starts at about x 980)
+11. Move the text block a bit better into place (the narrator aligns it and moves it a bit further down, about 37:41–37:48) before keying the push; amounts not given. (said) Then give the held scene movement. Select the top-level null and key Position and Scale on it. The stack is: the card's shape layers parent to "Null 1" (layer 23); Null 1 is itself parented to "Null 2" (layer 22, Parent: None, shown). Null 2 is the root and the keyed one; Null 1 is its child and carries no keys. (said; shown)
+   - First key, at the playhead's time of about 10:05 comp time: Scale 300 %, Position 1920, 770 (shown; layer Opacity 0 % on this null)
+   - One frame later: Scale 472 %, Position 2487.6, 1195.2 (shown at 10:06)
+   - A later key a little further on: Position 2379.6, 1195.2 – a small drift of about 108 px left (shown at 11:04; only Position is keyed there, Scale 472 % is a held value); "not too much" (said)
+   - The author deletes and redoes the push keys at about 38:36–38:44; the recipe shows the redone state and the source range ends.
+   - Make the first keys hold keys (said); the move is a cut to the close framing, then the drift
+12. Drag the keys left, so the push starts where the text movement ends (said). The keys' final times are not given. (shows the first key dragged to ~9.5 s while time display reads 11:04.)
+
+layout: All measured on small frames where the picture is 960 x 540 (picture x 301–1261, y 141–681).
+- Card : 65 % of picture width, 81 % of its height, left edge 17 % in from left, top 9 % down; large corner radius (about 5 % of width) measured.
+- Heading "Notes": left edge 21.9 % across, baseline at about 24 % down (22 % is its centre); cap height about 4.5 % of picture height. Measured.
+- Typed block: left edge 21.9 % (same as heading), first line centre 31 % down, second line centre 35.5 % down, line spacing 4.4 % of picture height; capitals about 1.9 % and ascenders about 2.2 % of height. The finished regular-weight sentence "This video will be about" runs small-frame x 510–698 of the picture's 301–1261, about 19.5 % of picture width (measured); the bold building state is wider, x 510–718, about 21.7 %. Box wide enough not to wrap. Measured.
+- Title text in dark near-black, body in dark grey (regular); cursor: thin vertical bar, dark core 2 px wide on the 3840 frame (about 4 px at half darkness once blurred by the recording) of the same colour directly after the last letter (shown crop/ crop). Cursor extent (measured on full-size, picture 1080 px high, cursor in its on phase): about 34 px tall = 3.1 % of picture height, from about 2 px above the ascender top (y 653) to about 8 px below the baseline (y 677), so it is about 1.4 x the ascender height (24 px) and about 1.7 x the capital height (20 px); overhang under the baseline about 8 px (0.4 of capital height). Taller than the letters, set directly against the last letter. It is Cursor Shape Vertical Bar, shown; the preset sets the height, no size control appears in the effect stack. In the cursor is in its off phase, so that frame shows none.
+- Colours: card white on a light grey ground, three traffic-light dots top left (red, yellow, green), 1.5 % of picture width each. Result of the card is not produced by this tip; it is the card from earlier tips (the neighbouring recipes in this video).
+- Word fade: during the preview, individual letters/words render lighter grey and fade up (crops show half-faded "Scr" next to solid "Video"). The heading "Notes" also looks half-faded in those crops; its animator is not shown, so how it fades is unknown.
+- Final push : comp view is 472 % null scale, the card fills about 1.3 x the picture width; text sentence width 30.7 % of picture width in that framing. At 300 % scale the card is 65 % wide, similar to the first framing.
+- Motion: typing speed is not measurable from the recording (preview speed varies). The drift is 108 px left (comp units) over the keys' span.
+
+timing and easing: Typing: slider keys retimed by hand; Easy Ease (F9) then more easing in the Graph Editor on the Range Selector keys, handle values not shown. Hold keys on the first null keys, then free keys for the drift. Keys' exact seconds not shown; only the preset's original two slider keys (about 7.2 s and 8.4 s) are readable.
+variations: Cursor Shape can be changed from Vertical Bar in the effect (menu seen in the effect stack); blink speed is a slider. Opacity animator can be Characters rather than Words (the dropdown also offers Characters, Characters Excluding Spaces, Lines; shown).
+pitfalls: The text must be paragraph text, not point text, and the typing text layer must be cut off with Alt+[ so no cursor shows before it starts (said). First keys of the camera push must be hold keys or it looks odd (said).
+build notes: Add the preset by selecting the text layer and double-clicking it in Effects & Presets (Animation Presets > Text > Animate In). Effect names appear as "Animation", "Cursor On/Off", "Cursor Shape", "Cursor Blink Speed" (preset-created expression controls, so they cannot be added by name from the Effects menu). Text animator: Text > Animator > Opacity; Range Selector Advanced > Based On = Words; key Start 0 to 100 %. Null: add a null, link the card's parent chain to it, key Position and Scale with setInterpolationTypeAtKey(HOLD) for the first keys. Cursor preset must be applied by hand or the preset file loaded with applyPreset.
+unknowns: Opacity animator's own value on the final result (said 50 %, not read on screen); slider key values apart from the last (100); the later Range Selector Start value; the heading's own animation; how far the text block was moved; the null's second key times; the preset's file name beyond what Effects & Presets shows; ease handle values; font colours; the final picture after the push is a different framing from the first and plays no typing on screen in this stretch. The result crop shows both lines bold (building state, before the switch to Regular); the finished weight is regular.
+
 ## Second notification arrives and the first one is pushed back
 id: 05-stacked-second-notification-with-push-back
 revision: 626d0c64

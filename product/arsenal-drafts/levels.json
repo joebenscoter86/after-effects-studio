@@ -907,6 +907,12 @@
     "motion: draw-on",
     "material: flat-vector"
    ]
+  },
+  "01-red-x-then-wipe-then-tick": {
+   "provides": [
+    "transition: wipe",
+    "motion: draw-on"
+   ]
   }
  },
  "styles": {

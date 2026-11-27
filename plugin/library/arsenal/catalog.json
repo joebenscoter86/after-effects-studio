@@ -1,6 +1,6 @@
 {
  "vocab": "jobs-v1",
- "version": "67deb222",
+ "version": "273fa4e9",
  "jobs": [
   "land-number",
   "count-things",
@@ -5265,6 +5265,54 @@
    }
   },
   {
+   "id": "01-red-x-then-wipe-then-tick",
+   "revision": "da4cc538",
+   "level": "recipe",
+   "name": "Fail, then fix: a red X on the wrong state, a wipe to the fixed one, a tick on the result",
+   "line": "Show something going wrong and then the fix making it right, as one beat: the wrong state is struck with a red X, a straight edge wipes the fixed state on over it and takes the X away, and a tick draws on the result.",
+   "status": "proven",
+   "kind": "technique",
+   "job": "fail-then-fix",
+   "support": [
+    "flag-a-problem",
+    "before-after"
+   ],
+   "mood": [
+    "bold",
+    "clean"
+   ],
+   "needs": [
+    "photo",
+    "shapes"
+   ],
+   "duration": 6,
+   "motion": "one-shot",
+   "difficulty": 3,
+   "taught_by": 1,
+   "variants": [],
+   "provides": [
+    "transition: wipe",
+    "motion: draw-on"
+   ],
+   "cost": {
+    "renderer": "classic"
+   },
+   "composes": [
+    "02-duplicate-rotate-lines-into-cross",
+    "01-before-after-sliding-matte-wipe",
+    "piece-tick"
+   ],
+   "shelf": "shipped",
+   "section": {
+    "document": "arsenal-line-2",
+    "heading": "Fail, then fix: a red X on the wrong state, a wipe to the fixed one, a tick on the result"
+   },
+   "still": {
+    "path": "arsenal/stills/01-red-x-then-wipe-then-tick.jpg",
+    "sha256": "c4d9bb013c8606c12855c7079eae45b30ab1b69186c1ac5bf74ecad89fff93c4"
+   }
+  },
+  {
    "id": "01-bevelled-3d-text-material-texture",
    "revision": "593535c4",
    "level": "recipe",
@@ -7165,7 +7213,7 @@
    "composes": [],
    "shelf": "shipped",
    "section": {
-    "document": "arsenal-line-2",
+    "document": "arsenal-line-3",
     "heading": "Typed-on note text that deletes and retypes, with word-by-word fade and a hold-key camera push"
    },
    "still": {
