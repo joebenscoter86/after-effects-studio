@@ -48,6 +48,22 @@ test('parseJson3 copes with no events at all', () => {
   assert.deepEqual(parseJson3({}), []);
 });
 
+// 99FUeOo4fiQ (explainer piece 14): roll-up captions, one line per event, each staying on
+// screen while the next starts. Spread over the whole event, two lines' words interleaved
+// (LESSONS 60).
+test('parseJson3 keeps the word order of roll-up captions whose events overlap', () => {
+  const rollUp = { events: [
+    { tStartMs: 0, dDurationMs: 3959, segs: [{ utf8: "In this tutorial I'll show you how to" }] },
+    { tStartMs: 1920, dDurationMs: 4200, segs: [{ utf8: 'create a countdown timer in After' }] },
+    { tStartMs: 3959, dDurationMs: 3900, segs: [{ utf8: 'Effects with one single expression' }] },
+  ] };
+  const w = parseJson3(rollUp);
+  assert.equal(w.map((x) => x.text).join(' '),
+    "In this tutorial I'll show you how to create a countdown timer in After Effects with one single expression");
+  assert.ok(w.slice(0, 8).every((x) => x.t < 1.92), 'the first line ends where the second starts');
+  close(w.at(-1).end, 7.859, 'the last line still runs to its own end');
+});
+
 const words = (list, step = 0.3, start = 0) =>
   list.map((text, i) => ({ t: start + i * step, end: start + (i + 1) * step, text }));
 

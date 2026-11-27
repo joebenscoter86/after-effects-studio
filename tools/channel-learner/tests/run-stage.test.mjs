@@ -334,6 +334,18 @@ test('a lead note that names a cause for a rebuild is tested on a scratch comp f
   assert.match(lead, /what (the|your) test measured/, 'and the note gives the figures the test measured');
 });
 
+// Lesson 61: the lead set the expression engine to Legacy ExtendScript by script; it read back
+// "extendscript", but renders evaluated the author's code with the JavaScript engine until the
+// project was reopened, and the first build of 99FUeOo4fiQ 01 showed "0".
+test('a scripted expression-engine change is followed by a reopen before the build (lesson 61)', () => {
+  const lead = fs.readFileSync(path.join(PROMPTS, 'video-lead.md'), 'utf8');
+  assert.match(lead, /expression engine/i);
+  assert.match(lead, /reopen/i, 'the lead reopens the project after setting the engine');
+  const run = fs.readFileSync(path.join(PROMPTS, 'prove-run.md'), 'utf8');
+  assert.match(run, /expressionEngine/);
+  assert.match(run, /reopen/i, 'a builder knows the setting only reaches the render after a reopen');
+});
+
 test('proofs are built at 9:16, the phone frame the owner reviews on: the art, script and comp rules all say so', () => {
   for (const f of ['prove-author.md', 'prove.md', 'art.md']) {
     const text = fs.readFileSync(path.join(PROMPTS, f), 'utf8');

@@ -12,16 +12,21 @@ const SPLIT = /\s+/u;
 // never past its own event's end; the last word ends with its event.
 export function parseJson3(json) {
   const raw = [];
-  for (const ev of json?.events ?? []) {
-    if (!Array.isArray(ev.segs)) continue;
+  const events = (json?.events ?? []).filter((ev) => Array.isArray(ev.segs));
+  const starts = events.map((ev) => (ev.tStartMs ?? 0) / 1000).sort((a, b) => a - b);
+  for (const ev of events) {
     const evStart = (ev.tStartMs ?? 0) / 1000;
     const evEnd = evStart + (ev.dDurationMs ?? 0) / 1000;
+    // Roll-up captions keep a line on screen while the next one starts: the line was spoken
+    // before the next began, so its words end there, not at the event's end (LESSONS 60).
+    const nextStart = starts.find((t) => t > evStart);
+    const spokenEnd = nextStart !== undefined && nextStart < evEnd ? nextStart : evEnd;
     const segs = ev.segs
       .map((s) => ({ at: evStart + (s.tOffsetMs ?? 0) / 1000, parts: String(s.utf8 ?? '').trim().split(SPLIT).filter(Boolean) }))
       .filter((s) => s.parts.length);
     segs.forEach((s, k) => {
       // A seg holding several words: spread them evenly up to the next seg.
-      const until = k + 1 < segs.length ? segs[k + 1].at : evEnd;
+      const until = k + 1 < segs.length ? segs[k + 1].at : Math.max(s.at, spokenEnd);
       const step = Math.max(0, until - s.at) / s.parts.length;
       s.parts.forEach((text, j) => raw.push({ t: s.at + j * step, evEnd, text }));
     });
